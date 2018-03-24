@@ -4,17 +4,21 @@ from pywikibot import pagegenerators, Category
 from mwparserfromhell.nodes.template import Template
 import mwparserfromhell
 import logging
+from maccabistats_player_event import PlayerEvent
+import sys
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler(sys.stdout))
 
-games_pages_temp_prefix = "דמיקולו"
-games_template_name = "תבנית:נסיון_משחקים_אגדיים"
-games_template_name_for_wpt = "{{נסיון_משחקים_אגדיים}}"
-legend_games_category_text = "[[קטגוריה:משחקים_אגדיים]]"
+football_games_prefix = "כדורגל"
+games_template_name = "תבנית:הצגת_משחק_כדורגל"
+legend_games_category_text = "[[קטגוריה:משחקי_כדורגל]]"
 
 # Legend games templates args consts:
 GAME_ID = "תאריך_המשחק"
 GAME_HOUR = "שעת_המשחק"
+DAY_OF_WEEK = "יום_המשחק_בשבוע"
 SEASON = "עונה"
 COMPETITION = "מפעל"
 ROUND_IN_COMPETITION = "מחזור_במפעל"
@@ -29,18 +33,17 @@ REFEREE = "שופט"
 CROWD = "כמות_קהל"
 BROADCAST = "גוף_שידור"
 COSTUME = "מכבי_תלבושת"
+PLAYERS_EVENTS = "אירועי_שחקנים"
 
 site = pw.Site()
 
-SHOULD_SAVE = False
+SHOULD_SAVE = True
 SHOULD_SHOW_DIFF = True
 
 
 def get_games_to_add(number):
     maccabi_games = get_maccabi_stats()
-    top_wins = sorted(maccabi_games.games, key=lambda g: g.maccabi_score_diff)
-
-    return top_wins[0:number]
+    return maccabi_games[0:number]
 
 
 def get_legend_games_template_arguments():
@@ -62,7 +65,7 @@ def get_all_legend_games_category_pages():
 
 
 def get_legend_games_template_object():
-    return Template(games_template_name_for_wpt)
+    return Template(games_template_name)
 
 
 def generate_page_name_from_game(game):
@@ -71,12 +74,46 @@ def generate_page_name_from_game(game):
     :rtype: str
     """
 
-    page_name = "{prefix}_{name1}_{name2}_{date}".format(prefix=games_pages_temp_prefix,
-                                                         name1=game.maccabi_team.name,
-                                                         name2=game.not_maccabi_team.name,
-                                                         date=game.date_as_hebrew_string)
+    page_name = "{prefix}_{maccabi}-{opponent}_{date}_{at}{competition}".format(prefix=football_games_prefix,
+                                                                                maccabi=game.maccabi_team.name,
+                                                                                opponent=game.not_maccabi_team.name,
+                                                                                date=game.date.strftime('%Y-%m-%d'),
+                                                                                at="ב",
+                                                                                competition=game.competition)
 
     return page_name
+
+
+def get_players_events_for_template(game):
+    """
+    Return the events as they should be written to template:
+    the separator between players attributes is '::'
+    the separator between players is ','
+    :type game: maccabistats.models.game_data.GameData
+    :return:
+    """
+
+    # Atm, no sub event type is supported.
+
+    # Maccabi players
+    unsorted_events = [
+        PlayerEvent(player.name, player.number, player_event.time_occur, player_event.event_type.value, None)
+        for player in game.maccabi_team.players
+        for player_event in player.events]
+
+    # Opponent players
+    unsorted_events.extend(
+        [PlayerEvent(player.name, player.number, player_event.time_occur.min, player_event.event_type.value, None)
+         for player in game.not_maccabi_team.players
+         for player_event in player.events])
+
+    events = sorted(unsorted_events, key=lambda player_event: player_event.minute_occur)
+
+    wikimedia_formatted_events = ",".join(
+        "{name}::{number}::{event_type}::{minute_occur}\n".format(**player_event.__dict__)
+        for player_event in events)
+
+    return wikimedia_formatted_events
 
 
 def __get_legend_game_template_with_maccabistats_game_value(game):
@@ -90,6 +127,7 @@ def __get_legend_game_template_with_maccabistats_game_value(game):
 
     template_arguments[GAME_ID] = str(game.date.date())
     template_arguments[GAME_HOUR] = game.date.hour
+    template_arguments[DAY_OF_WEEK] = (game.date.weekday() + 2) % 8  # weekday return 0 for monday, 6 for sunday.
     template_arguments[SEASON] = "2000-2001"
     template_arguments[COMPETITION] = game.competition
     template_arguments[ROUND_IN_COMPETITION] = game.fixture
@@ -102,8 +140,9 @@ def __get_legend_game_template_with_maccabistats_game_value(game):
     template_arguments[OPPONENT_COACH] = game.not_maccabi_team.coach
     template_arguments[REFEREE] = game.referee
     template_arguments[CROWD] = game.crowd
-    template_arguments[BROADCAST] = "ערוץ 1"
+    template_arguments[BROADCAST] = "ערוץ הכיבוד"
     template_arguments[COSTUME] = "תלבושת ביתית 2000-2001"
+    template_arguments[PLAYERS_EVENTS] = get_players_events_for_template(game)
 
     return template_arguments
 
@@ -122,7 +161,7 @@ def handle_existing_page(game_page, game):
     for argument_name, argument_value in arguments.items():
         if str(argument_value) != legend_template.get(argument_name).value and SHOULD_SHOW_DIFF:
             logger.info("Found diff between arguments on this argument_name: {arg_name}\n"
-                        "existing value: {existing_value}\n new_value: {new_value}".
+                        "existing value: {existing_value}\nnew_value: {new_value}".
                         format(arg_name=argument_name, existing_value=legend_template.get(argument_name).value,
                                new_value=argument_value))
 
@@ -146,25 +185,26 @@ def handle_new_page(game_page, game):
 
     game_page.text = str(legend_games_template)
 
+    game_page.text += legend_games_category_text
+
 
 def add_games_page(game):
     page_name = generate_page_name_from_game(game)
 
     game_page = pw.Page(site, page_name)
 
+    # handle_new_page & handle_existing_page changes the game_page.text attribute.
     if game_page.exists():
-        logger.info("Page : {name} exists, exiting".format(name=page_name))
+        logger.info("Page : {name} exists, exiting\n".format(name=page_name))
         handle_existing_page(game_page, game)
     else:
-        logger.info("Page : {name} does not exists, continue".format(name=page_name))
+        logger.info("Page : {name} does not exists, continue\n".format(name=page_name))
         handle_new_page(game_page, game)
 
-    # handle_new_page & handle_existing_page changes the game_page.text attribute.
-    game_page.text += legend_games_category_text
-
+    logger.info("")  # Empty line
     if SHOULD_SAVE:
         logger.info("Saving {name}".format(name=game_page.title()))
-        game_page.save(summary="MaccabiBot - Legend Games Template")
+        game_page.save(summary="MaccabiBot - Add games")
     else:
         logger.info("Not saving {name}".format(name=game_page.title()))
 
@@ -173,20 +213,22 @@ def main():
     logger.info("All pages in legend games category:")
     for p in get_all_legend_games_category_pages():
         logger.info(p)
-        logger.info("\n")
 
-    logger.info("Legend page template args:")
-    for a in get_legend_games_template_arguments():
-        logger.info(a)
-        logger.info("\n")
+    # logger.info("\nLegend page template args:")
+    # for a in get_legend_games_template_arguments():
+    #    logger.info(a)
 
-        logger.info("All pages in legend games template:")
+    logger.info("\nAll pages in legend games template:")
     for p in get_all_pages_that_use_legend_games_template():
         logger.info(p)
-        logger.info("\n")
+    logger.info("")  # Empty line
 
-    games = get_games_to_add(5)
-    add_games_page(games[4])
+    logger.info("Should save : {save}".format(save=SHOULD_SAVE))
+    logger.info("Should show diff: {diff}\n".format(diff=SHOULD_SHOW_DIFF))
+
+    game = get_games_to_add(1)
+
+    add_games_page(game)
 
 
 if __name__ == '__main__':

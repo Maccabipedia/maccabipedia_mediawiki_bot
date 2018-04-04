@@ -1,10 +1,12 @@
 import pywikibot as pw
-from maccabistats import get_maccabi_stats
+from maccabistats import combine_maccabi_stats_sources
 from pywikibot import pagegenerators, Category
 from mwparserfromhell.nodes.template import Template
 import mwparserfromhell
 import logging
 from maccabistats_player_event import PlayerEvent
+from maccabistats.models.player_game_events import GameEventTypes
+from datetime import timedelta
 import sys
 import re
 
@@ -13,7 +15,7 @@ logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 football_games_prefix = "משחק"
-football_games_template_name = "תבנית:הצגת_משחק"
+football_games_template_name = "קטלוג משחקים"
 football_games_category_name = "קטגוריה:משחקים"
 
 # Legend games templates args consts:
@@ -22,7 +24,7 @@ GAME_HOUR = "שעת המשחק"
 DAY_OF_WEEK = "יום המשחק בשבוע"
 SEASON = "עונה"
 COMPETITION = "מפעל"
-ROUND_IN_COMPETITION = "מחזור במפעל"
+ROUND_IN_COMPETITION = "שלב במפעל"
 OPPONENT_NAME = "שם יריבה"
 HOME_OR_AWAY = "בית חוץ"
 STADIUM = "אצטדיון"
@@ -30,7 +32,7 @@ MACCABI_RESULT = "תוצאת משחק מכבי"
 OPPONENT_RESULT = "תוצאת משחק יריבה"
 MACCABI_COACH = "מאמן מכבי"
 OPPONENT_COACH = "מאמן יריבה"
-REFEREE = "שופט"
+REFEREE = "שופטים"
 CROWD = "כמות קהל"
 BROADCAST = "גוף שידור"
 COSTUME = "מכבי תלבושת"
@@ -38,13 +40,14 @@ PLAYERS_EVENTS = "אירועי שחקנים"
 
 site = pw.Site()
 
+REFRESH_PAGES = True
 SHOULD_SAVE = True
 SHOULD_SHOW_DIFF = True
 SHOULD_CHECK_FOR_UPDATE_IN_EXISTING_PAGES = False
 
 
 def get_games_to_add():
-    maccabi_games = get_maccabi_stats()
+    maccabi_games = combine_maccabi_stats_sources()
     return maccabi_games
 
 
@@ -95,24 +98,37 @@ def get_players_events_for_template(game):
     """
 
     # Atm, no sub event type is supported.
+    # Bench event type is added for players who doesnt has line-up event.
 
     # Maccabi players
     unsorted_events = [
-        PlayerEvent(player.name, player.number, player_event.time_occur, player_event.event_type.value, None)
+        PlayerEvent(player.name, player.number, player_event.time_occur, player_event.event_type, getattr(player_event, "goal_type", None),
+                    maccabi_player=True)
         for player in game.maccabi_team.players
         for player_event in player.events]
 
+    # Maccabi players that not played
+    unsorted_events.extend(
+        [PlayerEvent(player.name, player.number, timedelta(minutes=0), GameEventTypes.BENCHED, None, maccabi_player=True)
+         for player in game.maccabi_team.players if not player.has_event_type(GameEventTypes.LINE_UP)]
+    )
+
     # Opponent players
     unsorted_events.extend(
-        [PlayerEvent(player.name, player.number, player_event.time_occur.min, player_event.event_type.value, None)
+        [PlayerEvent(player.name, player.number, player_event.time_occur.min, player_event.event_type, getattr(player_event, "goal_type", None),
+                     maccabi_player=False)
          for player in game.not_maccabi_team.players
          for player_event in player.events])
 
+    # Opponent players that not played
+    unsorted_events.extend(
+        [PlayerEvent(player.name, player.number, timedelta(minutes=0), GameEventTypes.BENCHED, None, maccabi_player=False)
+         for player in game.not_maccabi_team.players if not player.has_event_type(GameEventTypes.LINE_UP)]
+    )
+
     events = sorted(unsorted_events, key=lambda player_event: player_event.minute_occur)
 
-    wikimedia_formatted_events = ",".join(
-        "{name}::{number}::{event_type}::{minute_occur}\n".format(**player_event.__dict__)
-        for player_event in events)
+    wikimedia_formatted_events = ",".join(player_event.__maccabipedia__() for player_event in events)
 
     return wikimedia_formatted_events
 
@@ -141,8 +157,8 @@ def __get_football_game_template_with_maccabistats_game_value(game):
     template_arguments[OPPONENT_COACH] = "" if game.not_maccabi_team.coach == "Cant found coach" else game.not_maccabi_team.coach
     template_arguments[REFEREE] = "" if game.referee == "Cant found referee" else game.referee
     template_arguments[CROWD] = "" if game.crowd == "Cant found crowd" else game.crowd
-    template_arguments[BROADCAST] = "ערוץ הכיבוד"
-    template_arguments[COSTUME] = "תלבושת {place} {years}".format(place=template_arguments[HOME_OR_AWAY], years=game.season)
+    template_arguments[BROADCAST] = ""
+    template_arguments[COSTUME] = ""
     template_arguments[PLAYERS_EVENTS] = get_players_events_for_template(game)
 
     return template_arguments
@@ -169,6 +185,10 @@ def handle_existing_page(game_page, game):
             football_game_template.add(argument_name, argument_value)
 
     game_page.text = parsed_mw_text
+
+    if REFRESH_PAGES:
+        from random import randint
+        game_page.text += "<!--{num}-->".format(num=randint(0, 10000))
 
 
 def handle_new_page(game_page, game):
@@ -212,7 +232,11 @@ def get_games_that_has_existing_pages(games):
     existing_games = []
     existing_games_pages = get_all_football_games_category_pages()
     for game_page in existing_games_pages:
-        game_date = re.search("([0-9]{2}\-[0-9]{2}\-[0-9]{4})", game_page.title()).group()
+        game_date_match = re.search("([0-9]{2}\-[0-9]{2}\-[0-9]{4})", game_page.title())
+        if game_date_match is None:
+            logger.warning("Found game page title without date, skipping this page, wtf?? - {title}".format(title=game_page.title()))
+            continue
+        game_date = game_date_match.group()
         game_date = game_date.replace("-", ".")  # For maccabistats format played(before\after).
 
         game = games.played_before(game_date).played_after(game_date)
@@ -242,12 +266,11 @@ def main():
 
     games = get_games_to_add()
 
-    # from random import randint
-    # for i in range(20):
-    #   create_or_update_game_page(games[randint(0, 2000)])
+    for g in games:
+        create_or_update_game_page(g)
 
-    for game in games[-80:]:
-        create_or_update_game_page(game)
+    # for game in games[0:0]:
+    #    create_or_update_game_page(game)
 
     logger.info("Finished adding new games.")
 

@@ -1,5 +1,5 @@
 import pywikibot as pw
-from maccabistats import combine_maccabi_stats_sources
+from maccabistats import get_maccabi_stats_as_newest_wrapper
 from pywikibot import pagegenerators, Category
 from mwparserfromhell.nodes.template import Template
 import mwparserfromhell
@@ -47,7 +47,7 @@ SHOULD_CHECK_FOR_UPDATE_IN_EXISTING_PAGES = False
 
 
 def get_games_to_add():
-    maccabi_games = combine_maccabi_stats_sources()
+    maccabi_games = get_maccabi_stats_as_newest_wrapper()
     return maccabi_games
 
 
@@ -264,19 +264,17 @@ def main():
     logger.info("Should save : {save}".format(save=SHOULD_SAVE))
     logger.info("Should show diff: {diff}\n".format(diff=SHOULD_SHOW_DIFF))
 
-    games = get_games_to_add()
+    all_games = get_games_to_add()
 
-    for g in games:
+    games_to_add = all_games
+    for g in games_to_add:
         create_or_update_game_page(g)
-
-    # for game in games[0:0]:
-    #    create_or_update_game_page(game)
 
     logger.info("Finished adding new games.")
 
     if SHOULD_CHECK_FOR_UPDATE_IN_EXISTING_PAGES:
         logger.info("Now handling existing games:")
-        existing_games = get_games_that_has_existing_pages(games)
+        existing_games = get_games_that_has_existing_pages(games_to_add)
         [create_or_update_game_page(game) for game in existing_games]
     else:
         logger.info("Dont check for updates in existing pages")

@@ -17,6 +17,8 @@ SHOULD_SAVE = True
 SHOULD_SHOW_DIFF = True
 SHOULD_CHECK_FOR_UPDATE_IN_EXISTING_PAGES = False
 
+football_games_prefix = "משחק"
+
 
 def get_games_to_add():
     maccabi_games = get_maccabi_stats_as_newest_wrapper()

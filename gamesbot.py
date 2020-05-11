@@ -1,3 +1,4 @@
+from typing import AnyStr, List
 import pywikibot as pw
 from maccabistats import get_maccabi_stats_as_newest_wrapper
 from pywikibot import pagegenerators, Category
@@ -18,7 +19,7 @@ football_games_prefix = "משחק"
 football_games_template_name = "קטלוג משחקים"
 football_games_category_name = "קטגוריה:משחקים"
 
-# Legend games templates args consts:
+# Legend games templates args consts:s
 GAME_ID = "תאריך המשחק"
 GAME_HOUR = "שעת המשחק"
 DAY_OF_WEEK = "יום המשחק בשבוע"
@@ -40,7 +41,8 @@ PLAYERS_EVENTS = "אירועי שחקנים"
 
 site = pw.Site()
 
-REFRESH_PAGES = True
+REFRESH_PAGES = False
+JUST_EVENTS = True
 SHOULD_SAVE = True
 SHOULD_SHOW_DIFF = True
 SHOULD_CHECK_FOR_UPDATE_IN_EXISTING_PAGES = False
@@ -115,7 +117,7 @@ def get_players_events_for_template(game):
 
     # Opponent players
     unsorted_events.extend(
-        [PlayerEvent(player.name, player.number, player_event.time_occur.min, player_event.event_type, getattr(player_event, "goal_type", None),
+        [PlayerEvent(player.name, player.number, player_event.time_occur, player_event.event_type, getattr(player_event, "goal_type", None),
                      maccabi_player=False)
          for player in game.not_maccabi_team.players
          for player_event in player.events])
@@ -128,7 +130,8 @@ def get_players_events_for_template(game):
 
     events = sorted(unsorted_events, key=lambda player_event: player_event.minute_occur)
 
-    wikimedia_formatted_events = ",".join(player_event.__maccabipedia__() for player_event in events)
+    # Remove the last new line
+    wikimedia_formatted_events = ",".join(player_event.__maccabipedia__() for player_event in events).rstrip()
 
     return wikimedia_formatted_events
 
@@ -170,25 +173,36 @@ def handle_existing_page(game_page, game):
     :type game: maccabistats.models.game_data.GameData
     """
 
-    parsed_mw_text = mwparserfromhell.parse(game_page.text)
-    football_game_template = parsed_mw_text.filter_templates(football_games_template_name)[0]
+    if JUST_EVENTS:
+        parsed_mw_text = mwparserfromhell.parse(game_page.text)
+        football_game_template = parsed_mw_text.filter_templates(football_games_template_name)[0]
 
-    arguments = __get_football_game_template_with_maccabistats_game_value(game)
+        arguments = __get_football_game_template_with_maccabistats_game_value(game)
 
-    for argument_name, argument_value in arguments.items():
-        if str(argument_value) != football_game_template.get(argument_name).value and SHOULD_SHOW_DIFF:
-            logger.info("Found diff between arguments on this argument_name: {arg_name}\n"
-                        "existing value: {existing_value}\nnew_value: {new_value}".
-                        format(arg_name=argument_name, existing_value=football_game_template.get(argument_name).value,
-                               new_value=argument_value))
+        football_game_template.add(PLAYERS_EVENTS, arguments[PLAYERS_EVENTS])
 
-            football_game_template.add(argument_name, argument_value)
+        game_page.text = parsed_mw_text
 
-    game_page.text = parsed_mw_text
+    else:
+        parsed_mw_text = mwparserfromhell.parse(game_page.text)
+        football_game_template = parsed_mw_text.filter_templates(football_games_template_name)[0]
 
-    if REFRESH_PAGES:
-        from random import randint
-        game_page.text += "<!--{num}-->".format(num=randint(0, 10000))
+        arguments = __get_football_game_template_with_maccabistats_game_value(game)
+
+        for argument_name, argument_value in arguments.items():
+            if str(argument_value) != football_game_template.get(argument_name).value and SHOULD_SHOW_DIFF:
+                logger.info("Found diff between arguments on this argument_name: {arg_name}\n"
+                            "existing value: {existing_value}\nnew_value: {new_value}".
+                            format(arg_name=argument_name, existing_value=football_game_template.get(argument_name).value,
+                                   new_value=argument_value))
+
+                football_game_template.add(argument_name, argument_value)
+
+        game_page.text = parsed_mw_text
+
+        if REFRESH_PAGES:
+            from random import randint
+            game_page.text += "<!--{num}-->".format(num=randint(0, 10000))
 
 
 def handle_new_page(game_page, game):
@@ -223,12 +237,12 @@ def create_or_update_game_page(game):
     logger.info("")  # Empty line
     if SHOULD_SAVE:
         logger.info("Saving {name}".format(name=game_page.title()))
-        game_page.save(summary="MaccabiBot - Add games")
+        game_page.save(summary="MaccabiBot - Uploading Games")
     else:
         logger.info("Not saving {name}".format(name=game_page.title()))
 
 
-def get_games_that_has_existing_pages(games):
+def get_games_that_has_existing_pages(games: List[AnyStr]):
     existing_games = []
     existing_games_pages = get_all_football_games_category_pages()
     for game_page in existing_games_pages:
@@ -266,7 +280,7 @@ def main():
 
     all_games = get_games_to_add()
 
-    games_to_add = all_games
+    games_to_add = all_games[-1:]
     for g in games_to_add:
         create_or_update_game_page(g)
 
@@ -282,5 +296,17 @@ def main():
     logger.info("Finished handling existing games.")
 
 
+def refresh_from_maccabi_site():
+    from maccabistats import run_maccabitlv_site_source, merge_maccabi_games_from_all_input_serialized_sources, serialize_maccabi_games
+
+    run_maccabitlv_site_source()
+    newer_games = merge_maccabi_games_from_all_input_serialized_sources()
+    serialize_maccabi_games(newer_games)
+
+
 if __name__ == '__main__':
+    update_just_last_maccabi_game = True
+
+    if update_just_last_maccabi_game:
+        refresh_from_maccabi_site()
     main()

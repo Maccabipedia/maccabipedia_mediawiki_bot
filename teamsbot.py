@@ -1,5 +1,5 @@
 import pywikibot as pw
-from maccabistats import combine_maccabi_stats_sources
+from maccabistats import get_maccabi_stats_as_newest_wrapper
 from pywikibot import pagegenerators, Category
 from mwparserfromhell.nodes.template import Template
 import logging
@@ -18,7 +18,7 @@ SHOULD_SAVE = True
 
 
 def get_teams_to_add():
-    maccabi_games = combine_maccabi_stats_sources()
+    maccabi_games = get_maccabi_stats_as_newest_wrapper()
     all_teams_names_without_dups = list(maccabi_games.available_opponents)
     return sorted(all_teams_names_without_dups)
 

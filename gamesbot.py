@@ -1,15 +1,17 @@
+import logging
+import re
+import sys
+from datetime import timedelta
 from typing import AnyStr, List
+
+import mwparserfromhell
 import pywikibot as pw
 from maccabistats import get_maccabi_stats_as_newest_wrapper
-from pywikibot import pagegenerators, Category
-from mwparserfromhell.nodes.template import Template
-import mwparserfromhell
-import logging
-from maccabistats_player_event import PlayerEvent
 from maccabistats.models.player_game_events import GameEventTypes
-from datetime import timedelta
-import sys
-import re
+from mwparserfromhell.nodes.template import Template
+from pywikibot import pagegenerators, Category
+
+from maccabistats_player_event import PlayerEvent
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -104,27 +106,28 @@ def get_players_events_for_template(game):
 
     # Maccabi players
     unsorted_events = [
-        PlayerEvent(player.name, player.number, player_event.time_occur, player_event.event_type, getattr(player_event, "goal_type", None),
-                    maccabi_player=True)
+        PlayerEvent.from_maccabistats_event_type(player.name, player.number, player_event.time_occur, player_event.event_type,
+                                                 getattr(player_event, "goal_type", None), maccabi_player=True)
         for player in game.maccabi_team.players
         for player_event in player.events]
 
     # Maccabi players that not played
     unsorted_events.extend(
-        [PlayerEvent(player.name, player.number, timedelta(minutes=0), GameEventTypes.BENCHED, None, maccabi_player=True)
+        [PlayerEvent.from_maccabistats_event_type(player.name, player.number, timedelta(minutes=0), GameEventTypes.BENCHED, None, maccabi_player=True)
          for player in game.maccabi_team.players if not player.has_event_type(GameEventTypes.LINE_UP)]
     )
 
     # Opponent players
     unsorted_events.extend(
-        [PlayerEvent(player.name, player.number, player_event.time_occur, player_event.event_type, getattr(player_event, "goal_type", None),
-                     maccabi_player=False)
+        [PlayerEvent.from_maccabistats_event_type(player.name, player.number, player_event.time_occur, player_event.event_type,
+                                                  getattr(player_event, "goal_type", None), maccabi_player=False)
          for player in game.not_maccabi_team.players
          for player_event in player.events])
 
     # Opponent players that not played
     unsorted_events.extend(
-        [PlayerEvent(player.name, player.number, timedelta(minutes=0), GameEventTypes.BENCHED, None, maccabi_player=False)
+        [PlayerEvent.from_maccabistats_event_type(player.name, player.number, timedelta(minutes=0), GameEventTypes.BENCHED, None,
+                                                  maccabi_player=False)
          for player in game.not_maccabi_team.players if not player.has_event_type(GameEventTypes.LINE_UP)]
     )
 
@@ -305,7 +308,7 @@ def refresh_from_maccabi_site():
 
 
 if __name__ == '__main__':
-    update_just_last_maccabi_game = True
+    update_just_last_maccabi_game = False
 
     if update_just_last_maccabi_game:
         refresh_from_maccabi_site()

@@ -44,9 +44,9 @@ def youtube_video_active_and_public(link):
     raise Exception("Unknown state")
 
 
-def report_bad_youtube_link(missing_youtube_links_maccabipedia_page, link, page_name):
+def report_bad_youtube_link(missing_youtube_links_maccabipedia_page, link, page_name, video_type):
     new_text = missing_youtube_links_maccabipedia_page.text
-    new_text += f"\n# בעמוד [[{page_name}]] הלינק שבור: {link}, תייגתי את: {{{{משתמשי תקצירים}}}} , בתודה ~~~~"
+    new_text += f"\n# בעמוד [[{page_name}]] הלינק ל{video_type} שבור: {link}, תייגתי את: {{{{משתמשי תקצירים}}}} , בתודה ~~~~"
     missing_youtube_links_maccabipedia_page.text = new_text
     missing_youtube_links_maccabipedia_page.save(botflag=True, summary="Found new broken youtube link")
 
@@ -63,11 +63,11 @@ def crawl_videos():
 
         try:
             if youtube_link(video['FullGame']) and not youtube_video_active_and_public(video['FullGame']):
-                report_bad_youtube_link(maccabipedia_page_to_report_at, video['FullGame'], video['_pageName'])
+                report_bad_youtube_link(maccabipedia_page_to_report_at, video['FullGame'], video['_pageName'], video_type="משחק מלא")
             if youtube_link(video['Highlights']) and not youtube_video_active_and_public(video['Highlights']):
-                report_bad_youtube_link(maccabipedia_page_to_report_at, video['Highlights'], video['_pageName'])
+                report_bad_youtube_link(maccabipedia_page_to_report_at, video['Highlights'], video['_pageName'], video_type="תקציר ראשי")
             if youtube_link(video['Highlights2']) and not youtube_video_active_and_public(video['Highlights2']):
-                report_bad_youtube_link(maccabipedia_page_to_report_at, video['Highlights2'], video['_pageName'])
+                report_bad_youtube_link(maccabipedia_page_to_report_at, video['Highlights2'], video['_pageName'], video_type="תקציר משני")
         except Exception:
             logging.exception(f"Error on video: {video}")
 

@@ -35,9 +35,9 @@ SUBS_RANK = defaultdict(lambda: 5, {"מוחלף": 6,
                                     "מחליף": 7})
 
 # Assists, Goals then the rest (only if the events are at the same minute)
-GOALS_RANK = defaultdict(lambda: 5, {"בישול": 3,
+GOALS_RANK = defaultdict(lambda: 2, {"בישול": 3,
                                      "גול": 4,
-                                     "פנדל": 6,
+                                     "פנדל": 5,
 
                                      "החמצה": 7,
                                      "עצירה": 8})

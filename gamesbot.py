@@ -38,7 +38,7 @@ OPPONENT_COACH = "מאמן יריבה"
 REFEREE = "שופטים"
 CROWD = "כמות קהל"
 BROADCAST = "גוף שידור"
-COSTUME = "מכבי תלבושת"
+COSTUME = "מדים"
 PLAYERS_EVENTS = "אירועי שחקנים"
 
 site = pw.Site()
@@ -308,7 +308,7 @@ def refresh_from_maccabi_site():
 
 
 if __name__ == '__main__':
-    update_just_last_maccabi_game = False
+    update_just_last_maccabi_game = True
 
     if update_just_last_maccabi_game:
         refresh_from_maccabi_site()

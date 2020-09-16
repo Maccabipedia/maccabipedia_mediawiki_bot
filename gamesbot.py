@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 import sys
 from datetime import timedelta
@@ -12,6 +13,8 @@ from mwparserfromhell.nodes.template import Template
 from pywikibot import pagegenerators, Category
 
 from maccabistats_player_event import PlayerEvent
+from prettify_games_pages import prettify_game_page_main_template
+from stats.maccabi_games_stats import MaccabiGamesStats
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -50,7 +53,7 @@ SHOULD_SHOW_DIFF = True
 SHOULD_CHECK_FOR_UPDATE_IN_EXISTING_PAGES = False
 
 
-def get_games_to_add():
+def all_maccabi_games():
     maccabi_games = get_maccabi_stats_as_newest_wrapper()
     return maccabi_games
 
@@ -241,6 +244,9 @@ def create_or_update_game_page(game):
     if SHOULD_SAVE:
         logger.info("Saving {name}".format(name=game_page.title()))
         game_page.save(summary="MaccabiBot - Uploading Games")
+
+        logger.info(f"Prettifying {game_page.title()}")
+        prettify_game_page_main_template(game_page)
     else:
         logger.info("Not saving {name}".format(name=game_page.title()))
 
@@ -264,7 +270,7 @@ def get_games_that_has_existing_pages(games: List[AnyStr]):
     return existing_games
 
 
-def main():
+def main(maccabi_games_to_add: MaccabiGamesStats):
     logger.info("All pages in football games category:")
     for p in get_all_football_games_category_pages():
         logger.info(p)
@@ -281,17 +287,14 @@ def main():
     logger.info("Should save : {save}".format(save=SHOULD_SAVE))
     logger.info("Should show diff: {diff}\n".format(diff=SHOULD_SHOW_DIFF))
 
-    all_games = get_games_to_add()
-
-    games_to_add = all_games[-1:]
-    for g in games_to_add:
+    for g in maccabi_games_to_add:
         create_or_update_game_page(g)
 
     logger.info("Finished adding new games.")
 
     if SHOULD_CHECK_FOR_UPDATE_IN_EXISTING_PAGES:
         logger.info("Now handling existing games:")
-        existing_games = get_games_that_has_existing_pages(games_to_add)
+        existing_games = get_games_that_has_existing_pages(maccabi_games_to_add.games)
         [create_or_update_game_page(game) for game in existing_games]
     else:
         logger.info("Dont check for updates in existing pages")
@@ -299,17 +302,21 @@ def main():
     logger.info("Finished handling existing games.")
 
 
-def refresh_from_maccabi_site():
-    from maccabistats import run_maccabitlv_site_source, merge_maccabi_games_from_all_input_serialized_sources, serialize_maccabi_games
+def fetch_last_game_from_maccabi_site() -> MaccabiGamesStats:
+    from maccabistats import run_maccabitlv_site_source
 
-    run_maccabitlv_site_source()
-    newer_games = merge_maccabi_games_from_all_input_serialized_sources()
-    serialize_maccabi_games(newer_games)
+    # Season 2020/21
+    os.environ['START_SEASON_TO_CRAWL'] = '81'
+
+    games_from_maccabi_tlv_site = run_maccabitlv_site_source()
+    return MaccabiGamesStats([games_from_maccabi_tlv_site[-1]])
 
 
 if __name__ == '__main__':
     update_just_last_maccabi_game = True
 
     if update_just_last_maccabi_game:
-        refresh_from_maccabi_site()
-    main()
+        maccabi_tlv_games = fetch_last_game_from_maccabi_site()
+        main(maccabi_tlv_games)
+    else:
+        main(all_maccabi_games())

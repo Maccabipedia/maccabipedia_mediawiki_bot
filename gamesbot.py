@@ -14,6 +14,7 @@ from pywikibot import pagegenerators, Category
 
 from maccabistats_player_event import PlayerEvent
 from prettify_games_pages import prettify_game_page_main_template
+from sort_players_events import sort_player_events_in_games_page
 from stats.maccabi_games_stats import MaccabiGamesStats
 
 logger = logging.getLogger(__name__)
@@ -247,6 +248,9 @@ def create_or_update_game_page(game):
 
         logger.info(f"Prettifying {game_page.title()}")
         prettify_game_page_main_template(game_page)
+
+        logger.info(f"Sorting events {game_page.title()}")
+        sort_player_events_in_games_page(game_page)
     else:
         logger.info("Not saving {name}".format(name=game_page.title()))
 

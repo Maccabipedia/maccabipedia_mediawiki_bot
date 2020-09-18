@@ -100,7 +100,7 @@ def sort_players_event_by_groups(players_event):
             unsorted_maccabi_goals_involved_events, unsorted_opponent_goals_involved_events)
 
 
-def handle_game_page(game_page):
+def sort_player_events_in_games_page(game_page):
     """
     :type game_page: pywikibot.page.Page
     """
@@ -137,7 +137,7 @@ def main():
     logging.info("\nIterating all pages that uses football games template:")
     for game_page in iterate_games_pages():
         try:
-            handle_game_page(game_page)
+            sort_player_events_in_games_page(game_page)
         except TypeError:
             logging.exception(f"Probably unknown event description, skipping this game: {game_page.title()}")
         except Exception:

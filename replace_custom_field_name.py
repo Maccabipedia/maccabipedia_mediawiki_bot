@@ -78,7 +78,7 @@ def prettify_game_page_main_template(game_page):
     else:
         logging.info('Adding to this page the new custom field name!')
         # New line is to see each parameter in new line
-        add_before_this_param = 'תקציר וידאו' if game_template.has('תקציר וידו') else 'אירועי שחקנים'
+        add_before_this_param = 'תקציר וידאו' if game_template.has('תקציר וידאו') else 'אירועי שחקנים'
 
         game_template.add(name=NEW_CUSTOM_FIELD_NAME, value='', before=add_before_this_param)
 

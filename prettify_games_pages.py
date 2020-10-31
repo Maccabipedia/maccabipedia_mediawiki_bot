@@ -35,6 +35,7 @@ def _save_page_changes(game_page, new_text):
     :type new_text: str
     """
     if game_page.text == new_text:
+        logging.debug(f'No change for page: {game_page.title()}, Dont saving ')
         return
 
     if SHOULD_SHOW_DIFF:

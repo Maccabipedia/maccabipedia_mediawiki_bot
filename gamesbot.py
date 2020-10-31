@@ -15,7 +15,7 @@ from pywikibot import pagegenerators, Category
 from maccabistats_player_event import PlayerEvent
 from prettify_games_pages import prettify_game_page_main_template
 from sort_players_events import sort_player_events_in_games_page
-from stats.maccabi_games_stats import MaccabiGamesStats
+from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -46,6 +46,7 @@ COSTUME = "מדים"
 PLAYERS_EVENTS = "אירועי שחקנים"
 
 site = pw.Site()
+site.login()
 
 REFRESH_PAGES = False
 JUST_EVENTS = True
@@ -275,10 +276,6 @@ def get_games_that_has_existing_pages(games: List[AnyStr]):
 
 
 def main(maccabi_games_to_add: MaccabiGamesStats):
-    logger.info("All pages in football games category:")
-    for p in get_all_football_games_category_pages():
-        logger.info(p)
-
     # logger.info("\football page template args:")
     # for a in get_football_games_template_arguments():
     #    logger.info(a)
@@ -307,12 +304,13 @@ def main(maccabi_games_to_add: MaccabiGamesStats):
 
 
 def fetch_last_game_from_maccabi_site() -> MaccabiGamesStats:
-    from maccabistats import run_maccabitlv_site_source
+    from maccabistats import run_maccabitlv_site_source, load_from_maccabisite_source
 
     # Season 2020/21
     os.environ['START_SEASON_TO_CRAWL'] = '81'
 
-    games_from_maccabi_tlv_site = run_maccabitlv_site_source()
+    run_maccabitlv_site_source()
+    games_from_maccabi_tlv_site = load_from_maccabisite_source()
     return MaccabiGamesStats([games_from_maccabi_tlv_site[-1]])
 
 

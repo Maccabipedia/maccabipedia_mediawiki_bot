@@ -22,15 +22,15 @@ def iterate_games_pages():
     :rtype: list of pywikibot.page.Page
     """
     iterate_only_over_these_games = set()
-    # iterate_only_over_these_games.add("משחק: 20-04-1996 מכבי חיפה נגד מכבי תל אביב - ליגה לאומית")
-    # iterate_only_over_these_games.add("משחק: 02-10-1926 מכבי תל אביב נגד פ.ג.ה סרפנד - ידידות")
+    # iterate_only_over_these_games.add("משחק: 20-06-2020 הפועל תל אביב נגד מכבי תל אביב - ליגת העל")
 
     games_template_page = pw.Page(site, games_template_name, ns="תבנית")
     for index, game_page in enumerate(pagegenerators.ReferringPageGenerator(games_template_page)):
         logging.info(f"Page number: {index}")
 
         if not game_page.title().startswith(games_page_prefix):
-            logging.debug(f"Skipping ({game_page.title()} with uses '{games_template_name}' but does not start with '{games_page_prefix}' prefix")
+            logging.debug(
+                f"Skipping ({game_page.title()} with uses '{games_template_name}' but does not start with '{games_page_prefix}' prefix")
             continue
 
         if iterate_only_over_these_games:
@@ -74,15 +74,20 @@ def sort_players_event_by_groups(players_event):
 
     # Maccabi:
     unsorted_maccabi_squad_events = [e for e in players_event if e.event_type in SQUAD and e.maccabi_player]
-    unsorted_maccabi_subs_and_cards_events = [e for e in players_event if e.event_type in CARDS_AND_SUBS and e.maccabi_player]
-    unsorted_maccabi_goals_involved_events = [e for e in players_event if e.event_type in GOALS_INVOLVED and e.maccabi_player]
+    unsorted_maccabi_subs_and_cards_events = [e for e in players_event if
+                                              e.event_type in CARDS_AND_SUBS and e.maccabi_player]
+    unsorted_maccabi_goals_involved_events = [e for e in players_event if
+                                              e.event_type in GOALS_INVOLVED and e.maccabi_player]
 
     # Opponent
     unsorted_opponent_squad_events = [e for e in players_event if e.event_type in SQUAD and not e.maccabi_player]
-    unsorted_opponent_subs_and_cards_events = [e for e in players_event if e.event_type in CARDS_AND_SUBS and not e.maccabi_player]
-    unsorted_opponent_goals_involved_events = [e for e in players_event if e.event_type in GOALS_INVOLVED and not e.maccabi_player]
+    unsorted_opponent_subs_and_cards_events = [e for e in players_event if
+                                               e.event_type in CARDS_AND_SUBS and not e.maccabi_player]
+    unsorted_opponent_goals_involved_events = [e for e in players_event if
+                                               e.event_type in GOALS_INVOLVED and not e.maccabi_player]
 
-    if len(unsorted_maccabi_squad_events) + len(unsorted_opponent_squad_events) + len(unsorted_maccabi_subs_and_cards_events) + len(
+    if len(unsorted_maccabi_squad_events) + len(unsorted_opponent_squad_events) + len(
+            unsorted_maccabi_subs_and_cards_events) + len(
             unsorted_opponent_subs_and_cards_events) + len(unsorted_maccabi_goals_involved_events) + len(
         unsorted_opponent_goals_involved_events) != len(players_event):
         raise RuntimeError("We have missed some events!")
@@ -124,7 +129,8 @@ def sort_player_events_in_games_page(game_page):
     # Need a "," between each two events (which means between each two groups also).
     # Skip empty groups so we wont have extra "," with no events near them
     raw_sorted_events = "\n,".join(
-        (",".join(event.__maccabipedia__() for event in group_events) for group_events in sorted_grouped_events if group_events))
+        (",".join(event.__maccabipedia__() for event in group_events) for group_events in sorted_grouped_events if
+         group_events))
     player_events_param.value = f"\n{raw_sorted_events}\n"  # Start and end with newline, better visualize in the ui editor.
 
     _save_page_changes(game_page, parsed_mw_text)

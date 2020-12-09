@@ -28,7 +28,6 @@ football_games_category_name = "קטגוריה:משחקים"
 # Legend games templates args consts:s
 GAME_ID = "תאריך המשחק"
 GAME_HOUR = "שעת המשחק"
-DAY_OF_WEEK = "יום המשחק בשבוע"
 SEASON = "עונה"
 COMPETITION = "מפעל"
 ROUND_IN_COMPETITION = "שלב במפעל"
@@ -155,7 +154,6 @@ def __get_football_game_template_with_maccabistats_game_value(game):
 
     template_arguments[GAME_ID] = str(game.date.strftime("%d-%m-%Y"))
     template_arguments[GAME_HOUR] = game.date.hour
-    template_arguments[DAY_OF_WEEK] = (game.date.weekday() + 2) % 8  # weekday return 0 for monday, 6 for sunday.
     template_arguments[SEASON] = game.season
     template_arguments[COMPETITION] = game.competition
     template_arguments[ROUND_IN_COMPETITION] = "" if game.fixture == "No round found" else game.fixture  # Empty for unknown rounds

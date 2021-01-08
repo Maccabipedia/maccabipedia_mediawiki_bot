@@ -33,7 +33,7 @@ def generate_page_name_from_game(game):
                                                                                       away_team=game.away_team.name,
                                                                                       competition=game.competition)
 
-    page_name = page_name.replace('ביתר', 'בית"ר')  # Patch for now, we dont write beitar with ", as i should be.
+    page_name = page_name.replace('ביתר', 'בית"ר')  # Patch for now, we don't write beitar with ", as i should be.
 
     return page_name
 

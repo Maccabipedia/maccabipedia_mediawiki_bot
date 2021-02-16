@@ -153,7 +153,8 @@ def __get_football_game_template_with_maccabistats_game_value(game):
     template_arguments = dict()
 
     template_arguments[GAME_ID] = str(game.date.strftime("%d-%m-%Y"))
-    template_arguments[GAME_HOUR] = game.date.hour
+    if game.date.hour != 0:  # We don't want to upload the hour if it's equal to zero (that an unknown time)
+        template_arguments[GAME_HOUR] = game.date.hour
     template_arguments[SEASON] = game.season
     template_arguments[COMPETITION] = game.competition
     template_arguments[ROUND_IN_COMPETITION] = "" if game.fixture == "No round found" else game.fixture  # Empty for unknown rounds

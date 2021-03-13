@@ -153,18 +153,21 @@ def __get_football_game_template_with_maccabistats_game_value(game):
     template_arguments = dict()
 
     template_arguments[GAME_ID] = str(game.date.strftime("%d-%m-%Y"))
-    if game.date.hour != 0:  # We don't want to upload the hour if it's equal to zero (that an unknown time)
-        template_arguments[GAME_HOUR] = game.date.hour
+    # We don't want to upload the hour if it's equal to zero (that an unknown time)
+    template_arguments[GAME_HOUR] = game.date.hour if game.date.hour != 0 else ''
+    
     template_arguments[SEASON] = game.season
     template_arguments[COMPETITION] = game.competition
-    template_arguments[ROUND_IN_COMPETITION] = "" if game.fixture == "No round found" else game.fixture  # Empty for unknown rounds
+    template_arguments[
+        ROUND_IN_COMPETITION] = "" if game.fixture == "No round found" else game.fixture  # Empty for unknown rounds
     template_arguments[OPPONENT_NAME] = game.not_maccabi_team.name
     template_arguments[HOME_OR_AWAY] = "בית" if game.is_maccabi_home_team else "חוץ"
     template_arguments[STADIUM] = game.stadium
     template_arguments[MACCABI_RESULT] = game.maccabi_team.score
     template_arguments[OPPONENT_RESULT] = game.not_maccabi_team.score
     template_arguments[MACCABI_COACH] = "" if game.maccabi_team.coach == "Cant found coach" else game.maccabi_team.coach
-    template_arguments[OPPONENT_COACH] = "" if game.not_maccabi_team.coach == "Cant found coach" else game.not_maccabi_team.coach
+    template_arguments[
+        OPPONENT_COACH] = "" if game.not_maccabi_team.coach == "Cant found coach" else game.not_maccabi_team.coach
     template_arguments[REFEREE] = "" if game.referee == "Cant found referee" else game.referee
     template_arguments[CROWD] = "" if game.crowd == "Cant found crowd" else game.crowd
     template_arguments[BROADCAST] = ""

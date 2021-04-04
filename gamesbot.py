@@ -39,6 +39,7 @@ OPPONENT_RESULT = "תוצאת משחק יריבה"
 MACCABI_COACH = "מאמן מכבי"
 OPPONENT_COACH = "מאמן יריבה"
 REFEREE = "שופט ראשי"
+REFEREE_ASSISTERS = "עוזרי שופט"
 CROWD = "כמות קהל"
 BROADCAST = "גוף שידור"
 COSTUME = "מדים"
@@ -169,6 +170,7 @@ def __get_football_game_template_with_maccabistats_game_value(game):
     template_arguments[
         OPPONENT_COACH] = "" if game.not_maccabi_team.coach == "Cant found coach" else game.not_maccabi_team.coach
     template_arguments[REFEREE] = "" if game.referee == "Cant found referee" else game.referee
+    template_arguments[REFEREE_ASSISTERS] = ""
     template_arguments[CROWD] = "" if game.crowd == "Cant found crowd" else game.crowd
     template_arguments[BROADCAST] = ""
     template_arguments[COSTUME] = ""

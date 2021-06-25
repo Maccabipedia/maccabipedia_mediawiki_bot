@@ -6,7 +6,7 @@ from pywikibot import pagegenerators
 
 from maccabistats_player_event import PlayerEvent, SQUAD, CARDS_AND_SUBS, GOALS_INVOLVED
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 site = pw.Site()
 
@@ -22,7 +22,8 @@ def iterate_games_pages():
     :rtype: list of pywikibot.page.Page
     """
     iterate_only_over_these_games = set()
-    # iterate_only_over_these_games.add("משחק: 20-06-2020 הפועל תל אביב נגד מכבי תל אביב - ליגת העל")
+    # Uncomment the next line in order to iterate only on this page
+    # iterate_only_over_these_games.add("משחק: 16-09-2020 מכבי תל אביב נגד דינמו ברסט - מוקדמות ליגת האלופות")
 
     games_template_page = pw.Page(site, games_template_name, ns="תבנית")
     for index, game_page in enumerate(pagegenerators.ReferringPageGenerator(games_template_page)):

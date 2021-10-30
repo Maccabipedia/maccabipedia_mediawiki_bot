@@ -66,12 +66,6 @@ def get_football_games_template_arguments():
     return legend_games_template_text.filter_arguments()
 
 
-def get_all_pages_that_use_football_games_template():
-    legend_games_template_page = pw.Page(site, football_games_template_name)
-    legend_games_templates_pages_iterator = pagegenerators.ReferringPageGenerator(legend_games_template_page)
-    return list(legend_games_templates_pages_iterator)
-
-
 def get_all_football_games_category_pages():
     games_category = Category(site, football_games_category_name)
     games_category = list(pagegenerators.CategorizedPageGenerator(games_category))
@@ -234,6 +228,8 @@ def handle_new_page(game_page, game):
 
 
 def create_or_update_game_page(game):
+    logger.info(f"create_or_update_game_page : {game}")
+
     page_name = generate_page_name_from_game(game)
 
     game_page = pw.Page(site, page_name)
@@ -284,9 +280,6 @@ def main(maccabi_games_to_add: MaccabiGamesStats):
     # for a in get_football_games_template_arguments():
     #    logger.info(a)
 
-    logger.info("\nAll pages that uses football games template:")
-    for p in get_all_pages_that_use_football_games_template():
-        logger.info(p)
     logger.info("")  # Empty line
 
     logger.info("Should save : {save}".format(save=SHOULD_SAVE))

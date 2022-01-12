@@ -95,7 +95,7 @@ def _try_to_cast_date_str_to_datetime(date_str: str) -> datetime:
 
 def _parse_paper_file_name(paper_file_name: str) -> PaperGameDetails:
     potential_dates = re.findall(r'\d{2}-\d{2}-\d{4}', paper_file_name)
-    potential_dates.extend(re.findall(r'\d{4}-\d{2}-\d{2}', paper_file_name))
+    potential_publish_date = re.findall(r'\d{2}\.\d{2}\.\d{4}', paper_file_name)
 
     if len(potential_dates) > 2:
         raise RuntimeError(
@@ -114,8 +114,8 @@ def _parse_paper_file_name(paper_file_name: str) -> PaperGameDetails:
         raise RuntimeError("Paper name is empty!")
 
     publish_date = None
-    if len(potential_dates) > 1:
-        publish_date = _try_to_cast_date_str_to_datetime(potential_dates[1])
+    if potential_publish_date:
+        publish_date = _try_to_cast_date_str_to_datetime(potential_publish_date[0])
 
     return PaperGameDetails(paper_name=paper_name,
                             paper_related_game_date=game_date,
@@ -203,6 +203,8 @@ class UploadGamesPapers:
 
 
 if __name__ == '__main__':
+    # Format example:
+    # מעריב 29-09-1973 הפועל בני נצרת (30.09.1973).jpg
     if _PAPER_NAME_ENV_VAR_NAME in os.environ:
         _logger.info(f'Found Paper name env var: {os.environ[_PAPER_NAME_ENV_VAR_NAME]}, '
                      f'override this as the only paper name in this chunk')

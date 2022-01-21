@@ -113,5 +113,4 @@ venv.bak/
 # pywikibot
 apicache-py3/
 throttle.ctrl
-user-config.py
 pywikibot.lwp

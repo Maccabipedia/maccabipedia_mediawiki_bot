@@ -16,5 +16,11 @@ jobs:
       - name: Install dependencies
         run: python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Fetch Games From MaccabiTLVSite
+        run: python fetch_games_from_maccabi_tlv_site.py
       - name: Fetch Last Game And Upload To MaccabiPedia
-        run: python fetch_and_upload_last_game_to_maccabipedia.py.py
+        env:
+          PYWIKIBOT_DIR: pywikibot_configs/
+          MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
+          MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
+        run: python upload_last_game_to_maccabipedia.py

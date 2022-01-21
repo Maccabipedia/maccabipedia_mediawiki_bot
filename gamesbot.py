@@ -3,10 +3,17 @@ import re
 from datetime import timedelta
 from typing import AnyStr, List
 
+from pywikibot_boilerplate import run_boilerplate
+
+run_boilerplate()
+
 import mwparserfromhell
 import pywikibot as pw
 from mwparserfromhell.nodes.template import Template
 from pywikibot import pagegenerators, Category
+
+site = pw.Site()
+site.login()
 
 from maccabistats import get_maccabi_stats_as_newest_wrapper
 from maccabistats.models.player_game_events import GameEventTypes
@@ -40,9 +47,6 @@ CROWD = "כמות קהל"
 BROADCAST = "גוף שידור"
 COSTUME = "מדים"
 PLAYERS_EVENTS = "אירועי שחקנים"
-
-site = pw.Site()
-site.login()
 
 REFRESH_PAGES = False
 JUST_EVENTS = True
@@ -229,7 +233,7 @@ def handle_new_page(game_page, game):
     game_page.text = str(football_game_template)
 
 
-def create_or_update_game_page(game):
+def create_or_update_game_page(game, overwrite_existing_pages: bool = True):
     logging.info(f"create_or_update_game_page : {game}")
 
     page_name = generate_page_name_from_game(game)
@@ -238,6 +242,10 @@ def create_or_update_game_page(game):
 
     # handle_new_page & handle_existing_page changes the game_page.text attribute.
     if game_page.exists():
+        if not overwrite_existing_pages:
+            logging.info(f"Don't edit existing pages, skipping: {page_name}")
+            return
+
         logging.info("Page : {name} exists, check for updates\n".format(name=page_name))
         handle_existing_page(game_page, game)
     else:
@@ -285,7 +293,7 @@ def upload_games_to_maccabipedia(maccabi_games_to_add: MaccabiGamesStats):
     logging.info("Should show diff: {diff}\n".format(diff=SHOULD_SHOW_DIFF))
 
     for g in maccabi_games_to_add:
-        create_or_update_game_page(g)
+        create_or_update_game_page(g, overwrite_existing_pages=False)
 
     logging.info("Finished adding new games.")
 

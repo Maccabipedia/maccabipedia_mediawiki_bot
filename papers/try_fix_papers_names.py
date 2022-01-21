@@ -55,7 +55,7 @@ def handle_paper_image_file(paper: Path) -> None:
 
 if __name__ == '__main__':
     folder = Path(
-        r"C:\code\maccabipedia_mediawikibot\games_papers_to_upload\from_drive\חדשות הספורט\נגלה_אחרונה")
+        r"/games_papers_to_upload/from_drive/חדשות הספורט/נגלה_אחרונה")
 
     for current_paper in folder.iterdir():
         if not current_paper.is_file():

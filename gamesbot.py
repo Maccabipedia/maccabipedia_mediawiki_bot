@@ -1,25 +1,21 @@
 import logging
-import os
 import re
-import sys
 from datetime import timedelta
 from typing import AnyStr, List
 
 import mwparserfromhell
 import pywikibot as pw
-from maccabistats import get_maccabi_stats_as_newest_wrapper
-from maccabistats.models.player_game_events import GameEventTypes
 from mwparserfromhell.nodes.template import Template
 from pywikibot import pagegenerators, Category
 
+from maccabistats import get_maccabi_stats_as_newest_wrapper
+from maccabistats.models.player_game_events import GameEventTypes
+from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 from maccabistats_player_event import PlayerEvent
 from prettify_games_pages import prettify_game_page_main_template
 from sort_players_events import sort_player_events_in_games_page
-from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler(sys.stdout))
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 football_games_prefix = "משחק"
 football_games_template_name = "קטלוג משחקים"
@@ -83,7 +79,8 @@ def generate_page_name_from_game(game):
     """
 
     page_name = "{prefix}: {date} {home_team} נגד {away_team} - {competition}".format(prefix=football_games_prefix,
-                                                                                      date=game.date.strftime('%d-%m-%Y'),
+                                                                                      date=game.date.strftime(
+                                                                                          '%d-%m-%Y'),
                                                                                       home_team=game.home_team.name,
                                                                                       away_team=game.away_team.name,
                                                                                       competition=game.competition)
@@ -105,27 +102,31 @@ def get_players_events_for_template(game):
 
     # Maccabi players
     unsorted_events = [
-        PlayerEvent.from_maccabistats_event_type(player.name, player.number, player_event.time_occur, player_event.event_type,
+        PlayerEvent.from_maccabistats_event_type(player.name, player.number, player_event.time_occur,
+                                                 player_event.event_type,
                                                  getattr(player_event, "goal_type", None), maccabi_player=True)
         for player in game.maccabi_team.players
         for player_event in player.events]
 
     # Maccabi players that not played
     unsorted_events.extend(
-        [PlayerEvent.from_maccabistats_event_type(player.name, player.number, timedelta(minutes=0), GameEventTypes.BENCHED, None, maccabi_player=True)
+        [PlayerEvent.from_maccabistats_event_type(player.name, player.number, timedelta(minutes=0),
+                                                  GameEventTypes.BENCHED, None, maccabi_player=True)
          for player in game.maccabi_team.players if not player.has_event_type(GameEventTypes.LINE_UP)]
     )
 
     # Opponent players
     unsorted_events.extend(
-        [PlayerEvent.from_maccabistats_event_type(player.name, player.number, player_event.time_occur, player_event.event_type,
+        [PlayerEvent.from_maccabistats_event_type(player.name, player.number, player_event.time_occur,
+                                                  player_event.event_type,
                                                   getattr(player_event, "goal_type", None), maccabi_player=False)
          for player in game.not_maccabi_team.players
          for player_event in player.events])
 
     # Opponent players that not played
     unsorted_events.extend(
-        [PlayerEvent.from_maccabistats_event_type(player.name, player.number, timedelta(minutes=0), GameEventTypes.BENCHED, None,
+        [PlayerEvent.from_maccabistats_event_type(player.name, player.number, timedelta(minutes=0),
+                                                  GameEventTypes.BENCHED, None,
                                                   maccabi_player=False)
          for player in game.not_maccabi_team.players if not player.has_event_type(GameEventTypes.LINE_UP)]
     )
@@ -150,7 +151,7 @@ def __get_football_game_template_with_maccabistats_game_value(game):
     template_arguments[GAME_ID] = str(game.date.strftime("%d-%m-%Y"))
     # We don't want to upload the hour if it's equal to zero (that an unknown time)
     template_arguments[GAME_HOUR] = game.date.hour if game.date.hour != 0 else ''
-    
+
     template_arguments[SEASON] = game.season
     template_arguments[COMPETITION] = game.competition
     template_arguments[
@@ -197,10 +198,11 @@ def handle_existing_page(game_page, game):
 
         for argument_name, argument_value in arguments.items():
             if str(argument_value) != football_game_template.get(argument_name).value and SHOULD_SHOW_DIFF:
-                logger.info("Found diff between arguments on this argument_name: {arg_name}\n"
-                            "existing value: {existing_value}\nnew_value: {new_value}".
-                            format(arg_name=argument_name, existing_value=football_game_template.get(argument_name).value,
-                                   new_value=argument_value))
+                logging.info("Found diff between arguments on this argument_name: {arg_name}\n"
+                             "existing value: {existing_value}\nnew_value: {new_value}".
+                             format(arg_name=argument_name,
+                                    existing_value=football_game_template.get(argument_name).value,
+                                    new_value=argument_value))
 
                 football_game_template.add(argument_name, argument_value)
 
@@ -228,7 +230,7 @@ def handle_new_page(game_page, game):
 
 
 def create_or_update_game_page(game):
-    logger.info(f"create_or_update_game_page : {game}")
+    logging.info(f"create_or_update_game_page : {game}")
 
     page_name = generate_page_name_from_game(game)
 
@@ -236,24 +238,24 @@ def create_or_update_game_page(game):
 
     # handle_new_page & handle_existing_page changes the game_page.text attribute.
     if game_page.exists():
-        logger.info("Page : {name} exists, check for updates\n".format(name=page_name))
+        logging.info("Page : {name} exists, check for updates\n".format(name=page_name))
         handle_existing_page(game_page, game)
     else:
-        logger.info("Page : {name} does not exists, creating\n".format(name=page_name))
+        logging.info("Page : {name} does not exists, creating\n".format(name=page_name))
         handle_new_page(game_page, game)
 
-    logger.info("")  # Empty line
+    logging.info("")  # Empty line
     if SHOULD_SAVE:
-        logger.info("Saving {name}".format(name=game_page.title()))
+        logging.info("Saving {name}".format(name=game_page.title()))
         game_page.save(summary="MaccabiBot - Uploading Games")
 
-        logger.info(f"Prettifying {game_page.title()}")
+        logging.info(f"Prettifying {game_page.title()}")
         prettify_game_page_main_template(game_page)
 
-        logger.info(f"Sorting events {game_page.title()}")
+        logging.info(f"Sorting events {game_page.title()}")
         sort_player_events_in_games_page(game_page)
     else:
-        logger.info("Not saving {name}".format(name=game_page.title()))
+        logging.info("Not saving {name}".format(name=game_page.title()))
 
 
 def get_games_that_has_existing_pages(games: List[AnyStr]):
@@ -262,7 +264,8 @@ def get_games_that_has_existing_pages(games: List[AnyStr]):
     for game_page in existing_games_pages:
         game_date_match = re.search("([0-9]{2}\-[0-9]{2}\-[0-9]{4})", game_page.title())
         if game_date_match is None:
-            logger.warning("Found game page title without date, skipping this page, wtf?? - {title}".format(title=game_page.title()))
+            logging.warning("Found game page title without date, skipping this page, wtf?? - {title}".format(
+                title=game_page.title()))
             continue
         game_date = game_date_match.group()
         game_date = game_date.replace("-", ".")  # For maccabistats format played(before\after).
@@ -275,47 +278,26 @@ def get_games_that_has_existing_pages(games: List[AnyStr]):
     return existing_games
 
 
-def main(maccabi_games_to_add: MaccabiGamesStats):
-    # logger.info("\football page template args:")
-    # for a in get_football_games_template_arguments():
-    #    logger.info(a)
+def upload_games_to_maccabipedia(maccabi_games_to_add: MaccabiGamesStats):
+    logging.info("")  # Empty line
 
-    logger.info("")  # Empty line
-
-    logger.info("Should save : {save}".format(save=SHOULD_SAVE))
-    logger.info("Should show diff: {diff}\n".format(diff=SHOULD_SHOW_DIFF))
+    logging.info("Should save : {save}".format(save=SHOULD_SAVE))
+    logging.info("Should show diff: {diff}\n".format(diff=SHOULD_SHOW_DIFF))
 
     for g in maccabi_games_to_add:
         create_or_update_game_page(g)
 
-    logger.info("Finished adding new games.")
+    logging.info("Finished adding new games.")
 
     if SHOULD_CHECK_FOR_UPDATE_IN_EXISTING_PAGES:
-        logger.info("Now handling existing games:")
+        logging.info("Now handling existing games:")
         existing_games = get_games_that_has_existing_pages(maccabi_games_to_add.games)
         [create_or_update_game_page(game) for game in existing_games]
     else:
-        logger.info("Dont check for updates in existing pages")
+        logging.info("Don't check for updates in existing pages")
 
-    logger.info("Finished handling existing games.")
-
-
-def fetch_last_game_from_maccabi_site() -> MaccabiGamesStats:
-    from maccabistats import run_maccabitlv_site_source, load_from_maccabisite_source
-
-    # Season 2020/21
-    os.environ['START_SEASON_TO_CRAWL'] = '81'
-
-    run_maccabitlv_site_source()
-    games_from_maccabi_tlv_site = load_from_maccabisite_source()
-    return MaccabiGamesStats([games_from_maccabi_tlv_site[-1]])
+    logging.info("Finished handling existing games.")
 
 
 if __name__ == '__main__':
-    update_just_last_maccabi_game = True
-
-    if update_just_last_maccabi_game:
-        maccabi_tlv_games = fetch_last_game_from_maccabi_site()
-        main(maccabi_tlv_games)
-    else:
-        main(all_maccabi_games())
+    upload_games_to_maccabipedia(all_maccabi_games())

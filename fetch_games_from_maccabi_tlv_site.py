@@ -7,8 +7,8 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 
 
 def fetch_games_from_maccabi_tlv_site() -> None:
-    # Season 2020/21
-    os.environ['START_SEASON_TO_CRAWL'] = '81'
+    # Season 2022/23
+    os.environ['START_SEASON_TO_CRAWL'] = '83'
 
     run_maccabitlv_site_source()
 

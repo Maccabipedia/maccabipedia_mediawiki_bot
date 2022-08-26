@@ -17,6 +17,9 @@ from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
+# Paper name format:
+# {שם_עיתון}_{תאריך_המשחק}_{שם_היריבה}_{מספר_עיתון_אם_יש_כמה}_({תאריך_פרסום_העיתון})
+
 _logger = logging.getLogger(__name__)
 
 _CURRENT_FOLDER = Path(__file__).absolute().parent
@@ -157,12 +160,13 @@ class UploadGamesPapers:
 
         final_paper_name = paper_file.name
         if override_paper_name and not final_paper_name.startswith(override_paper_name):
-            final_paper_name = f'{override_paper_name}{final_paper_name}'
+            raise Exception(f"File: {paper_file} don't start with the paper name")
+            # final_paper_name = f'{override_paper_name}{final_paper_name}'
 
         paper_maccabipedia_page = pw.FilePage(site, final_paper_name)
 
         if paper_maccabipedia_page.exists():
-            raise DuplicateMaccabipediaPageException(paper_file)
+            raise DuplicateMaccabipediaPageException(f'{paper_file}, {paper_maccabipedia_page.title()}')
 
         paper_details = _parse_paper_file_name(paper_file.stem)
         tag_paper_template = paper_details.to_mediawiki_template(self.maccabi_games)
@@ -209,5 +213,5 @@ if __name__ == '__main__':
         _logger.info(f'Found Paper name env var: {os.environ[_PAPER_NAME_ENV_VAR_NAME]}, '
                      f'override this as the only paper name in this chunk')
 
-    upload_games_papers_bot = UploadGamesPapers(_CURRENT_FOLDER / 'games_papers_to_upload')
+    upload_games_papers_bot = UploadGamesPapers(_CURRENT_FOLDER.parent / 'games_papers_to_upload')
     upload_games_papers_bot.upload_papers()

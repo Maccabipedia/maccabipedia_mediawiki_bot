@@ -1,0 +1,24 @@
+name: Upload Last Game To MaccabiPedia
+on:
+  schedule:
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+
+jobs:
+  upload-last-game-to-maccabipedia:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+          architecture: x64
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Fetch league table and update MaccabiPedia
+        env:
+          PYWIKIBOT_DIR: pywikibot_configs/
+          MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
+          MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
+        run: python update_league_table.py

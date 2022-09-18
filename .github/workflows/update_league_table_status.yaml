@@ -1,4 +1,4 @@
-name: Upload Last Game To MaccabiPedia
+name: Update league table status
 on:
   schedule:
     - cron: "0 20 * * *"

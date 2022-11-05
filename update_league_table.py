@@ -25,7 +25,7 @@ def update_league_table_status() -> None:
 
     parsed_mw_text = mwparserfromhell.parse(league_table_template_page.text)
     table_template = parsed_mw_text.filter_templates(_LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA)[0]
-    table_template.add(_TABLE_STATUS_KEY, league_table_status)
+    table_template.add(_TABLE_STATUS_KEY, league_table_status.text)
 
     league_table_template_page.text = parsed_mw_text
 

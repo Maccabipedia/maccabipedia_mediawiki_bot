@@ -29,7 +29,6 @@ def run_boilerplate() -> pw.Site:
 
     # We need to have the url to api.php due to the fact we don't have w/api.php
     site = pw.Site()
-    site.logout()
     site.login()
 
     return site

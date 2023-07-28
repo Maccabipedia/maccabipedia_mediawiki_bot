@@ -20,6 +20,7 @@ import pywikibot as pw
 def update_league_table_status() -> None:
     logging.info(f'Fetching current league table from: {_LATEST_LEAGUE_TABLE_STATUS_URL}')
     league_table_status = requests.get(_LATEST_LEAGUE_TABLE_STATUS_URL)
+    league_table_status.raise_for_status()
 
     league_table_template_page = pw.Page(site, _LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA)
 

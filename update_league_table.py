@@ -6,7 +6,7 @@ import requests
 from pywikibot_boilerplate import run_boilerplate
 
 _LATEST_LEAGUE_TABLE_STATUS_URL = 'https://rona.sh/api/maccabipedia'
-_LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA = 'תבנית:טבלת ליגה 2022/23'
+_LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA = 'תבנית:טבלת ליגה 2023/24'
 _TABLE_STATUS_KEY = 'נתוני טבלה'
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

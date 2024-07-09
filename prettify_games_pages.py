@@ -11,6 +11,7 @@ site = pw.Site()
 
 games_page_prefix = "משחק:"
 games_template_name = "קטלוג משחקים"
+volleyball_games_template_name = "משחק כדורעף"
 
 SHOULD_SAVE = True
 SHOULD_SHOW_DIFF = False
@@ -49,7 +50,7 @@ def _save_page_changes(game_page, new_text):
 
 
 def matches_games_template(*args, **kwargs):
-    return args[0].name.strip() == games_template_name
+    return args[0].name.strip() in [games_template_name, volleyball_games_template_name]
 
 
 def prettify_game_page_main_template(game_page):

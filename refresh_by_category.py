@@ -15,6 +15,10 @@ CACHE_FILE = Path("C://") / "maccabipedia" / "volleyball_code" / "cache.json"
 
 
 def refresh_category(category: str, hard_refresh: bool = False) -> None:
+    if not CACHE_FILE.is_file():
+        CACHE_FILE.touch(exist_ok=True)
+        CACHE_FILE.write_text(json.dumps([]))
+
     logging.info(f'Refresh every page in category: {category}')
 
     category_iterator = pagegenerators.CategorizedPageGenerator(Category(site, category),
@@ -36,4 +40,4 @@ def refresh_category(category: str, hard_refresh: bool = False) -> None:
 
 
 if __name__ == '__main__':
-    refresh_category(category="עיתונות כדורעף")
+    refresh_category(category="עונות כדורעף")

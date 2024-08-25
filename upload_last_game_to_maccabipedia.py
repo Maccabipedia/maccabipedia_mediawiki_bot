@@ -11,6 +11,8 @@ from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
 def loading_last_game_from_maccabi_site() -> MaccabiGamesStats:
     games_from_maccabi_tlv_site = load_from_maccabisite_source()
+    logging.info(
+        f'Loaded games from maccabi tlv site: {games_from_maccabi_tlv_site.first_game_date} to {games_from_maccabi_tlv_site.last_game_date}')
     return MaccabiGamesStats([games_from_maccabi_tlv_site[-1]])
 
 

@@ -1,7 +1,5 @@
 name: Upload Last Game To MaccabiPedia
 on:
-  schedule:
-    - cron: "0 20 * * *"
   workflow_dispatch:
   repository_dispatch:
     types: [ zapier_trigger ]

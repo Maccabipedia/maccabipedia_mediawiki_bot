@@ -5,9 +5,8 @@ import requests
 
 from pywikibot_boilerplate import run_boilerplate
 
-_LATEST_LEAGUE_TABLE_STATUS_URL = 'https://rona.sh/api/maccabipedia'
 _LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA = 'תבנית:טבלת ליגה 2024/25'
-_TABLE_STATUS_KEY = 'נתוני טבלה'
+_TABLE_STATUS_KEY = 'טבלה'
 
 OPPONENTS_NAMES_TO_UNICODE = {"FC Ashdod": "\u05de.\u05e1. \u05d0\u05e9\u05d3\u05d5\u05d3",
                               "Bnei Sakhnin": "\u05d1\u05e0\u05d9 \u05e1\u05db\u05e0\u05d9\u05df",
@@ -70,7 +69,7 @@ def fetch_league_table_data():
 
 
 def update_league_table_status() -> None:
-    logging.info(f'Fetching current league table from: {_LATEST_LEAGUE_TABLE_STATUS_URL}')
+    logging.info(f'Fetching current league table from: {LINKS_TO_FETCH_LEAGUE_TABLE_FROM}')
     league_table_data = fetch_league_table_data()
 
     league_table_template_page = pw.Page(site, _LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA)

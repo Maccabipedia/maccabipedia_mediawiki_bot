@@ -1,11 +1,11 @@
 import logging
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import List
 
 from prettify_games_pages import prettify_game_page_main_template
 from pywikibot_boilerplate import run_boilerplate
+from volleyball_game import VolleyballGame
 
 run_boilerplate()
 
@@ -58,30 +58,6 @@ SHOULD_SAVE = True
 SHOULD_SHOW_DIFF = True
 
 FILES_TO_IGNORE = {'desktop.ini'}
-
-
-@dataclass
-class VolleyballGame:
-    date: datetime
-    fixture: str
-    opponent: str
-    home_game: bool
-    competition: str
-    season: str
-
-    @property
-    def home_team(self):
-        if self.home_game:
-            return 'מכבי תל אביב'
-
-        return self.opponent
-
-    @property
-    def away_team(self):
-        if self.home_game:
-            return self.opponent
-
-        return 'מכבי תל אביב'
 
 
 def build_volleyball_game_from_folder(potential_game_folder: Path) -> VolleyballGame:
@@ -148,6 +124,10 @@ def generate_page_name_from_game(volleyball_game: VolleyballGame):
     return page_name
 
 
+def get_value_if_not_none_or_empty_string(value):
+    return value if value is not None else ''
+
+
 def fill_page_content(game_page, volleyball_game: VolleyballGame):
     volleyball_game_template = Template(volleyball_games_template_name)
 
@@ -158,9 +138,9 @@ def fill_page_content(game_page, volleyball_game: VolleyballGame):
                            ROUND_IN_COMPETITION: volleyball_game.fixture,
                            OPPONENT_NAME: volleyball_game.opponent,
                            HOME_OR_AWAY: 'בית' if volleyball_game.home_game else 'חוץ',
-                           STADIUM: '',
-                           MACCABI_RESULT: '',
-                           OPPONENT_RESULT: '',
+                           STADIUM: volleyball_game.stadium if volleyball_game.stadium is not None else '',
+                           MACCABI_RESULT: get_value_if_not_none_or_empty_string(volleyball_game.maccabi_result),
+                           OPPONENT_RESULT: get_value_if_not_none_or_empty_string(volleyball_game.opponent_result),
                            MACCABI_COACH: '',
                            OPPONENT_COACH: '',
                            REFEREE: '',

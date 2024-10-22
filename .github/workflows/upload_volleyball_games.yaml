@@ -1,0 +1,23 @@
+name: Upload Volleyball Games To MaccabiPedia
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [ zapier_trigger_volleyball_upload_game ]
+
+jobs:
+  upload-volleyball-games-to-maccabipedia:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+          architecture: x64
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Upload Volleyball Games To MaccabiPedia
+        env:
+          PYWIKIBOT_DIR: pywikibot_configs/
+          MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
+          MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
+        run: python upload_volleyball_games_from_iva_site.py

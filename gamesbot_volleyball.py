@@ -18,6 +18,7 @@ site.login()
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 VOLLEYBALL_ROOT_FOLDER = Path(r'D:\maccabipedia_google_drive\מכביפדיה_ראשי\כדורעף\משחקים מהעיתונות')
+ALLOWED_SEASONS = ['1986-87']
 
 volleyball_games_prefix = "כדורעף"
 volleyball_games_template_name = "משחק כדורעף"
@@ -48,6 +49,10 @@ MACCABI_SECOND_SET = 'מערכה2 מכבי'
 OPPONENT_SECOND_SET = 'מערכה2 יריבה'
 MACCABI_THIRD_SET = 'מערכה3 מכבי'
 OPPONENT_THIRD_SET = 'מערכה3 יריבה'
+MACCABI_FORTH_SET = 'מערכה4 מכבי'
+OPPONENT_FORTH_SET = 'מערכה4 יריבה'
+MACCABI_FIFTH_SET = 'מערכה5 מכבי'
+OPPONENT_FIFTH_SET = 'מערכה5 יריבה'
 
 SHOULD_SAVE = True
 SHOULD_SHOW_DIFF = True
@@ -87,7 +92,13 @@ def build_volleyball_game_from_folder(potential_game_folder: Path) -> Volleyball
     competition = raw_competition
     is_trophy = 'גביע' in raw_competition
 
-    fixture, opponent, raw_date, *raw_home_or_away = map(str.strip, raw_game_details.split('-'))
+    # In case it's a playoff game, we write it as: פלייאוף - מחזור 1, so we will have extra '-'
+    if 'פלייאוף' in raw_game_details:
+        playoff_name, fixture, opponent, raw_date, *raw_home_or_away = map(str.strip, raw_game_details.split('-'))
+        fixture = f'{playoff_name} - {fixture}'
+    else:
+        fixture, opponent, raw_date, *raw_home_or_away = map(str.strip, raw_game_details.split('-'))
+
     game_date = datetime.strptime(raw_date, '%d.%m.%Y')
 
     if (not is_trophy) and (not raw_home_or_away):
@@ -110,6 +121,11 @@ def get_volleyball_games() -> List[VolleyballGame]:
     for potential_game_folder in VOLLEYBALL_ROOT_FOLDER.glob("**"):
         if len(potential_game_folder.relative_to(VOLLEYBALL_ROOT_FOLDER).parts) != 3:
             logging.info(f'skipping folder: {potential_game_folder}, this folder has less parts than needed')
+            continue
+
+        if not any(f'עונת {season}' in str(potential_game_folder) for season in ALLOWED_SEASONS):
+            logging.info(
+                f'Skipping folder: {potential_game_folder}, this folder is not in allowed seasons: {ALLOWED_SEASONS}')
             continue
 
         try:
@@ -150,14 +166,22 @@ def fill_page_content(game_page, volleyball_game: VolleyballGame):
                            REFEREE: '',
                            CROWD: '',
                            BROADCAST: '',
-                           MACCABI_PLAYERS: '',
-                           OPPONENT_PLAYERS: '',
+
                            MACCABI_FIRST_SET: '',
                            OPPONENT_FIRST_SET: '',
                            MACCABI_SECOND_SET: '',
                            OPPONENT_SECOND_SET: '',
                            MACCABI_THIRD_SET: '',
-                           OPPONENT_THIRD_SET: ''}
+                           OPPONENT_THIRD_SET: '',
+                           MACCABI_FORTH_SET: '',
+                           OPPONENT_FORTH_SET: '',
+                           MACCABI_FIFTH_SET: '',
+                           OPPONENT_FIFTH_SET: '',
+
+                           # We want to have these params at the end:
+                           MACCABI_PLAYERS: '',
+                           OPPONENT_PLAYERS: ''
+                           }
 
     for argument_name, argument_value in template_parameters.items():
         volleyball_game_template.add(argument_name, argument_value)

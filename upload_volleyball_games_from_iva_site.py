@@ -1,4 +1,7 @@
 import logging
+
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+
 from datetime import datetime
 from typing import List
 
@@ -7,13 +10,22 @@ import requests
 
 from gamesbot_volleyball import VolleyballGame, create_or_update_volleyball_game_pages
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
-
 WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES = 'https://www.iva.org.il/team.asp?TeamId=17029&cYear=2025'
-MACCABI_NAMES = 'מכבי יעדים תל-אביב'
+MACCABI_NAMES = ['מכבי יעדים תל-אביב']
 LEAGUE_NAME_AS_IT_DISPLAYED_IN_IVA_SITE = 'ליגת על גברים'
 LEAGUE_NAME_TO_UPLOAD = 'ליגת העל'
 CURRENT_SEASON = '2024/25'
+
+OPPONENTS_NAMES = {
+    'הפועל אריות ירושלים': 'הפועל ירושלים',
+    'הפועל יואב כפר סבא': 'הפועל כפר סבא',
+    'הפועל המעפיל/מנשה/עמק-חפר': 'הפועל המעפיל/מנשה/עמק חפר',
+    'הפועל SVA רחובות': 'הפועל רחובות'
+}
+
+STADIUMS_NAMES = {
+    'מרכז הרב ספורט ת-א': 'הדר יוסף'
+}
 
 
 def create_volleyball_game_from_dataframe_row(row: pd.Series) -> VolleyballGame:
@@ -38,6 +50,31 @@ def create_volleyball_game_from_dataframe_row(row: pd.Series) -> VolleyballGame:
                           )
 
 
+def _correct_team_name(volleyball_game: VolleyballGame) -> None:
+    corrected_opponent_name = OPPONENTS_NAMES.get(volleyball_game.opponent, volleyball_game.opponent)
+    if corrected_opponent_name == volleyball_game.opponent:
+        return
+
+    logging.info(f'Changed team name from: {volleyball_game.opponent} to: {corrected_opponent_name}')
+    volleyball_game.opponent = corrected_opponent_name
+    return
+
+
+def _correct_stadium_name(volleyball_game: VolleyballGame) -> None:
+    corrected_stadium_name = STADIUMS_NAMES.get(volleyball_game.stadium, volleyball_game.stadium)
+    if corrected_stadium_name == volleyball_game.stadium:
+        return
+
+    logging.info(f'Changed stadium name from: {volleyball_game.stadium} to: {corrected_stadium_name}')
+    volleyball_game.stadium = corrected_stadium_name
+    return
+
+
+def correct_volleyball_namings(volleyball_game: VolleyballGame):
+    _correct_team_name(volleyball_game)
+    _correct_stadium_name(volleyball_game)
+
+
 def extract_games_metadata() -> List[VolleyballGame]:
     logging.info(f'Fetching games from: {WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES}')
     maccabi_main_page_response = requests.get(WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES)
@@ -54,7 +91,9 @@ def extract_games_metadata() -> List[VolleyballGame]:
 
     all_games = []
     for _, game_row in games_table[games_table['תוצאה'].notna()].iterrows():
-        all_games.append(create_volleyball_game_from_dataframe_row(game_row))
+        game = create_volleyball_game_from_dataframe_row(game_row)
+        correct_volleyball_namings(game)
+        all_games.append(game)
 
     return all_games
 

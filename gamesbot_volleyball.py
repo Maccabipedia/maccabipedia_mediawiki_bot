@@ -131,9 +131,10 @@ def get_value_if_not_none_or_empty_string(value):
 
 def fill_page_content(game_page, volleyball_game: VolleyballGame):
     volleyball_game_template = Template(volleyball_games_template_name)
+    contains_game_hour = volleyball_game.date.strftime("%H:%M") != "00:00"
 
     template_parameters = {GAME_ID: str(volleyball_game.date.strftime("%d-%m-%Y")),
-                           GAME_HOUR: '',
+                           GAME_HOUR: volleyball_game.date.strftime("%H:%M") if contains_game_hour else '',
                            SEASON: volleyball_game.season,
                            COMPETITION: volleyball_game.competition,
                            ROUND_IN_COMPETITION: volleyball_game.fixture,

@@ -19,7 +19,7 @@ site.login()
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 VOLLEYBALL_ROOT_FOLDER = Path(r'D:\maccabipedia_google_drive\מכביפדיה_ראשי\כדורעף\משחקים מהעיתונות')
-ALLOWED_SEASONS = ['1986-87']
+ALLOWED_SEASONS = ['1988-89']
 
 volleyball_games_prefix = "כדורעף"
 volleyball_games_template_name = "משחק כדורעף"
@@ -38,6 +38,7 @@ OPPONENT_RESULT = "תוצאת משחק יריבה"
 MACCABI_COACH = "מאמן מכבי"
 OPPONENT_COACH = "מאמן יריבה"
 REFEREE = "שופט ראשי"
+REFEREE_HELPERS = "עוזרי שופט"
 
 CROWD = "כמות קהל"
 BROADCAST = "גוף שידור"
@@ -146,6 +147,7 @@ def fill_page_content(game_page, volleyball_game: VolleyballGame):
                            MACCABI_COACH: '',
                            OPPONENT_COACH: '',
                            REFEREE: '',
+                           REFEREE_HELPERS: '',
                            CROWD: '',
                            BROADCAST: '',
 

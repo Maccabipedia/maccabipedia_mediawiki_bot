@@ -55,7 +55,8 @@ def parse_team_record(raw_team_record: pd.Series) -> VolleyballTableTeamRecord:
 
 
 def fetch_league_data_from_iva():
-    iva_league_table_page_response = requests.get(IVA_LEAGUE_TABLE_URL)
+    # There's some issues with iva ssl and Python 3.7 while running in Github runners, not so important:
+    iva_league_table_page_response = requests.get(IVA_LEAGUE_TABLE_URL, verify=False)
 
     tables = pd.read_html(iva_league_table_page_response.content)
     volleyball_league_table = tables[0]

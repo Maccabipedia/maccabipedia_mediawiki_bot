@@ -5,13 +5,19 @@ import mwparserfromhell
 import pandas as pd
 import requests
 
+import sys, requests, ssl
+
+print("Python version:", sys.version)
+print("Requests version:", requests.__version__)
+print("SSL version:", ssl.OPENSSL_VERSION)
+
 from pywikibot_boilerplate import run_boilerplate
 from volleyball_common import TEAM_NAMES_REPLACER
 
 LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA = 'תבנית:טבלת ליגת כדורעף 2024/25'
 _TABLE_STATUS_KEY = 'טבלה'
 
-IVA_LEAGUE_TABLE_URL = 'http://www.iva.org.il/league.asp?LeagueId=2334&cYear=2025'
+IVA_LEAGUE_TABLE_URL = 'https://www.iva.org.il/league.asp?LeagueId=2334&cYear=2025'
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
@@ -55,7 +61,6 @@ def parse_team_record(raw_team_record: pd.Series) -> VolleyballTableTeamRecord:
 
 
 def fetch_league_data_from_iva():
-    # There's some issues with iva ssl and Python 3.7 while running in Github runners, not so important:
     iva_league_table_page_response = requests.get(IVA_LEAGUE_TABLE_URL, verify=False)
 
     tables = pd.read_html(iva_league_table_page_response.content)

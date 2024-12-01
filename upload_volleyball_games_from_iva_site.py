@@ -8,6 +8,7 @@ from typing import List
 import pandas as pd
 import requests
 
+from volleyball_common import TEAM_NAMES_REPLACER, STADIUMS_NAMES
 from gamesbot_volleyball import VolleyballGame, create_or_update_volleyball_game_pages
 
 WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES = 'https://www.iva.org.il/team.asp?TeamId=17029&cYear=2025'
@@ -15,17 +16,6 @@ MACCABI_NAMES = ['מכבי יעדים תל-אביב']
 LEAGUE_NAME_AS_IT_DISPLAYED_IN_IVA_SITE = 'ליגת על גברים'
 LEAGUE_NAME_TO_UPLOAD = 'ליגת העל'
 CURRENT_SEASON = '2024/25'
-
-OPPONENTS_NAMES = {
-    'הפועל אריות ירושלים': 'הפועל ירושלים',
-    'הפועל יואב כפר סבא': 'הפועל כפר סבא',
-    'הפועל המעפיל/מנשה/עמק-חפר': 'הפועל המעפיל/מנשה/עמק חפר',
-    'הפועל SVA רחובות': 'הפועל רחובות'
-}
-
-STADIUMS_NAMES = {
-    'מרכז הרב ספורט ת-א': 'הדר יוסף'
-}
 
 
 def create_volleyball_game_from_dataframe_row(row: pd.Series) -> VolleyballGame:
@@ -51,7 +41,7 @@ def create_volleyball_game_from_dataframe_row(row: pd.Series) -> VolleyballGame:
 
 
 def _correct_team_name(volleyball_game: VolleyballGame) -> None:
-    corrected_opponent_name = OPPONENTS_NAMES.get(volleyball_game.opponent, volleyball_game.opponent)
+    corrected_opponent_name = TEAM_NAMES_REPLACER.get(volleyball_game.opponent, volleyball_game.opponent)
     if corrected_opponent_name == volleyball_game.opponent:
         return
 

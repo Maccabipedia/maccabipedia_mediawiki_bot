@@ -19,7 +19,7 @@ site.login()
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 VOLLEYBALL_ROOT_FOLDER = Path(r'D:\maccabipedia_google_drive\מכביפדיה_ראשי\כדורעף\משחקים מהעיתונות')
-ALLOWED_SEASONS = ['1988-89']
+ALLOWED_SEASONS = ['1989-90']
 
 volleyball_games_prefix = "כדורעף"
 volleyball_games_template_name = "משחק כדורעף"

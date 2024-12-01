@@ -21,6 +21,12 @@ jobs:
           MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
           MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
         run: python update_league_table.py
+      - name: Install OpenSSL 1.1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl1.1 || echo "libssl1.1 already installed"
+          sudo ln -sf /usr/lib/x86_64-linux-gnu/libssl.so.1.1 /usr/lib/x86_64-linux-gnu/libssl.so
+          openssl version
       - name: Fetch Volleyball league table and update MaccabiPedia
         env:
           PYWIKIBOT_DIR: pywikibot_configs/

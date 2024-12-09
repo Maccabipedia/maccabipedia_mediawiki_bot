@@ -1,5 +1,6 @@
-mwparserfromhell==0.5.4
-pywikibot==6.6.3
+mwparserfromhell==0.6.6
+pywikibot==9.6.0
 maccabistats
-requests==2.24.0
-pandas==1.3.5
+requests==2.32.3
+pandas==2.2.3
+lxml==5.3.0

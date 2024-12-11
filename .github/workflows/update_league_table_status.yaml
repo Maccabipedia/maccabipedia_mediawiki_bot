@@ -15,6 +15,12 @@ jobs:
           architecture: x64
       - name: Install dependencies
         run: pip install -r requirements.txt
+      - name: Fetch Football league table and update MaccabiPedia
+        env:
+          PYWIKIBOT_DIR: pywikibot_configs/
+          MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
+          MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
+        run: python update_league_table.py
       - name: Fetch Volleyball league table and update MaccabiPedia
         env:
           PYWIKIBOT_DIR: pywikibot_configs/

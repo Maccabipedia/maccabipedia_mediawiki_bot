@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: 3.11
           architecture: x64
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -21,12 +21,6 @@ jobs:
           MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
           MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
         run: python update_league_table.py
-      - name: Install OpenSSL 1.1
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libssl1.1 || echo "libssl1.1 already installed"
-          sudo ln -sf /usr/lib/x86_64-linux-gnu/libssl.so.1.1 /usr/lib/x86_64-linux-gnu/libssl.so
-          openssl version
       - name: Fetch Volleyball league table and update MaccabiPedia
         env:
           PYWIKIBOT_DIR: pywikibot_configs/

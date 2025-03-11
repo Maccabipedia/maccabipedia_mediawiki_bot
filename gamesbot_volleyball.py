@@ -41,6 +41,9 @@ REFEREE = "שופט ראשי"
 REFEREE_HELPERS = "עוזרי שופט"
 
 CROWD = "כמות קהל"
+HIGHLIGHTS_VIDEO = "תקציר וידאו"
+CROWD_VIDEO = "וידאו אוהדים"
+FULL_GAME_VIDEO = "משחק מלא"
 BROADCAST = "גוף שידור"
 COSTUME = "מדים"
 MACCABI_PLAYERS = 'שחקנים מכבי'
@@ -150,6 +153,10 @@ def fill_page_content(game_page, volleyball_game: VolleyballGame):
                            REFEREE_HELPERS: '',
                            CROWD: '',
                            BROADCAST: '',
+
+                           HIGHLIGHTS_VIDEO: '',
+                           CROWD_VIDEO: '',
+                           FULL_GAME_VIDEO: '',
 
                            MACCABI_FIRST_SET: '',
                            OPPONENT_FIRST_SET: '',

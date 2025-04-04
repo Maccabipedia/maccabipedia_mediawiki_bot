@@ -5,7 +5,7 @@ import requests
 
 from pywikibot_boilerplate import run_boilerplate
 
-_LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA = 'תבנית:טבלת ליגה 2024/25'
+_LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA = 'תבנית:טבלת_ליגת_כדורגל_2024/25'
 _TABLE_STATUS_KEY = 'טבלה'
 
 OPPONENTS_NAMES_TO_UNICODE = {"FC Ashdod": "\u05de.\u05e1. \u05d0\u05e9\u05d3\u05d5\u05d3",

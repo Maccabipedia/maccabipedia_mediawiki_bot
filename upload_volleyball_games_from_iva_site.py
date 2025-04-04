@@ -14,7 +14,9 @@ from gamesbot_volleyball import VolleyballGame, create_or_update_volleyball_game
 WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES = 'https://www.iva.org.il/team.asp?TeamId=17029&cYear=2025'
 MACCABI_NAMES = ['מכבי יעדים תל-אביב']
 LEAGUE_NAME_AS_IT_DISPLAYED_IN_IVA_SITE = 'ליגת על גברים'
-LEAGUE_NAME_TO_UPLOAD = 'ליגת העל'
+TROPHY_NAME_AS_IT_DISPLAYED_IN_IVA_SITE = 'גביע המדינה לגברים'
+LEAGUE_NAME = 'ליגת העל'
+TROPHY_NAME = 'גביע המדינה'
 CURRENT_SEASON = '2024/25'
 
 
@@ -25,14 +27,23 @@ def create_volleyball_game_from_dataframe_row(row: pd.Series) -> VolleyballGame:
     is_home_game = row["מארחת"] in MACCABI_NAMES
     opponent_name = row["אורחת"] if is_home_game else row["מארחת"]
     stadium = row["אולם"]
-    fixture = row["מסגרת"].replace(LEAGUE_NAME_AS_IT_DISPLAYED_IN_IVA_SITE, '')
     maccabi_result, opponent_result = (row["תוצאה"].split('-')[::-1]) if is_home_game else row["תוצאה"].split('-')
+
+    if LEAGUE_NAME_AS_IT_DISPLAYED_IN_IVA_SITE in row["מסגרת"]:
+        fixture = row["מסגרת"].replace(LEAGUE_NAME_AS_IT_DISPLAYED_IN_IVA_SITE, '')
+        competition = LEAGUE_NAME
+    elif TROPHY_NAME_AS_IT_DISPLAYED_IN_IVA_SITE in row["מסגרת"]:
+        fixture = row["מסגרת"].replace(TROPHY_NAME_AS_IT_DISPLAYED_IN_IVA_SITE, '')
+        competition = TROPHY_NAME
+    else:
+        raise RuntimeError(f'Could not find matching competition: {row["מסגרת"]}')
+
 
     return VolleyballGame(date=game_date,
                           fixture=fixture,
                           opponent=opponent_name,
                           home_game=is_home_game,
-                          competition=LEAGUE_NAME_TO_UPLOAD,
+                          competition=competition,
                           season=CURRENT_SEASON,
                           stadium=stadium,
                           maccabi_result=maccabi_result,
@@ -69,7 +80,7 @@ def extract_games_metadata() -> List[VolleyballGame]:
     logging.info(f'Fetching games from: {WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES}')
     maccabi_main_page_response = requests.get(WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES)
 
-    tables = pd.read_html(maccabi_main_page_response.content)
+    tables = pd.read_html(maccabi_main_page_response.content, flavor="html5lib")
 
     if len(tables) > 1:
         raise RuntimeError("Something changed, we've found more than one table, need to be examined manually")

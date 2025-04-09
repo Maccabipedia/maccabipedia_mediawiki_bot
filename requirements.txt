@@ -4,3 +4,4 @@ requests==2.32.3
 pandas==2.2.3
 lxml<5,>=4.9.1
 maccabistats>=2.50
+html5lib==1.1

@@ -15,6 +15,8 @@ jobs:
           architecture: x64
       - name: Install dependencies
         run: pip install -r requirements.txt
+      - name: Try curl
+        run: curl -I https://www.iva.org.il/team.asp?TeamId=17029&cYear=2025 || echo "Failed"
       - name: Upload Volleyball Games To MaccabiPedia
         env:
           PYWIKIBOT_DIR: pywikibot_configs/

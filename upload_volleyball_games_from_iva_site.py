@@ -78,7 +78,7 @@ def correct_volleyball_namings(volleyball_game: VolleyballGame):
 
 def extract_games_metadata() -> List[VolleyballGame]:
     logging.info(f'Fetching games from: {WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES}')
-    maccabi_main_page_response = requests.get(WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES)
+    maccabi_main_page_response = requests.get(WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES, timeout=120)
 
     tables = pd.read_html(maccabi_main_page_response.content, flavor="html5lib")
 

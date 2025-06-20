@@ -19,7 +19,7 @@ site.login()
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 VOLLEYBALL_ROOT_FOLDER = Path(r'D:\maccabipedia_google_drive\מכביפדיה_ראשי\כדורעף\משחקים מהעיתונות')
-ALLOWED_SEASONS = ['1989-90']
+ALLOWED_SEASONS = ['1999-00']
 
 volleyball_games_prefix = "כדורעף"
 volleyball_games_template_name = "משחק כדורעף"
@@ -74,7 +74,7 @@ def build_volleyball_game_from_folder(potential_game_folder: Path) -> Volleyball
     is_trophy = 'גביע' in raw_competition
 
     # In case it's a playoff game, we write it as: פלייאוף - מחזור 1, so we will have extra '-'
-    if 'פלייאוף' in raw_game_details:
+    if ('פלייאוף' in raw_game_details) or is_trophy or ('ליגת האלופות' in competition):
         playoff_name, fixture, opponent, raw_date, *raw_home_or_away = map(str.strip, raw_game_details.split('-'))
         fixture = f'{playoff_name} - {fixture}'
     else:

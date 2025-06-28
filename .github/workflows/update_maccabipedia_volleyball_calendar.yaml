@@ -1,4 +1,4 @@
-name: Update MaccabiPedia Calendar (Football)
+name: Update MaccabiPedia Calendar (Volleyball)
 on:
   schedule:
     - cron: "0 20 * * *"
@@ -18,9 +18,9 @@ jobs:
         run: pip install -r requirements.txt
       - name: Update MaccabiPedia Calendar
         env:
-          FOOTBALL_CALENDAR_ID: ${{ secrets.FOOTBALL_CALENDAR_ID }}
+          VOLLEYBALL_CALENDAR_ID: ${{ secrets.VOLLEYBALL_CALENDAR_ID }}
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-        run: python maccabipedia_calendar/main.py
+        run: python maccabipedia_calendar/main_volleyball.py
   workflow-keepalive:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest

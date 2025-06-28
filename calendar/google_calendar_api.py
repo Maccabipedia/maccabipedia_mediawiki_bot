@@ -41,7 +41,7 @@ def initialize_global_google_service_account_from_memory_json(credentials: str) 
     _logger.info(f"Initializing Global Google service account from memory json, json size: {len(credentials)}")
     _DEFAULT_CREDENTIALS_FILE_PATH.write_text(credentials, encoding="utf-8")
     _logger.info(f"Initializing Global Google service account from memory json, json size: "
-                 f"{_DEFAULT_CREDENTIALS_FILE_PATH.read_text(credentials, encoding='utf-8')}")
+                 f"{_DEFAULT_CREDENTIALS_FILE_PATH.read_text(encoding='utf-8')}")
 
 
     initialize_global_google_service_account(_DEFAULT_CREDENTIALS_FILE_PATH)

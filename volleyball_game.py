@@ -28,3 +28,7 @@ class VolleyballGame:
             return self.opponent
 
         return 'מכבי תל אביב'
+
+    @property
+    def home_away(self) -> str:
+        return 'בית' if self.home_game else 'חוץ'

@@ -36,16 +36,16 @@ def general_fixes_for_game(basketball_game: BasketballGame) -> None:
 
 def get_all_games() -> list[BasketballGame]:
     all_games = []
-    for result_file in ALL_JSONS_FOLDER.glob("*.json"):
-        if changed the name: 'maccabi_euroleague_' in result_file.name:
-            games_json = json.loads(result_file.read_text(encoding="utf8"))
-            current_source_games = [BasketballGame.from_raw(raw_game) for raw_game in games_json]
-        else:
-            current_source_games = TypeAdapter(list[BasketballGame]).validate_json(
-                result_file.read_text(encoding="utf8"))
-
-        logging.info(f"Added {len(current_source_games)} games from file: {result_file}")
-        all_games.extend(current_source_games)
+    # for result_file in ALL_JSONS_FOLDER.glob("*.json"):
+    #     if changed the name: 'maccabi_euroleague_' in result_file.name:
+    #         games_json = json.loads(result_file.read_text(encoding="utf8"))
+    #         current_source_games = [BasketballGame.from_raw(raw_game) for raw_game in games_json]
+    #     else:
+    #         current_source_games = TypeAdapter(list[BasketballGame]).validate_json(
+    #             result_file.read_text(encoding="utf8"))
+    #
+    #     logging.info(f"Added {len(current_source_games)} games from file: {result_file}")
+    #     all_games.extend(current_source_games)
 
     return all_games
 

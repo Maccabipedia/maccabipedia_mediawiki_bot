@@ -18,11 +18,11 @@ RESULTS_FILE = BASKETBALL_BASE_FOLDER / 'results.json'
 CACHE_FOLDER = BASKETBALL_BASE_FOLDER / 'cache'
 PAGE_IS_GAME_CACHE_FILE = CACHE_FOLDER / 'is_game_cache.json'
 MACCABI_TLV_BASE_GAME_URL_UNFORMATTED = "https://www.maccabi.co.il/gameZone.asp?gameID={game_number}"
-MACCABI_TEL_AVIV_NAME = "מכבי תל אביב"
+MACCABI_TEL_AVIV_NAME = "מכבי" # Should be Maccabi tel aviv, but we have sponser name, se left just maccabi
 
 SHOULD_SAVE_TO_CACHE = True
 
-MAX_CONNECTIONS = 100
+MAX_CONNECTIONS = 1
 
 GAMES_NUMBER_TO_FETCH = range(0, 18000)
 
@@ -81,13 +81,17 @@ def parse_inner_div_game(element: bs4.element.Tag, game_url: str) -> BasketballG
                           game_date=game_date,
                           home_team_score=home_team_score,
                           away_team_score=away_team_score,
-                          game_url=game_url)
+                          game_url=[game_url],
+                          referee_assistants=[],
+                          maccabi_players=[],
+                          opponent_players=[]
+                          )
 
 
 async def parse_basketball_game(session: ClientSession, game_number: int) -> BasketballGame:
     global is_game_cache_in_memory
     if not is_game_cache_in_memory.get(str(game_number), True):
-        logging.debug("Not a maccabi/real game, found from global cache, skipping")
+        logging.debug(f"Not a maccabi/real game, found from global cache, skipping, game number: {game_number}")
         return
 
     game_page_content = await fetch_basketball_game(session, game_number)
@@ -100,16 +104,20 @@ async def parse_basketball_game(session: ClientSession, game_number: int) -> Bas
         is_game_cache_in_memory[game_number] = False
         return
 
-    b = parse_inner_div_game(game_area_content,
-                             game_url=MACCABI_TLV_BASE_GAME_URL_UNFORMATTED.format(game_number=game_number))
-    is_game_cache_in_memory[game_number] = True
+    try:
+        b = parse_inner_div_game(game_area_content,
+                                 game_url=MACCABI_TLV_BASE_GAME_URL_UNFORMATTED.format(game_number=game_number))
+        is_game_cache_in_memory[game_number] = True
+    except Exception:
+        logging.error(f"Could not parse game number: {game_number}, skipping")
+        return
     return b
 
 
 async def crawl_game_pages():
     PAGE_IS_GAME_CACHE_FILE.touch(exist_ok=True)
     global is_game_cache_in_memory
-    is_game_cache_in_memory = json.loads(PAGE_IS_GAME_CACHE_FILE.read_text())
+    is_game_cache_in_memory = json.loads(PAGE_IS_GAME_CACHE_FILE.read_text() or "{}")
     logging.info(f'Loaded {len(is_game_cache_in_memory)} game from global cache')
 
     limited_connector = aiohttp.TCPConnector(limit=MAX_CONNECTIONS)

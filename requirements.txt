@@ -4,7 +4,7 @@ requests==2.32.3
 pandas==2.2.3
 lxml<5,>=4.9.1
 maccabistats>=2.50
-html5lib==1.
+html5lib==1.1
 google-api-python-client==1.12.8
 google-auth-oauthlib==0.4.2
 beautifulsoup4==4.9.3

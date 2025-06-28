@@ -18,7 +18,7 @@ jobs:
         run: pip install -r requirements.txt
       - name: Update MaccabiPedia Calendar
         env:
-          CALENDAR_ID: ${{ secrets.CALENDAR_ID }}
+          FOOTBALL_CALENDAR_ID: ${{ secrets.FOOTBALL_CALENDAR_ID }}
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
         run: python calendar/main.py
   workflow-keepalive:

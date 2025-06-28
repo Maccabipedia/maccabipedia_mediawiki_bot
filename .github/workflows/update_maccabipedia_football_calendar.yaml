@@ -1,0 +1,29 @@
+name: Update MaccabiPedia Calendar
+on:
+  schedule:
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+
+jobs:
+  update-maccabipedia-calendar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+          architecture: x64
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Update MaccabiPedia Calendar
+        env:
+          CALENDAR_ID: ${{ secrets.CALENDAR_ID }}
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        run: python calendar/main.py
+  workflow-keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: liskin/gh-workflow-keepalive@v1

@@ -7,5 +7,5 @@ maccabistats>=2.50
 html5lib==1.1
 google-api-python-client==1.12.8
 google-auth-oauthlib==0.4.2
-beautifulsoup4==4.9.3
+beautifulsoup4>=4.9.3
 python-dotenv==0.15.0

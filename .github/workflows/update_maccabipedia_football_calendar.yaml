@@ -20,7 +20,7 @@ jobs:
         env:
           FOOTBALL_CALENDAR_ID: ${{ secrets.FOOTBALL_CALENDAR_ID }}
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-        run: python calendar/main.py
+        run: python maccabipedia_calendar/main.py
   workflow-keepalive:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest

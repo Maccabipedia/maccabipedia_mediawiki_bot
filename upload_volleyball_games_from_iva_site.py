@@ -27,7 +27,11 @@ def create_volleyball_game_from_dataframe_row(row: pd.Series) -> VolleyballGame:
     is_home_game = row["מארחת"] in MACCABI_NAMES
     opponent_name = row["אורחת"] if is_home_game else row["מארחת"]
     stadium = row["אולם"]
-    maccabi_result, opponent_result = (row["תוצאה"].split('-')[::-1]) if is_home_game else row["תוצאה"].split('-')
+
+    if "-" in row["תוצאה"]:
+        maccabi_result, opponent_result = (row["תוצאה"].split('-')[::-1]) if is_home_game else row["תוצאה"].split('-')
+    else:
+        maccabi_result, opponent_result = None, None  # Future game
 
     if LEAGUE_NAME_AS_IT_DISPLAYED_IN_IVA_SITE in row["מסגרת"]:
         fixture = row["מסגרת"].replace(LEAGUE_NAME_AS_IT_DISPLAYED_IN_IVA_SITE, '')
@@ -76,7 +80,7 @@ def correct_volleyball_namings(volleyball_game: VolleyballGame):
     _correct_stadium_name(volleyball_game)
 
 
-def extract_games_metadata() -> List[VolleyballGame]:
+def extract_games_metadata(include_future_games: bool = False) -> List[VolleyballGame]:
     logging.info(f'Fetching games from: {WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES}')
     maccabi_main_page_response = requests.get(WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES, timeout=120)
 
@@ -91,7 +95,12 @@ def extract_games_metadata() -> List[VolleyballGame]:
     logging.info(f'Found {len(games_table)} games records, out of them we found {finished_games_count} finished games')
 
     all_games = []
-    for _, game_row in games_table[games_table['תוצאה'].notna()].iterrows():
+    if include_future_games:
+        games_to_fetch = games_table.iterrows()
+    else:
+        games_to_fetch = games_table.index[games_table['תוצאה'].notna()].iterrows()
+
+    for _, game_row in games_to_fetch:
         game = create_volleyball_game_from_dataframe_row(game_row)
         correct_volleyball_namings(game)
         all_games.append(game)

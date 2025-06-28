@@ -1,6 +1,8 @@
+import json
 import logging
 import os
-from datetime import datetime
+import re
+from datetime import datetime, timedelta
 from typing import Dict, List
 
 import requests
@@ -8,22 +10,10 @@ from dotenv import load_dotenv
 
 from calendar_operations import fetch_games_from_calendar, update_event, upload_event, delete_event, Event
 from google_calendar_api import initialize_global_google_service_account_from_memory_json
-from maccabi_tlv_site import fetch_games_from_maccabi_tlv_site
+from upload_volleyball_games_from_iva_site import extract_games_metadata
+from volleyball_game import VolleyballGame
 
 _logger = logging.getLogger(__name__)
-
-SEASON_LINK_UNFORMATTED = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season={season_number}#content'
-UPCOMING_GAMES_LINK = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%9c%d7%95%d7%97-%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d/'
-
-
-
-
-def delete_all_events(calendar_id: str) -> None:
-    _logger.info("--- Deleting All Events: ---")
-    events = fetch_games_from_calendar(calendar_id, '2011-10-10T10:10:10.644170Z')
-    for event in events:
-        _logger.info(f"Deleting event {event['summary']}")
-        delete_event(event['id'], calendar_id)
 
 
 def search_event_in_calendar(event: Dict, events_list: List) -> Dict:
@@ -39,7 +29,8 @@ def search_event_in_calendar(event: Dict, events_list: List) -> Dict:
     if events_list:
         for temp_event in events_list:
             if 'extendedProperties' in temp_event and 'extendedProperties' in event:
-                if event['extendedProperties']['shared']['url'] == temp_event['extendedProperties']['shared']['url']:
+                if event['extendedProperties']['shared']['maccabipedia_id'] == \
+                        temp_event['extendedProperties']['shared']['maccabipedia_id']:
                     if 'id' in temp_event:
                         return temp_event
                     else:
@@ -76,60 +67,67 @@ def delete_unnecessary_events(events_list: List[Event], future_calendars_events:
             delete_event(event['id'], calendar_id)
 
 
-def update_last_game(url: str, calendar_id: str) -> None:
-    """
-    Updating the last game result & adding link to game page at maccabipedia
-    """
+def format_result(game: VolleyballGame) -> str:
+    if game.maccabi_result is None and game.opponent_result is None:
+        return f"המשחק טרם שוחק"  # Future game:
 
-    _logger.info("--- Updating Last Game: ---")
-    last_game = fetch_games_from_maccabi_tlv_site(url, to_update_last_game=True)[0]
-    last_event = fetch_games_from_calendar(calendar_id, last_game['start']['dateTime'] + '+02:00', 1)[0]
+    if game.maccabi_result > game.opponent_result:
+        return f"נצחון {game.maccabi_result} - {game.opponent_result}"
 
-    if 'extendedProperties' in last_game and 'extendedProperties' in last_event:
-        if last_game['extendedProperties']['shared']['url'] == last_event['extendedProperties']['shared']['url']:
-            if last_event['extendedProperties']['shared']['result'] == '':
-                update_event(last_game, last_event['id'], calendar_id)
+    return f"הפסד {game.maccabi_result} - {game.opponent_result}"
 
 
-def add_history_games(seasons: List[str], calendar_id: str) -> None:
-    """
-    Loop over all past seasons URLs and adding the games to the calendar
-    """
+def cast_game_to_google_event(game: VolleyballGame) -> Event:
+    # Get link to game page at maccabipedia
+    response = requests.get(
+        f"https://www.maccabipedia.co.il/index.php?title=Special:CargoExport&format=json&tables=Volleyball_Games&fields=_pageName&where=Volleyball_Games.Date='{game.date.date().strftime('%Y-%m-%d')}'")
+    page_name = json.loads(response.text)
+    if page_name and '_pageName' in page_name[0]:
+        page_name = page_name[0]['_pageName']
+        page_name = re.sub(r"\s+", '_', page_name)  # Replacing spaces/whitespace with underscore
+        game_page_link = f'\n<a href="https://maccabipedia.co.il/{page_name}">עמוד המשחק</a>'
+    else:
+        page_name = ''
+        game_page_link = f'\n<a href="https://maccabipedia.co.il">מכביפדיה</a>'
 
-    for season in seasons:
-        events = fetch_games_from_maccabi_tlv_site(season, to_update_last_game=False)
-        for event in events:
-            upload_event(event, calendar_id)
+    maccabipedia_id = f"{game.opponent} {game.fixture} {game.competition}"
 
-
-def build_maccabi_tlv_site_seasons_links() -> List[str]:
-    seasons_links = []
-
-    _logger.info("Building season links")
-
-    current_season_number = 74  # 2013/14
-    while "המשחק האחרון" in requests.get(SEASON_LINK_UNFORMATTED.format(season_number=current_season_number)).text:
-        seasons_links.append(SEASON_LINK_UNFORMATTED.format(season_number=current_season_number))
-        _logger.info(f"Added new season: {current_season_number - 62}/{str(current_season_number - 61)[-2:]}")
-
-        current_season_number += 1
-
-    _logger.info(f"Finished to build season links, total seasons: {len(seasons_links)}")
-    return seasons_links
+    event = {
+        'summary': f"[עף] {game.opponent} - {game.home_away}",
+        'location': game.stadium,
+        'description': f"{game.competition}, {game.fixture}\n{format_result(game)}{game_page_link}",
+        'start': {
+            'dateTime': game.date.isoformat(),
+            'timeZone': "Asia/Jerusalem",
+        },
+        'end': {
+            'dateTime': (game.date + timedelta(hours=2)).isoformat(),
+            'timeZone': "Asia/Jerusalem",
+        },
+        'source': {
+            'url': f'https://www.maccabipedia.co.il/{page_name}',
+            'title': 'עמוד המשחק'
+        },
+        'extendedProperties': {
+            'shared': {
+                'maccabipedia_id': maccabipedia_id,
+            }
+        },
+    }
+    _logger.info(event)
+    return event
 
 
 def main(google_credentials: str, calendar_id: str):
     current_time = datetime.utcnow().isoformat() + 'Z'  # current datetime - to update and add upcoming games only
 
     initialize_global_google_service_account_from_memory_json(google_credentials)
-    seasons = build_maccabi_tlv_site_seasons_links()
 
     future_calendars_events = fetch_games_from_calendar(calendar_id, fetch_after_this_time=current_time)
-    upcoming_games_from_maccabi_tlv_site = fetch_games_from_maccabi_tlv_site(UPCOMING_GAMES_LINK,
-                                                                             to_update_last_game=False)
-    sync_future_games_to_calendar(upcoming_games_from_maccabi_tlv_site, future_calendars_events, calendar_id)
-    delete_unnecessary_events(upcoming_games_from_maccabi_tlv_site, future_calendars_events, calendar_id)
-    update_last_game(seasons[len(seasons) - 1], calendar_id)
+    games_from_iva_site = extract_games_metadata(include_future_games=True)
+    upcoming_events_from_iva_site = [cast_game_to_google_event(game) for game in games_from_iva_site]
+    sync_future_games_to_calendar(upcoming_events_from_iva_site, future_calendars_events, calendar_id)
+    delete_unnecessary_events(upcoming_events_from_iva_site, future_calendars_events, calendar_id)
 
     # Uncomment this in case you need to old games
     # add_history_games(seasons, calendar_id)

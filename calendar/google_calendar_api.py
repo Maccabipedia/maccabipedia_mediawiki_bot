@@ -39,8 +39,9 @@ def initialize_global_google_service_account(credentials_json_path: Path) -> Non
 
 def initialize_global_google_service_account_from_memory_json(credentials: str) -> None:
     _logger.info(f"Initializing Global Google service account from memory json, json size: {len(credentials)}")
-    _DEFAULT_CREDENTIALS_FILE_PATH.write_text(credentials)
-    _logger.info(f"Initializing Global Google service account from memory json, json size: {_DEFAULT_CREDENTIALS_FILE_PATH.read_text(credentials)}")
+    _DEFAULT_CREDENTIALS_FILE_PATH.write_text(credentials, encoding="utf-8")
+    _logger.info(f"Initializing Global Google service account from memory json, json size: "
+                 f"{_DEFAULT_CREDENTIALS_FILE_PATH.read_text(credentials, encoding='utf-8')}")
 
 
     initialize_global_google_service_account(_DEFAULT_CREDENTIALS_FILE_PATH)

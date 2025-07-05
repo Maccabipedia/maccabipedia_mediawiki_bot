@@ -143,7 +143,7 @@ def fill_page_content(game_page, volleyball_game: VolleyballGame):
                            COMPETITION: volleyball_game.competition,
                            ROUND_IN_COMPETITION: volleyball_game.fixture,
                            OPPONENT_NAME: volleyball_game.opponent,
-                           HOME_OR_AWAY: 'בית' if volleyball_game.home_game else 'חוץ',
+                           HOME_OR_AWAY: volleyball_game.home_away,
                            STADIUM: volleyball_game.stadium if volleyball_game.stadium is not None else '',
                            MACCABI_RESULT: get_value_if_not_none_or_empty_string(volleyball_game.maccabi_result),
                            OPPONENT_RESULT: get_value_if_not_none_or_empty_string(volleyball_game.opponent_result),

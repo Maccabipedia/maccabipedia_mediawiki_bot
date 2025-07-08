@@ -84,4 +84,5 @@ def update_league_table_status() -> None:
 
 
 if __name__ == '__main__':
+    return
     update_league_table_status()

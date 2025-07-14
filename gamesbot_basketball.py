@@ -19,7 +19,7 @@ from prettify_games_pages import prettify_game_page_main_template
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
-EXAMPLE_GAME_FILE_PATH = Path(r"D:\maccabipedia_google_drive\מכביפדיה_ראשי\כדורסל\איסוף מידע לאתר\game_exmaple.json")
+EXAMPLE_GAMES_FILE_PATH = Path(r"C:\maccabi\basketball\games_for_upload.json")
 
 basketball_games_template_name = "משחק כדורסל"
 basketball_games_prefix = "כדורסל"
@@ -40,6 +40,10 @@ OPPONENT_COACH = "מאמן יריבה"
 REFEREE = "שופט ראשי"
 REFEREE_ASSISTERS = "עוזרי שופט"
 CROWD = "כמות קהל"
+HIGHLIGHTS_VIDEO = "תקציר וידאו"
+FULL_GAME_VIDEO = "משחק מלא"
+BROADCAST = "גוף שידור"
+GAME_SUMMARY = "סיכום משחק"
 IS_OVERTIME = "הארכה"
 GAME_URLS = "כתבות על המשחק"
 MACCABI_PLAYERS = 'שחקנים מכבי'
@@ -69,9 +73,9 @@ SHOULD_CHECK_FOR_UPDATE_IN_EXISTING_PAGES = False
 
 
 def load_basketball_games() -> list[BasketballGame]:
-    game_text = EXAMPLE_GAME_FILE_PATH.read_text(encoding='utf-8')
-    game = TypeAdapter(BasketballGame).validate_json(game_text)
-    return [game]
+    games_text = EXAMPLE_GAMES_FILE_PATH.read_text(encoding='utf-8')
+    games = TypeAdapter(list[BasketballGame]).validate_json(games_text)
+    return games
 
 
 def generate_page_name_from_game(game: BasketballGame) -> str:
@@ -122,6 +126,10 @@ def __get_football_game_template_with_maccabistats_game_value(game: BasketballGa
         REFEREE: game.referee,
         REFEREE_ASSISTERS: ", ".join(game.referee_assistants),
         CROWD: game.crowd,
+        HIGHLIGHTS_VIDEO: "",
+        FULL_GAME_VIDEO: "",
+        BROADCAST: "",
+        GAME_SUMMARY: "",
         IS_OVERTIME: "כן" if game.has_overtime else "לא",
         GAME_URLS: ", ".join(game.game_url),
         MACCABI_PLAYERS: get_players_events_for_template(game.maccabi_players),
@@ -212,5 +220,5 @@ def upload_basketball_games_to_maccabipedia(games: list[BasketballGame]):
 
 if __name__ == '__main__':
     logging.info(f"Should save? : {SHOULD_SAVE}, should show diff?: {SHOULD_SHOW_DIFF}")
-    upload_basketball_games_to_maccabipedia(load_basketball_games())
+    upload_basketball_games_to_maccabipedia(load_basketball_games()[:5])
     logging.info("Finish to upload basketball games to Maccabipedia")

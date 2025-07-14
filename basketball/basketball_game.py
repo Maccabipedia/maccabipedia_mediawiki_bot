@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 class PlayerSummary(BaseModel):
     name: str
-    number: int
+    number: Optional[int] = None
     is_starting_five: bool
     minutes_played: Optional[int] = None
     total_points: int

@@ -33,7 +33,7 @@ def publish_event_to_brothers_1906_site(event: Dict) -> None:
         "title": event['summary'],
         "date_start": event['start']['dateTime'],
         "description": event['description'].split('\n')[0], # Take the content before maccabipedia link
-        "location": event['location'],
+        "location": event['location'] or 'N/A',
     }
 
     response = requests.post(url=BROTHER_1906_SITE_URL, headers=headers, json=body)

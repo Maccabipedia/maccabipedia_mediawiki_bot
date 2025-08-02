@@ -76,6 +76,10 @@ class BasketballGame(BaseModel):
     second_overtime_opponent_points: Optional[int] = None
     fourth_overtime_opponent_points: Optional[int] = None
     third_overtime_opponent_points: Optional[int] = None
+    first_half_maccabi_points: Optional[int] = None
+    second_half_maccabi_points: Optional[int] = None
+    first_half_opponent_points: Optional[int] = None
+    second_half_opponent_points: Optional[int] = None
     season: Optional[str] = None
     hour: Optional[str] = None
     crowd: Optional[int] = None

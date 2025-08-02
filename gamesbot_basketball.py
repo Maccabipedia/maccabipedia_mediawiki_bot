@@ -33,8 +33,8 @@ ROUND_IN_COMPETITION = "שלב במפעל"
 OPPONENT_NAME = "שם יריבה"
 HOME_OR_AWAY = "בית חוץ"
 STADIUM = "אצטדיון"
-MACCABI_TOTAL_POINTS = "נקודות למכבי"
-OPPONENT_TOTAL_POINTS = "נקודות ליריבה"
+MACCABI_GAME_SCORE = "תוצאת משחק מכבי"
+OPPONENT_GAME_SCORE = "תוצאת משחק יריבה"
 MACCABI_COACH = "מאמן מכבי"
 OPPONENT_COACH = "מאמן יריבה"
 REFEREE = "שופט ראשי"
@@ -48,22 +48,27 @@ IS_OVERTIME = "הארכה"
 GAME_URLS = "כתבות על המשחק"
 MACCABI_PLAYERS = 'שחקנים מכבי'
 OPPONENT_PLAYERS = 'שחקנים יריבה'
-FIRST_QUARTER_MACCABI_POINTS = 'נקודות מכבי רבע ראשון'
-SECOND_QUARTER_MACCABI_POINTS = 'נקודות מכבי רבע שני'
-THIRD_QUARTER_MACCABI_POINTS = 'נקודות מכבי רבע שלישי'
-FOURTH_QUARTER_MACCABI_POINTS = 'נקודות מכבי רבע רביעי'
-FIRST_OVERTIME_MACCABI_POINTS = 'נקודות מכבי הארכה ראשונה'
-SECOND_OVERTIME_MACCABI_POINTS = 'נקודות מכבי הארכה שניה'
-THIRD_OVERTIME_MACCABI_POINTS = 'נקודות מכבי הארכה שלישית'
-FOURTH_OVERTIME_MACCABI_POINTS = 'נקודות מכבי הארכה רביעית'
-FIRST_QUARTER_OPPONENT_POINTS = 'נקודות יריבה רבע ראשון'
-SECOND_QUARTER_OPPONENT_POINTS = 'נקודות יריבה רבע שניה'
-THIRD_QUARTER_OPPONENT_POINTS = 'נקודות יריבה רבע שלישי'
-FOURTH_QUARTER_OPPONENT_POINTS = 'נקודות יריבה רבע רביעי'
-FIRST_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה ראשונה'
-SECOND_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה שניה'
-FOURTH_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה שלישית'
-THIRD_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה רביעית'
+FIRST_QUARTER_MACCABI_POINTS = 'נקודות מכבי רבע1'
+SECOND_QUARTER_MACCABI_POINTS = 'נקודות מכבי רבע2'
+THIRD_QUARTER_MACCABI_POINTS = 'נקודות מכבי רבע3'
+FOURTH_QUARTER_MACCABI_POINTS = 'נקודות מכבי רבע4'
+FIRST_OVERTIME_MACCABI_POINTS = 'נקודות מכבי הארכה1'
+SECOND_OVERTIME_MACCABI_POINTS = 'נקודות מכבי הארכה2'
+THIRD_OVERTIME_MACCABI_POINTS = 'נקודות מכבי הארכה3'
+FOURTH_OVERTIME_MACCABI_POINTS = 'נקודות מכבי הארכה4'
+FIRST_QUARTER_OPPONENT_POINTS = 'נקודות יריבה רבע1'
+SECOND_QUARTER_OPPONENT_POINTS = 'נקודות יריבה רבע2'
+THIRD_QUARTER_OPPONENT_POINTS = 'נקודות יריבה רבע3'
+FOURTH_QUARTER_OPPONENT_POINTS = 'נקודות יריבה רבע4'
+FIRST_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה1'
+SECOND_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה2'
+THIRD_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה3'
+FOURTH_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה4'
+FIRST_HALF_MACCABI_POINTS = 'נקודות מכבי מחצית1'
+SECOND_HALF_MACCABI_POINTS = 'נקודות מכבי מחצית2'
+FIRST_HALF_OPPONENT_POINTS = 'נקודות יריבה מחצית1'
+SECOND_HALF_OPPONENT_POINTS = 'נקודות יריבה מחצית2'
+
 
 REFRESH_PAGES = False
 JUST_EVENTS = True
@@ -119,8 +124,12 @@ def __get_football_game_template_with_maccabistats_game_value(game: BasketballGa
         SECOND_OVERTIME_OPPONENT_POINTS: game.second_overtime_opponent_points,
         THIRD_OVERTIME_OPPONENT_POINTS: game.third_overtime_opponent_points,
         FOURTH_OVERTIME_OPPONENT_POINTS: game.fourth_overtime_opponent_points,
-        MACCABI_TOTAL_POINTS: game.maccabi_points,
-        OPPONENT_TOTAL_POINTS: game.opponent_points,
+        FIRST_HALF_MACCABI_POINTS: game.first_half_maccabi_points,
+        SECOND_HALF_MACCABI_POINTS: game.second_half_maccabi_points,
+        FIRST_HALF_OPPONENT_POINTS: game.first_half_opponent_points,
+        SECOND_HALF_OPPONENT_POINTS: game.second_half_opponent_points,
+        MACCABI_GAME_SCORE: game.maccabi_points,
+        OPPONENT_GAME_SCORE: game.opponent_points,
         MACCABI_COACH: game.maccabi_coach,
         OPPONENT_COACH: game.opponent_coach,
         REFEREE: game.referee,

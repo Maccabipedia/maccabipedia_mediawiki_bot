@@ -182,7 +182,7 @@ def entry_point() -> None:
         load_dotenv()
 
         google_credentials = os.environ['GOOGLE_CREDENTIALS']
-        calendar_id = os.environ['CALENDAR_ID']
+        calendar_id = os.environ['FOOTBALL_CALENDAR_ID']
 
         if 'SHOULD_PUBLISH_TO_BROTHER_1906_SITE' in os.environ:
             _SHOULD_PUBLISH_TO_BROTHER_1906_SITE = os.environ['SHOULD_PUBLISH_TO_BROTHER_1906_SITE'].lower() == 'true'

@@ -38,6 +38,7 @@ def publish_event_to_brothers_1906_site(event: Dict) -> None:
 
     response = requests.post(url=BROTHER_1906_SITE_URL, headers=headers, json=body)
     response.raise_for_status()
+    _logger.info(f"Published event to brothers1906 new event: {event['start']['dateTime']}")
 
 
 def publish_new_event(event: Dict, calendar_id: str) -> None:

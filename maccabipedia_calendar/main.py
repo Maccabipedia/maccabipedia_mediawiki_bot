@@ -1,3 +1,4 @@
+import base64
 import logging
 import os
 from datetime import datetime
@@ -12,8 +13,46 @@ from maccabi_tlv_site import fetch_games_from_maccabi_tlv_site
 
 _logger = logging.getLogger(__name__)
 
+_SHOULD_PUBLISH_TO_BROTHER_1906_SITE = False
+_BROTHER_1906_API_KEY = ''
+
 SEASON_LINK_UNFORMATTED = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/?season={season_number}#content'
 UPCOMING_GAMES_LINK = 'https://www.maccabi-tlv.co.il/%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d-%d7%95%d7%aa%d7%95%d7%a6%d7%90%d7%95%d7%aa/%d7%94%d7%a7%d7%91%d7%95%d7%a6%d7%94-%d7%94%d7%91%d7%95%d7%92%d7%a8%d7%aa/%d7%9c%d7%95%d7%97-%d7%9e%d7%a9%d7%97%d7%a7%d7%99%d7%9d/'
+
+BROTHER_1906_SITE_URL = 'https://brothers1906.org/_functions/addGame'
+
+
+def publish_event_to_brothers_1906_site(event: Dict) -> None:
+    headers = {
+        'Content-Type': 'application/json',
+        'x-api-key': _BROTHER_1906_API_KEY
+    }
+
+    body = {
+        "gameId": base64.b64encode(event['extendedProperties']['shared']['url'].encode()).decode(),
+        "title": event['summary'],
+        "date_start": event['start']['dateTime'],
+        "description": event['description'].split('\n')[0], # Take the content before maccabipedia link
+        "location": event['location'] or 'N/A',
+    }
+
+    response = requests.post(url=BROTHER_1906_SITE_URL, headers=headers, json=body)
+    response.raise_for_status()
+
+
+def publish_new_event(event: Dict, calendar_id: str) -> None:
+    _logger.info(f"Publishing new event: {event['summary']}")
+    upload_event(event, calendar_id)
+
+    if _SHOULD_PUBLISH_TO_BROTHER_1906_SITE:
+        publish_event_to_brothers_1906_site(event)
+
+def update_existing_event(event: Dict, event_id: str, calendar_id: str) -> None:
+    _logger.info(f"Updating existing event: {event['summary']}")
+    update_event(event, event_id, calendar_id)
+
+    if _SHOULD_PUBLISH_TO_BROTHER_1906_SITE:
+        publish_event_to_brothers_1906_site(event)
 
 
 def delete_all_events(calendar_id: str) -> None:
@@ -54,9 +93,9 @@ def sync_future_games_to_calendar(events_list: List[Event], curr_events_list: Li
         if curr_event != {}:
             if event['summary'] != curr_event['summary'] or event['description'] != curr_event['description'] \
                     or event['start'] != curr_event['start'] or event['location'] != curr_event['location']:
-                update_event(event, curr_event['id'], calendar_id)
+                update_existing_event(event, curr_event['id'], calendar_id)
         else:
-            upload_event(event, calendar_id)
+            publish_new_event(event, calendar_id)
 
 
 def delete_unnecessary_events(events_list: List[Event], future_calendars_events: List[Event], calendar_id: str) -> None:
@@ -86,7 +125,7 @@ def update_last_game(url: str, calendar_id: str) -> None:
     if 'extendedProperties' in last_game and 'extendedProperties' in last_event:
         if last_game['extendedProperties']['shared']['url'] == last_event['extendedProperties']['shared']['url']:
             if last_event['extendedProperties']['shared']['result'] == '':
-                update_event(last_game, last_event['id'], calendar_id)
+                update_existing_event(last_game, last_event['id'], calendar_id)
 
 
 def add_history_games(seasons: List[str], calendar_id: str) -> None:
@@ -97,7 +136,7 @@ def add_history_games(seasons: List[str], calendar_id: str) -> None:
     for season in seasons:
         events = fetch_games_from_maccabi_tlv_site(season, to_update_last_game=False)
         for event in events:
-            upload_event(event, calendar_id)
+            publish_event_to_brothers_1906_site(event, calendar_id)
 
 
 def build_maccabi_tlv_site_seasons_links() -> List[str]:
@@ -134,13 +173,25 @@ def main(google_credentials: str, calendar_id: str):
 
 
 def entry_point() -> None:
+    global _SHOULD_PUBLISH_TO_BROTHER_1906_SITE
+    global _BROTHER_1906_API_KEY
+
     # noinspection PyBroadException
     try:
         logging.info("Starting!")
         load_dotenv()
 
         google_credentials = os.environ['GOOGLE_CREDENTIALS']
-        calendar_id = os.environ['FOOTBALL_CALENDAR_ID']
+        calendar_id = os.environ['CALENDAR_ID']
+
+        if 'SHOULD_PUBLISH_TO_BROTHER_1906_SITE' in os.environ:
+            _SHOULD_PUBLISH_TO_BROTHER_1906_SITE = os.environ['SHOULD_PUBLISH_TO_BROTHER_1906_SITE'].lower() == 'true'
+            _BROTHER_1906_API_KEY = os.environ.get('BROTHER_1906_API_KEY')
+        else:
+            _SHOULD_PUBLISH_TO_BROTHER_1906_SITE = False
+
+        logging.info(f"Loaded environment variables successfully! "
+                     f"Should publish to brother 1906 site?: {_SHOULD_PUBLISH_TO_BROTHER_1906_SITE}")
 
         main(google_credentials, calendar_id)
     except Exception:

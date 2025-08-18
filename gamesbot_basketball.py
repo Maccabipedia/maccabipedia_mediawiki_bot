@@ -9,6 +9,7 @@ from pywikibot_boilerplate import run_boilerplate
 run_boilerplate()
 
 import mwparserfromhell
+import tldextract
 import pywikibot as pw
 from mwparserfromhell.nodes.template import Template
 
@@ -29,10 +30,10 @@ GAME_DATE = "תאריך המשחק"
 GAME_HOUR = "שעת המשחק"
 SEASON = "עונה"
 COMPETITION = "מפעל"
-ROUND_IN_COMPETITION = "שלב במפעל"
+FIXTURE = "שלב במפעל"
 OPPONENT_NAME = "שם יריבה"
 HOME_OR_AWAY = "בית חוץ"
-STADIUM = "אצטדיון"
+ARENA = "אולם"
 MACCABI_GAME_SCORE = "תוצאת משחק מכבי"
 OPPONENT_GAME_SCORE = "תוצאת משחק יריבה"
 MACCABI_COACH = "מאמן מכבי"
@@ -41,11 +42,14 @@ REFEREE = "שופט ראשי"
 REFEREE_ASSISTERS = "עוזרי שופט"
 CROWD = "כמות קהל"
 HIGHLIGHTS_VIDEO = "תקציר וידאו"
+HIGHLIGHTS_VIDEO2 = "תקציר וידאו2"
 FULL_GAME_VIDEO = "משחק מלא"
+FULL_GAME_VIDEO2 = "משחק מלא2"
 BROADCAST = "גוף שידור"
 GAME_SUMMARY = "סיכום משחק"
 IS_OVERTIME = "הארכה"
-GAME_URLS = "כתבות על המשחק"
+ARTICLE1 = "כתבה1"
+ARTICLE2 = "כתבה2"
 MACCABI_PLAYERS = 'שחקנים מכבי'
 OPPONENT_PLAYERS = 'שחקנים יריבה'
 FIRST_QUARTER_MACCABI_POINTS = 'נקודות מכבי רבע1'
@@ -64,10 +68,10 @@ FIRST_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה1'
 SECOND_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה2'
 THIRD_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה3'
 FOURTH_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה4'
-FIRST_HALF_MACCABI_POINTS = 'נקודות מכבי מחצית1'
-SECOND_HALF_MACCABI_POINTS = 'נקודות מכבי מחצית2'
-FIRST_HALF_OPPONENT_POINTS = 'נקודות יריבה מחצית1'
-SECOND_HALF_OPPONENT_POINTS = 'נקודות יריבה מחצית2'
+FIRST_HALF_MACCABI_POINTS = 'נקודות מכבי חצי1'
+SECOND_HALF_MACCABI_POINTS = 'נקודות מכבי חצי2'
+FIRST_HALF_OPPONENT_POINTS = 'נקודות יריבה חצי1'
+SECOND_HALF_OPPONENT_POINTS = 'נקודות יריבה חצי2'
 
 
 REFRESH_PAGES = False
@@ -97,6 +101,9 @@ def generate_page_name_from_game(game: BasketballGame) -> str:
 def get_players_events_for_template(players_summary: list[PlayerSummary]) -> str:
     return ",\n".join(player_summary.__maccabipedia__() for player_summary in players_summary).rstrip()
 
+def format_url(game_url: str) -> str:
+    main_domain = tldextract.extract(game_url).domain
+    return f"[{game_url} עמוד המשחק באתר {main_domain}]"
 
 def __get_football_game_template_with_maccabistats_game_value(game: BasketballGame) -> dict[str, str]:
     template_arguments = {
@@ -105,9 +112,10 @@ def __get_football_game_template_with_maccabistats_game_value(game: BasketballGa
         GAME_HOUR: game.game_date.hour if game.game_date.hour != 0 else '',
         SEASON: game.season,
         COMPETITION: game.competition,
+        FIXTURE: game.fixture,
         OPPONENT_NAME: game.opponent_name,
         HOME_OR_AWAY: 'בית' if game.is_home_game else 'חוץ',
-        STADIUM: game.stadium,
+        ARENA: game.arena,
         FIRST_QUARTER_MACCABI_POINTS: game.first_quarter_maccabi_points,
         SECOND_QUARTER_MACCABI_POINTS: game.second_quarter_maccabi_points,
         THIRD_QUARTER_MACCABI_POINTS: game.third_quarter_maccabi_points,
@@ -136,14 +144,24 @@ def __get_football_game_template_with_maccabistats_game_value(game: BasketballGa
         REFEREE_ASSISTERS: ", ".join(game.referee_assistants),
         CROWD: game.crowd,
         HIGHLIGHTS_VIDEO: "",
+        HIGHLIGHTS_VIDEO2: "",
         FULL_GAME_VIDEO: "",
+        FULL_GAME_VIDEO2: "",
         BROADCAST: "",
-        GAME_SUMMARY: "",
-        IS_OVERTIME: "כן" if game.has_overtime else "לא",
-        GAME_URLS: ", ".join(game.game_url),
-        MACCABI_PLAYERS: get_players_events_for_template(game.maccabi_players),
-        OPPONENT_PLAYERS: get_players_events_for_template(game.opponent_players)
+        GAME_SUMMARY: ""
     }
+
+    if game.has_overtime:
+        template_arguments[IS_OVERTIME] = "כן"
+
+    if game.game_url:
+        template_arguments[ARTICLE1] = format_url(game.game_url[0])
+        if len(game.game_url) > 1:
+            template_arguments[ARTICLE2] = format_url(game.game_url[1])
+
+    # Players events should be last:
+    template_arguments[MACCABI_PLAYERS] = get_players_events_for_template(game.maccabi_players)
+    template_arguments[OPPONENT_PLAYERS] = get_players_events_for_template(game.opponent_players)
 
     return template_arguments
 
@@ -202,6 +220,7 @@ def handle_game(game: BasketballGame, overwrite_existing_pages: bool = True):
 
     if page_exists and not overwrite_existing_pages:
         logging.info(f"Don't edit existing pages, skipping: {page_name}")
+        #game_page.delete(reason="MaccabiBot - Deleting basketball game page")
         return
 
     if page_exists:
@@ -229,5 +248,6 @@ def upload_basketball_games_to_maccabipedia(games: list[BasketballGame]):
 
 if __name__ == '__main__':
     logging.info(f"Should save? : {SHOULD_SAVE}, should show diff?: {SHOULD_SHOW_DIFF}")
-    upload_basketball_games_to_maccabipedia(load_basketball_games()[:5])
+    games = load_basketball_games()
+    upload_basketball_games_to_maccabipedia(games[5:10] + games[100:105])
     logging.info("Finish to upload basketball games to Maccabipedia")

@@ -18,6 +18,7 @@ class PlayerSummary(BaseModel):
     free_throws_scored: int
     defensive_rebounds: Optional[int] = None
     offensive_rebounds: Optional[int] = None
+    total_rebounds: Optional[int] = None
     personal_total_fouls: Optional[int] = None
     personal_technical_fouls: Optional[int] = None
     steals: Optional[int] = None
@@ -29,14 +30,15 @@ class PlayerSummary(BaseModel):
         inner = "| ".join([
             f"שם={self.name}",
             f"מספר={self.number}",
+            f"דקות={self.minutes_played}",
             f"חמישייה={'כן' if self.is_starting_five else 'לא'}",
             f"נק={self.total_points}",
-            f"נק מהקו נסיון={self.field_goals_attempts}",
-            f"נק מהקו קלע={self.field_goals_scored}",
-            f"נק מהשלוש נסיון={self.three_scores_attempts}",
-            f"נק מהשלוש קלע={self.three_scores_scored}",
-            f"נק מהצבע נסיון={self.free_throws_attempts}",
-            f"נק מהצבע קלע={self.free_throws_scored}",
+            f"זריקות עונשין={self.field_goals_attempts}",
+            f"קליעות עונשין={self.field_goals_scored}",
+            f"זריקות שלוש נק={self.three_scores_attempts}",
+            f"קליעות שלוש נק={self.three_scores_scored}",
+            f"זריקות שתי נק={self.free_throws_attempts}",
+            f"קליעות שתי נק={self.free_throws_scored}",
             f"ריבאונד הגנה={self.defensive_rebounds}",
             f"ריבאונד התקפה={self.offensive_rebounds}",
             f"פאולים={self.personal_total_fouls}",
@@ -59,7 +61,7 @@ class BasketballGame(BaseModel):
     away_team_score: int
     game_url: list[str]
     has_overtime: Optional[bool] = None
-    stadium: Optional[str] = None
+    arena: Optional[str] = None
     first_quarter_maccabi_points: Optional[int] = None
     second_quarter_maccabi_points: Optional[int] = None
     third_quarter_maccabi_points: Optional[int] = None

@@ -142,7 +142,6 @@ def handle_game(game: bs4.element.Tag) -> Event:
 
     location = get_stadium(time_stadium[1])
 
-    # Game date may be with "לא סופי מועד" near it, we take just the date itself.
     game_date_str = location_info.find("span").text
     game_date = format_datetime(game_date_str, time_stadium[0])
     start_date = game_date.isoformat()
@@ -222,7 +221,7 @@ def fetch_games_from_maccabi_tlv_site(url: str, to_update_last_game: Optional[bo
 
         for game in games:
             # Ignoring games without final schedule or U19 league
-            if game.find(text='לנוער') is None:
+            if game.find(text='מועד לא סופי') is None and game.find(text='לנוער') is None:
                 event = handle_game(game)
                 events.append(event)
             else:

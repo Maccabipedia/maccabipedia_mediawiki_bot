@@ -8,9 +8,9 @@ from typing import Dict, List
 import requests
 from dotenv import load_dotenv
 
-from calendar_operations import fetch_games_from_calendar, update_event, upload_event, delete_event, Event
-from google_calendar_api import initialize_global_google_service_account_from_memory_json
-from ..upload_volleyball_games_from_iva_site import extract_games_metadata
+from maccabipedia_calendar.calendar_operations import fetch_games_from_calendar, update_event, upload_event, delete_event, Event
+from maccabipedia_calendar.google_calendar_api import initialize_global_google_service_account_from_memory_json
+from upload_volleyball_games_from_iva_site import extract_games_metadata
 from volleyball_game import VolleyballGame
 
 _logger = logging.getLogger(__name__)

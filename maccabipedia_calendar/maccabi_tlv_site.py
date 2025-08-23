@@ -8,7 +8,7 @@ import bs4
 import requests
 from bs4 import BeautifulSoup
 
-from calendar_operations import Event
+from maccabipedia_calendar.calendar_operations import Event
 
 _logger = logging.getLogger(__name__)
 

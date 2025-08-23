@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 import googleapiclient
 
-from google_calendar_api import get_global_google_service_account
+from maccabipedia_calendar.google_calendar_api import get_global_google_service_account
 
 _logger = logging.getLogger(__name__)
 

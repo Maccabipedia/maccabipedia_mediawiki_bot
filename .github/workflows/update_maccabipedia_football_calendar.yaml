@@ -21,7 +21,7 @@ jobs:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
           SHOULD_PUBLISH_TO_BROTHER_1906_SITE: true
           BROTHER_1906_API_KEY: ${{ secrets.BROTHER_1906_API_KEY }}
-        run: python scripts/maccabipediabot/maccabipedia_calendar/main.py
+        run: python src/maccabipediabot/maccabipedia_calendar/main.py
   workflow-keepalive:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest

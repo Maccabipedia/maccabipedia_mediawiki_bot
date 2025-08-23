@@ -19,7 +19,7 @@ jobs:
         env:
           VOLLEYBALL_CALENDAR_ID: ${{ secrets.VOLLEYBALL_CALENDAR_ID }}
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-        run: python maccabipedia_calendar/main_volleyball.py
+        run: python -m maccabipedia_calendar.main_volleyball
   workflow-keepalive:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest

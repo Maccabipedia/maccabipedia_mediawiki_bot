@@ -14,7 +14,7 @@ jobs:
           python-version: 3.11
           architecture: x64
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install .
       - name: Try curl
         run: curl -I https://www.iva.org.il/team.asp?TeamId=17029&cYear=2025 || echo "Failed"
       - name: Upload Volleyball Games To MaccabiPedia
@@ -22,4 +22,4 @@ jobs:
           PYWIKIBOT_DIR: pywikibot_configs/
           MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
           MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
-        run: python upload_volleyball_games_from_iva_site.py
+        run: python scripts/upload_volleyball_games_from_iva_site.py

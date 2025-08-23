@@ -16,7 +16,7 @@ from mwparserfromhell.nodes.template import Template
 site = pw.Site()
 site.login()
 
-from prettify_games_pages import prettify_game_page_main_template
+from maccabipediabot.prettify_games_pages import prettify_game_page_main_template
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 

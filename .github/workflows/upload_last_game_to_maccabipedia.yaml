@@ -14,12 +14,12 @@ jobs:
           python-version: 3.11
           architecture: x64
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install .
       - name: Fetch Games From MaccabiTLVSite
-        run: python fetch_games_from_maccabi_tlv_site.py
+        run: python scripts/fetch_games_from_maccabi_tlv_site.py
       - name: Upload Last Game To MaccabiPedia
         env:
           PYWIKIBOT_DIR: pywikibot_configs/
           MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
           MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
-        run: python upload_last_game_to_maccabipedia.py
+        run: python scripts/upload_last_game_to_maccabipedia.py

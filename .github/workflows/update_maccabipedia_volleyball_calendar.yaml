@@ -14,12 +14,12 @@ jobs:
           python-version: 3.11
           architecture: x64
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install .
       - name: Update MaccabiPedia Calendar
         env:
           VOLLEYBALL_CALENDAR_ID: ${{ secrets.VOLLEYBALL_CALENDAR_ID }}
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-        run: python maccabipedia_calendar/main_volleyball.py
+        run: python scripts/maccabipediabot/maccabipedia_calendar/main_volleyball.py
   workflow-keepalive:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest

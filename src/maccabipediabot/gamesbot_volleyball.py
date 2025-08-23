@@ -3,12 +3,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
-from pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.pywikibot_boilerplate import run_boilerplate
 
 run_boilerplate()
 
-from prettify_games_pages import prettify_game_page_main_template
-from volleyball_game import VolleyballGame
+from maccabipediabot.prettify_games_pages import prettify_game_page_main_template
+from maccabipediabot.volleyball_game import VolleyballGame
 
 import pywikibot as pw
 from mwparserfromhell.nodes.template import Template

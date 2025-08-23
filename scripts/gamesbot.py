@@ -19,7 +19,7 @@ from maccabistats import get_maccabi_stats_as_newest_wrapper
 from maccabistats.models.player_game_events import GameEventTypes
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 from maccabistats_player_event import PlayerEvent
-from prettify_games_pages import prettify_game_page_main_template
+from maccabipediabot.prettify_games_pages import prettify_game_page_main_template
 from sort_players_events import sort_player_events_in_games_page
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)

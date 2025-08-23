@@ -14,19 +14,19 @@ jobs:
           python-version: 3.11
           architecture: x64
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install .
       - name: Fetch Football league table and update MaccabiPedia
         env:
           PYWIKIBOT_DIR: pywikibot_configs/
           MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
           MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
-        run: python update_league_table.py
+        run: python scripts/update_league_table.py
       - name: Fetch Volleyball league table and update MaccabiPedia
         env:
           PYWIKIBOT_DIR: pywikibot_configs/
           MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
           MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
-        run: python update_league_table_volleyball.py
+        run: python scripts/update_league_table_volleyball.py
   workflow-keepalive:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest

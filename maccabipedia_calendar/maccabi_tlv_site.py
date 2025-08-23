@@ -140,7 +140,7 @@ def handle_game(game: bs4.element.Tag) -> Event:
     location_info = game.find("div", {"class": "location"})
     time_stadium = location_info.find("div").text.split(' ')
 
-    location = get_stadium(time_stadium[1])
+    location = get_stadium(' '.join(time_stadium[1:]))
 
     game_date_str = location_info.find("span").text
     game_date = format_datetime(game_date_str, time_stadium[0])

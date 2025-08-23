@@ -4,9 +4,11 @@ from typing import Dict
 
 import pywikibot as pw
 from pywikibot import config
-from pywikibot.data.api import LoginManager
 
 MACCABIPEDIA_FAMILY_FILE = Path(__file__).absolute().parent / 'pywikibot_configs' / 'maccabipedia_family.py'
+
+# We can't send the get param 'loginreturnurl' with example.com, and it's hardcoded, so have to replace it
+from pywikibot.data.api import LoginManager
 
 old_pywikibot_login = LoginManager._login_parameters
 
@@ -25,6 +27,7 @@ def run_boilerplate() -> pw.Site:
 
     LoginManager._login_parameters = new_pywikibot_login
 
+    # We need to have the url to api.php due to the fact we don't have w/api.php
     site = pw.Site()
     site.login()
 

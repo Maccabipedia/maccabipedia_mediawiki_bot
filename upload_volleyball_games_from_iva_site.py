@@ -11,7 +11,7 @@ import requests
 from volleyball_common import TEAM_NAMES_REPLACER, STADIUMS_NAMES
 from gamesbot_volleyball import VolleyballGame, create_or_update_volleyball_game_pages
 
-WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES = 'https://www.iva.org.il/team.asp?TeamId=17029&cYear=2025'
+WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES = 'https://iva.org.il/team.asp?TeamId=34149&cYear=2026'
 MACCABI_NAMES = ['מכבי יעדים תל-אביב']
 LEAGUE_NAME_AS_IT_DISPLAYED_IN_IVA_SITE = 'ליגת על גברים'
 TROPHY_NAME_AS_IT_DISPLAYED_IN_IVA_SITE = 'גביע המדינה לגברים'
@@ -28,7 +28,8 @@ def create_volleyball_game_from_dataframe_row(row: pd.Series) -> VolleyballGame:
     opponent_name = row["אורחת"] if is_home_game else row["מארחת"]
     stadium = row["אולם"]
 
-    if "-" in row["תוצאה"]:
+    # The result can be float (NaN) for future games, or string with "-" in case of a played game
+    if isinstance(row["תוצאה"], str) and "-" in row["תוצאה"]:
         maccabi_result, opponent_result = (row["תוצאה"].split('-')[::-1]) if is_home_game else row["תוצאה"].split('-')
     else:
         maccabi_result, opponent_result = None, None  # Future game

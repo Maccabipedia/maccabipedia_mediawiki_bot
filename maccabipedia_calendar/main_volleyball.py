@@ -1,6 +1,9 @@
 import json
 import logging
 import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import re
 from datetime import datetime, timedelta
 from typing import Dict, List
@@ -10,7 +13,8 @@ from dotenv import load_dotenv
 
 from calendar_operations import fetch_games_from_calendar, update_event, upload_event, delete_event, Event
 from google_calendar_api import initialize_global_google_service_account_from_memory_json
-from ..upload_volleyball_games_from_iva_site import extract_games_metadata
+# Hack with adding dirname to sys path!
+from upload_volleyball_games_from_iva_site import extract_games_metadata
 from volleyball_game import VolleyballGame
 
 _logger = logging.getLogger(__name__)

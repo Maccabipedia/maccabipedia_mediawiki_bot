@@ -2,6 +2,8 @@ import json
 import logging
 import os
 import sys
+from zoneinfo import ZoneInfo
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import re
@@ -42,18 +44,17 @@ def search_event_in_calendar(event: Dict, events_list: List) -> Dict:
 
     return {}
 
-
-def sync_future_games_to_calendar(events_list: List[Event], curr_events_list: List[Event], calendar_id: str) -> None:
+def sync_future_games_to_calendar(potential_new_events: List[Event], existing_event: List[Event], calendar_id: str) -> None:
     _logger.info("--- Adding & Updating Events: ---")
 
-    for event in events_list:
-        curr_event = search_event_in_calendar(event, curr_events_list)
+    for potential_new_event in potential_new_events:
+        curr_event = search_event_in_calendar(potential_new_event, existing_event)
         if curr_event != {}:
-            if event['summary'] != curr_event['summary'] or event['description'] != curr_event['description'] \
-                    or event['start'] != curr_event['start'] or event['location'] != curr_event['location']:
-                update_event(event, curr_event['id'], calendar_id)
+            if potential_new_event['summary'] != curr_event['summary'] or potential_new_event['description'] != curr_event['description'] \
+                    or potential_new_event['start'] != curr_event['start'] or potential_new_event['location'] != curr_event['location']:
+                update_event(potential_new_event, curr_event['id'], calendar_id)
         else:
-            upload_event(event, calendar_id)
+            upload_event(potential_new_event, calendar_id)
 
 
 def delete_unnecessary_events(events_list: List[Event], future_calendars_events: List[Event], calendar_id: str) -> None:
@@ -96,6 +97,8 @@ def cast_game_to_google_event(game: VolleyballGame) -> Event:
 
     maccabipedia_id = f"{game.opponent} {game.fixture} {game.competition}"
 
+    # Make sure the game date will include timezone info (used when checking whether this is an existing event)
+    game.date = game.date.replace(tzinfo = ZoneInfo('Asia/Jerusalem'))
     event = {
         'summary': f"[עף] {game.opponent} - {game.home_away}",
         'location': game.stadium,

@@ -99,7 +99,7 @@ def extract_games_metadata(include_future_games: bool = False) -> List[Volleybal
     if include_future_games:
         games_to_fetch = games_table.iterrows()
     else:
-        games_to_fetch = games_table.index[games_table['תוצאה'].notna()].iterrows()
+        games_to_fetch = games_table[games_table['תוצאה'].notna()].iterrows()
 
     for _, game_row in games_to_fetch:
         game = create_volleyball_game_from_dataframe_row(game_row)

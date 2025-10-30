@@ -14,10 +14,10 @@ print("SSL version:", ssl.OPENSSL_VERSION)
 from pywikibot_boilerplate import run_boilerplate
 from volleyball_common import TEAM_NAMES_REPLACER
 
-LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA = 'תבנית:טבלת ליגת כדורעף 2024/25'
+LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA = 'תבנית:טבלת ליגת כדורעף 2025/26'
 _TABLE_STATUS_KEY = 'טבלה'
 
-IVA_LEAGUE_TABLE_URL = 'https://www.iva.org.il/league.asp?LeagueId=2334&cYear=2025'
+IVA_LEAGUE_TABLE_URL = 'https://iva.org.il/league.asp?LeagueId=7505&cYear=2026'
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 

@@ -17,7 +17,7 @@ LEAGUE_NAME_AS_IT_DISPLAYED_IN_IVA_SITE = 'ליגת על גברים'
 TROPHY_NAME_AS_IT_DISPLAYED_IN_IVA_SITE = 'גביע המדינה לגברים'
 LEAGUE_NAME = 'ליגת העל'
 TROPHY_NAME = 'גביע המדינה'
-CURRENT_SEASON = '2024/25'
+CURRENT_SEASON = '2025/26'
 
 
 def create_volleyball_game_from_dataframe_row(row: pd.Series) -> VolleyballGame:

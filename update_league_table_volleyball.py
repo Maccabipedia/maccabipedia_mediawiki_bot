@@ -14,6 +14,19 @@ print("SSL version:", ssl.OPENSSL_VERSION)
 from pywikibot_boilerplate import run_boilerplate
 from volleyball_common import TEAM_NAMES_REPLACER
 
+# Local overrides for team names mapping. Use the original team name string from the IVA
+# table as the key and the desired modified name as the value. If a team name is not
+# present in either this local dict or the imported TEAM_NAMES_REPLACER, the original
+# name will be used unchanged.
+# Example:
+# LOCAL_TEAM_NAMES_REPLACER = {
+#     'מכבי תל אביב': 'מכבי ת"א',
+# }
+LOCAL_TEAM_NAMES_REPLACER = {
+    # put entries here as 'original_team_name': 'modified_team_name'
+    'מכבי SVA רחובות': 'מכבי רחובות'
+}
+
 LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA = 'תבנית:טבלת ליגת כדורעף 2025/26'
 _TABLE_STATUS_KEY = 'טבלה'
 
@@ -70,8 +83,11 @@ def fetch_league_data_from_iva():
     for raw_table_team_record in volleyball_league_table.iterrows():
         parsed_team_records.append(parse_team_record(raw_table_team_record[1]))
 
+    # Merge the global replacer with local overrides; local overrides take precedence.
+    merged_replacer = {**TEAM_NAMES_REPLACER, **LOCAL_TEAM_NAMES_REPLACER}
+
     for team_record in parsed_team_records:
-        team_record.name = TEAM_NAMES_REPLACER.get(team_record.name, team_record.name)
+        team_record.name = merged_replacer.get(team_record.name, team_record.name)
 
     aggregated_record_to_be_filled_in_table_template_key = ",\n".join(
         team_record.adapt_to_mediawiki_code() for team_record in parsed_team_records)

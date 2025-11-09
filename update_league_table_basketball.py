@@ -25,10 +25,6 @@ OPPONENTS_NAMES_TO_UNICODE = {"Maccabi Tel Aviv": "מכבי תל אביב",
 
 
 LINKS_TO_FETCH_LEAGUE_TABLE_FROM = [
-    # Links for probably playoff stages:
-    #"https://prod-public-api.livescore.com/v1/api/app/stage/soccer/israel/premier-league-championship-group/3",
-    #"https://prod-public-api.livescore.com/v1/api/app/stage/soccer/israel/premier-league-relegation-group/3",
-
     "https://prod-cdn-public-api.livescore.com/v1/api/app/stage/basketball/israel/super-league/2"
 ]
 

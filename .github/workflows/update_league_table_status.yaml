@@ -33,6 +33,12 @@ jobs:
           MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
           MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
         run: python update_league_table_basketball.py
+      - name: Fetch Basketball euroleague table and update MaccabiPedia
+        env:
+          PYWIKIBOT_DIR: pywikibot_configs/
+          MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
+          MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
+        run: python update_euroleague_table_basketball.py
   workflow-keepalive:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest

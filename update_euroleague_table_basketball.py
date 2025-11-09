@@ -20,6 +20,7 @@ OPPONENTS_NAMES_TO_UNICODE = {"Maccabi Tel Aviv": "מכבי תל אביב",
                               "Barcelona": "ברצלונה",
                               "FC Bayern Munchen": "באיירן מינכן",
                               "Paris Basketball": "פריז בסקטבול",
+                              "Olimpia Milano": "ארמאני מילאנו",
                               "Fenerbahçe": "פנרבחצ'ה",
                               "Virtus Bologna": "וירטוס בולוניה",
                               "BC Dubai": "דובאי",
@@ -49,6 +50,9 @@ def fetch_table_data():
         resp = requests.get(url)
         table = resp.json()["Stages"][0]["LeagueTable"]["L"][0]["Tables"][0]["team"]
         for row in table:
+            wins = int(row["winn"])
+            losses = int(row["lstn"])
+            points = wins * 2 + losses * 1
             stats.append(
                 "^".join(
                     [
@@ -58,7 +62,7 @@ def fetch_table_data():
                         row["lstn"],
                         str(row["gf"]),
                         str(row["ga"]),
-                        row["ptsn"],
+                        str(points),
                     ]
                 )
             )

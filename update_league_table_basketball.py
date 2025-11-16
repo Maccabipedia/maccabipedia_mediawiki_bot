@@ -21,6 +21,7 @@ OPPONENTS_NAMES_TO_UNICODE = {"Maccabi Tel Aviv": "מכבי תל אביב",
                               "Elitzur Netanya": "אליצור עירוני נתניה",
                               "Ironi Nes Ziona": "עירוני נס ציונה",
                               "Bnei Herzliya": "בני הרצליה",
+                              "Ironi Kiryat Ata": "עירוני קרית אתא"
                               }
 
 

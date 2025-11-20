@@ -11,7 +11,7 @@ import requests
 from volleyball_common import TEAM_NAMES_REPLACER, STADIUMS_NAMES
 from gamesbot_volleyball import VolleyballGame, create_or_update_volleyball_game_pages
 
-WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES = 'https://iva.org.il/team.asp?TeamId=34149&cYear=2026'
+WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES = 'https://iva.org.il/team/?TeamId=34149&cYear=2026'
 MACCABI_NAMES = ['מכבי יעדים תל-אביב']
 LEAGUE_NAME_AS_IT_DISPLAYED_IN_IVA_SITE = 'ליגת על גברים'
 TROPHY_NAME_AS_IT_DISPLAYED_IN_IVA_SITE = 'גביע המדינה לגברים'

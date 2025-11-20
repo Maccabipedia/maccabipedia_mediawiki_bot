@@ -30,7 +30,7 @@ LOCAL_TEAM_NAMES_REPLACER = {
 LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA = 'תבנית:טבלת ליגת כדורעף 2025/26'
 _TABLE_STATUS_KEY = 'טבלה'
 
-IVA_LEAGUE_TABLE_URL = 'https://iva.org.il/league.asp?LeagueId=7505&cYear=2026'
+IVA_LEAGUE_TABLE_URL = 'https://iva.org.il/league/?LeagueId=7505&cYear=2026'
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 

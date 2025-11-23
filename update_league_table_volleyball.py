@@ -24,7 +24,6 @@ from volleyball_common import TEAM_NAMES_REPLACER
 # }
 LOCAL_TEAM_NAMES_REPLACER = {
     # put entries here as 'original_team_name': 'modified_team_name'
-    'מכבי SVA רחובות': 'מכבי רחובות'
 }
 
 LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA = 'תבנית:טבלת ליגת כדורעף 2025/26'
@@ -60,7 +59,7 @@ class VolleyballTableTeamRecord:
 
 
 def parse_team_record(raw_team_record: pd.Series) -> VolleyballTableTeamRecord:
-    team_name = raw_team_record['קבוצה'].partition(".")[2].strip()  # Take everything after the first dot
+    team_name = raw_team_record['קבוצה']  # Take everything after the first dot
     games = raw_team_record["מש'"]
     wins = raw_team_record["נצ'"]
     losses = raw_team_record["הפ'"]

@@ -1,4 +1,5 @@
 import logging
+import re
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
@@ -12,7 +13,7 @@ from volleyball_common import TEAM_NAMES_REPLACER, STADIUMS_NAMES
 from gamesbot_volleyball import VolleyballGame, create_or_update_volleyball_game_pages
 
 WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES = 'https://iva.org.il/team/?TeamId=34149&cYear=2026'
-MACCABI_NAMES = ['מכבי יעדים תל-אביב']
+MACCABI_NAMES = ['מכבי יעדים תל-אביב', 'מכבי תל אביב', 'מכבי יעדים תל אביב']
 LEAGUE_NAME_AS_IT_DISPLAYED_IN_IVA_SITE = 'ליגת על גברים'
 TROPHY_NAME_AS_IT_DISPLAYED_IN_IVA_SITE = 'גביע המדינה לגברים'
 LEAGUE_NAME = 'ליגת העל'
@@ -21,10 +22,13 @@ CURRENT_SEASON = '2025/26'
 
 
 def create_volleyball_game_from_dataframe_row(row: pd.Series) -> VolleyballGame:
-    raw_date_parts = row["תאריך"].split()
-    game_date = datetime.strptime(f'{raw_date_parts[0]} {raw_date_parts[3]}', '%d/%m/%Y %H:%M')
+    date_field = str(row["תאריך"])
+    m = re.search(r"(\d{1,2}/\d{1,2}/\d{4}).*?(\d{1,2}:\d{2})", date_field)
+    game_date = datetime.strptime(f'{m.group(1)} {m.group(2)}', '%d/%m/%Y %H:%M')
 
-    is_home_game = row["מארחת"] in MACCABI_NAMES
+    is_home_game = row["מארחת"].strip() in MACCABI_NAMES
+    home_team_name = row["מארחת"].strip()
+    logging.info(f'for game date: {game_date} ({home_team_name}), is_home_game: {is_home_game}')
     opponent_name = row["אורחת"] if is_home_game else row["מארחת"]
     stadium = row["אולם"]
 

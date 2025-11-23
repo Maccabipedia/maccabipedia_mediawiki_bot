@@ -64,9 +64,9 @@ def parse_team_record(raw_team_record: pd.Series) -> VolleyballTableTeamRecord:
     games = raw_team_record["מש'"]
     wins = raw_team_record["נצ'"]
     losses = raw_team_record["הפ'"]
-    points_in_game_against, points_in_game_for = raw_team_record["נקודות"].split("-")
-    sets_against, sets_for = raw_team_record["מערכות"].split("-")
-    points = raw_team_record["נק'"]
+    points_in_game_against, points_in_game_for = raw_team_record["סה\"כ נקודות"].split("-")
+    sets_against, sets_for = raw_team_record["סטים"].split("-")
+    points = raw_team_record["נקודות"]
     return VolleyballTableTeamRecord(name=team_name, games=games, wins=wins, losses=losses,
                                      points_in_game_for=points_in_game_for,
                                      points_in_game_against=points_in_game_against, sets_for=sets_for,

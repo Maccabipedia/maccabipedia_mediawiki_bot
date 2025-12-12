@@ -126,13 +126,17 @@ def cast_game_to_google_event(game: VolleyballGame) -> Event:
 
 
 def main(google_credentials: str, calendar_id: str):
-    current_time = datetime.utcnow().isoformat() + 'Z'  # current datetime - to update and add upcoming games only
+    current_datetime = datetime.utcnow()
+    current_time = current_datetime.isoformat() + 'Z'  # current datetime - to update and add upcoming games only
 
     initialize_global_google_service_account_from_memory_json(google_credentials)
 
     future_calendars_events = fetch_games_from_calendar(calendar_id, fetch_after_this_time=current_time)
     games_from_iva_site = extract_games_metadata(include_future_games=True)
-    upcoming_events_from_iva_site = [cast_game_to_google_event(game) for game in games_from_iva_site]
+    # filter in only event from the current_time and later (as we do in the calendar fetch)
+    future_games_from_iva_site = [game for game in games_from_iva_site if game.date >= current_datetime]
+
+    upcoming_events_from_iva_site = [cast_game_to_google_event(game) for game in future_games_from_iva_site]
     sync_future_games_to_calendar(upcoming_events_from_iva_site, future_calendars_events, calendar_id)
     delete_unnecessary_events(upcoming_events_from_iva_site, future_calendars_events, calendar_id)
 

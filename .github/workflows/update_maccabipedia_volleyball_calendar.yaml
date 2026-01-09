@@ -1,7 +1,7 @@
 name: Update MaccabiPedia Calendar (Volleyball)
 on:
   schedule:
-    - cron: "0 20 * * *"
+    - cron: "0 16,20,0 * * *"
   workflow_dispatch:
 
 jobs:

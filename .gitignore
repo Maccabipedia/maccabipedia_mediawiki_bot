@@ -116,4 +116,5 @@ throttle.ctrl
 pywikibot.lwp
 
 # AI Agents
-.agents-temp/
+.agents-temp/*
+!.agents-temp/.gitkeep

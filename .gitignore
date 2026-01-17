@@ -114,3 +114,6 @@ venv.bak/
 apicache-py3/
 throttle.ctrl
 pywikibot.lwp
+
+# AI Agents
+.agents-temp/

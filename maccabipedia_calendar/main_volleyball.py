@@ -47,23 +47,24 @@ def load_game_overrides() -> Dict:
 def apply_overrides(games: List[VolleyballGame], overrides: Dict) -> List[VolleyballGame]:
     """
     Apply date overrides to games from IVA site.
-    Matches games by maccabipedia_id format: '{opponent} {fixture} {competition}'
-    Override value is a date string in format: 'DD/MM/YYYY HH:MM' (same as IVA site)
-    Raises ValueError if date format is invalid (fail fast).
+    Matches games by their original date string format: 'DD/MM/YYYY HH:MM'
+    Override value is the new date string in the same format.
+    Raises ValueError if new date format is invalid (fail fast).
     """
     if not overrides:
         return games
     
     for game in games:
-        game_id = f"{game.opponent} {game.fixture} {game.competition}"
+        # Format current game date to match override key format
+        current_date_str = game.date.strftime('%d/%m/%Y %H:%M')
         
-        if game_id in overrides:
-            date_string = overrides[game_id]
-            _logger.info(f"Applying date override to game: {game_id}")
+        if current_date_str in overrides:
+            new_date_str = overrides[current_date_str]
+            _logger.info(f"Applying date override: {current_date_str} -> {new_date_str} (Game: {game.opponent} {game.fixture})")
             
-            # Let ValueError propagate if date format is invalid
-            game.date = datetime.strptime(date_string, '%d/%m/%Y %H:%M')
-            _logger.info(f"  - Overriding date to: {game.date}")
+            # Let ValueError propagate if new date format is invalid
+            game.date = datetime.strptime(new_date_str, '%d/%m/%Y %H:%M')
+            _logger.info(f"  - Overridden successfully")
     
     return games
 
@@ -172,7 +173,7 @@ def cast_game_to_google_event(game: VolleyballGame) -> Event:
         'extendedProperties': {
             'shared': {
                 'maccabipedia_id': maccabipedia_id,
-                'iva_sourced': 'true',  # Mark as IVA-sourced for deletion protection
+                'iva_sourced': 'true',  # Games with this flag are managed by automation and can be deleted if not in IVA data
             }
         },
     }

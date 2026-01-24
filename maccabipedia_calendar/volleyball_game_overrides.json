@@ -1,10 +1,9 @@
 {
   "_comment": "Override file for volleyball games with incorrect dates from IVA website",
-  "_format": "Key format: '{opponent} {fixture} {competition}' (must match maccabipedia_id)",
+  "_format": "Format: 'OLD_DATE_TIME': 'NEW_DATE_TIME'",
   "_date_format": "DD/MM/YYYY HH:MM (same format as IVA site)",
   "_examples": {
-    "מכבי חיפה מחזור 5 ליגה": "15/02/2026 19:00",
-    "הפועל ירושלים מחזור 3 גביע המדינה": "28/01/2026 20:30",
-    "הפועל כפר סבא   מחזור 13 ליגת העל": "10/02/2026 19:00"
-  }
+    "15/02/2026 19:30": "15/02/2026 19:00"
+  },
+  "27/01/2026 19:00": "10/02/2026 19:00"
 }

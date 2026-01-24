@@ -1,6 +1,6 @@
 # Project Rules for AI Agents
 
-Welcome to the Maccabipedia MediaWiki Bot project. To maintain a clean and efficient workspace, all AI agents must follow these rules:
+Welcome to the Maccabipedia MediaWiki Bot project. This file is the **primary source of truth** for all agent behavior and coding standards.
 
 ## 1. File Placement (CRITICAL)
 - **Do NOT** create temporary scripts, debug tools, or data reports in the root directory.
@@ -14,11 +14,18 @@ Welcome to the Maccabipedia MediaWiki Bot project. To maintain a clean and effic
   - Any specific dependencies or inputs required.
 
 ## 3. Workflows
-- Check the `.agent/workflows/` directory for any pre-defined procedures before starting complex tasks.
+- Check the `.agent/workflows/` directory for any procedures. Most workflow files will point back to this file for general best practices.
 
 ## 4. Automation & Data Integrity Best Practices
-- **Zero Tolerance for Silent Failures**: Treat every discrepancy as an exception. Verify counts against source of truth (e.g., wiki category size vs. processed list) before assuming completeness.
-- **Interactive Verification**: For fuzzy matching or data correction, prefer interactive scripts that cache user decisions (Human-in-the-Loop) over automated guessing.
+- **Zero Tolerance for Silent Failures**: Treat every discrepancy as an exception. Verify counts against source of truth (e.g., wiki category size vs. processed list).
+- **Let Exceptions Propagate (Fail Fast)**: Do **NOT** silence exceptions with empty `try/except` blocks (catch and do nothing). Let the script crash so errors are visible.
+- **Handle Edge Cases**: proactively identify and handle potential edge cases (e.g., missing data, network timeouts, invalid wiki syntax).
+- **Interactive Verification**: For fuzzy matching or data correction, prefer interactive scripts that cache user decisions (Human-in-the-Loop).
 
-## 5. Project Specific Coding Standards
-- **URL Formatting**: Mccaabipedia URLs must be `https://www.maccabipedia.co.il/Page_Title_With_Underscores`. Do not use `index.php?title=...`.
+## 5. Coding Standards & Naming
+- **Readable Names**: Naming conventions must prioritize readability and clarity. Avoid overly cryptic abbreviations.
+- **Python Style**: Follow PEP 8 (snake_case for functions/variables, PascalCase for classes).
+- **URL Formatting**: Maccabipedia URLs must be `https://www.maccabipedia.co.il/Page_Title_With_Underscores`. Do not use `index.php?title=...`.
+
+## 6. Environment & Tools
+- **Shell Preference**: Use **`cmd`** for command-line operations instead of PowerShell. Avoid PowerShell-specific syntax (like `$env:VAR` or backtick line continuations) and use standard CMD syntax (`^` for line continuation).

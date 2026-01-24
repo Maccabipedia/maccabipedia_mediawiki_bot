@@ -40,4 +40,4 @@ def refresh_category(category: str, hard_refresh: bool = False) -> None:
 
 
 if __name__ == '__main__':
-    refresh_category(category="פרופילי כדורגל")
+    refresh_category(category="משחקי כדורסל")

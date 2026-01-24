@@ -4,7 +4,7 @@
 
 The volleyball calendar sync system now supports:
 1. **Manual game protection** - Games added manually to the calendar won't be deleted
-2. **Data overrides** - Fix incorrect IVA website data (dates, times, locations, scores)
+2. **Date overrides** - Fix incorrect game dates from IVA website
 
 ---
 
@@ -24,9 +24,9 @@ The volleyball calendar sync system now supports:
 
 ---
 
-### Data Overrides
+### Date Overrides
 
-**For fixing wrong IVA data** (incorrect dates, times, locations, etc.)
+**For fixing wrong dates from IVA**
 
 #### Override File Location
 `maccabipedia_calendar/volleyball_game_overrides.json`
@@ -35,13 +35,8 @@ The volleyball calendar sync system now supports:
 
 ```json
 {
-  "מכבי חיפה מחזור 5 ליגה": {
-    "date": "2026-02-15 19:00",
-    "stadium": "היכל הספורט רמת גן"
-  },
-  "הפועל ירושלים מחזור 3 גביע המדינה": {
-    "date": "2026-01-28 20:30"
-  }
+  "מכבי חיפה מחזור 5 ליגה": "2026-02-15 19:00",
+  "הפועל ירושלים מחזור 3 גביע המדינה": "2026-01-28 20:30"
 }
 ```
 
@@ -55,14 +50,12 @@ The key must match the `maccabipedia_id` format:
 - `"מכבי חיפה מחזור 5 ליגה"`
 - `"הפועל ירושלים מחזור 3 גביע המדינה"`
 
-#### Available Override Fields
+#### Date Format
+`YYYY-MM-DD HH:MM`
 
-| Field | Format | Example |
-|-------|--------|---------|
-| `date` | `YYYY-MM-DD HH:MM` | `"2026-02-15 19:00"` |
-| `stadium` | String | `"היכל הספורט רמת גן"` |
-| `maccabi_result` | Integer | `3` |
-| `opponent_result` | Integer | `1` |
+**Examples:**
+- `"2026-02-15 19:00"`
+- `"2026-01-28 20:30"`
 
 ---
 
@@ -74,44 +67,41 @@ IVA shows game on Feb 10, but it's actually Feb 15:
 
 ```json
 {
-  "מכבי חיפה מחזור 5 ליגה": {
-    "date": "2026-02-15 19:00"
-  }
+  "מכבי חיפה מחזור 5 ליגה": "2026-02-15 19:00"
 }
 ```
 
-### Example 2: Fix Multiple Fields
+### Example 2: Multiple Date Fixes
 
 ```json
 {
-  "הפועל ירושלים מחזור 3 גביע המדינה": {
-    "date": "2026-01-28 20:30",
-    "stadium": "היכל טוטו ירושלים"
-  }
+  "מכבי חיפה מחזור 5 ליגה": "2026-02-15 19:00",
+  "הפועל ירושלים מחזור 3 גביע המדינה": "2026-01-28 20:30"
 }
 ```
 
-### Example 3: Update Score
+### Example 3: Add Manual Game
 
-```json
-{
-  "מכבי נתניה מחזור 8 ליגה": {
-    "maccabi_result": 3,
-    "opponent_result": 2
-  }
-}
-```
+**Scenario:** Game not on IVA website at all
+
+**Solution:**
+1. Add game directly in Google Calendar
+2. Don't add any special properties
+3. Done! It's automatically protected
+
+**Result:** Game stays in calendar, never deleted by sync
+
 
 ---
 
 ## How to Use
 
-### Adding an Override
+### Adding a Date Override
 
 1. Open `maccabipedia_calendar/volleyball_game_overrides.json`
-2. Add your override entry
+2. Add entry: `"game_id": "YYYY-MM-DD HH:MM"`
 3. Save the file
-4. Next sync will use the corrected data
+4. Next sync will use the corrected date
 
 ### Finding the Game ID
 

@@ -48,8 +48,9 @@ def load_game_overrides() -> Dict:
 
 def apply_overrides(games: List[VolleyballGame], overrides: Dict) -> List[VolleyballGame]:
     """
-    Apply overrides to games from IVA site.
+    Apply date overrides to games from IVA site.
     Matches games by maccabipedia_id format: '{opponent} {fixture} {competition}'
+    Override value is a date string in format: 'YYYY-MM-DD HH:MM'
     """
     if not overrides:
         return games
@@ -58,27 +59,14 @@ def apply_overrides(games: List[VolleyballGame], overrides: Dict) -> List[Volley
         game_id = f"{game.opponent} {game.fixture} {game.competition}"
         
         if game_id in overrides:
-            override_data = overrides[game_id]
-            _logger.info(f"Applying overrides to game: {game_id}")
+            date_override = overrides[game_id]
+            _logger.info(f"Applying date override to game: {game_id}")
             
-            if 'date' in override_data:
-                try:
-                    game.date = datetime.strptime(override_data['date'], '%Y-%m-%d %H:%M')
-                    _logger.info(f"  - Overriding date to: {game.date}")
-                except ValueError as e:
-                    _logger.error(f"  - Invalid date format in override: {e}")
-            
-            if 'stadium' in override_data:
-                game.stadium = override_data['stadium']
-                _logger.info(f"  - Overriding stadium to: {game.stadium}")
-            
-            if 'maccabi_result' in override_data:
-                game.maccabi_result = override_data['maccabi_result']
-                _logger.info(f"  - Overriding Maccabi result to: {game.maccabi_result}")
-            
-            if 'opponent_result' in override_data:
-                game.opponent_result = override_data['opponent_result']
-                _logger.info(f"  - Overriding opponent result to: {game.opponent_result}")
+            try:
+                game.date = datetime.strptime(date_override, '%Y-%m-%d %H:%M')
+                _logger.info(f"  - Overriding date to: {game.date}")
+            except ValueError as e:
+                _logger.error(f"  - Invalid date format in override: {e}")
     
     return games
 

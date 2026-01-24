@@ -1,14 +1,9 @@
 {
-  "_comment": "Override file for volleyball games with incorrect data from IVA website",
+  "_comment": "Override file for volleyball games with incorrect dates from IVA website",
   "_format": "Key format: '{opponent} {fixture} {competition}' (must match maccabipedia_id)",
-  "_available_overrides": "date (YYYY-MM-DD HH:MM), stadium, maccabi_result, opponent_result",
+  "_date_format": "YYYY-MM-DD HH:MM",
   "_examples": {
-    "מכבי חיפה מחזור 5 ליגה": {
-      "date": "2026-02-15 19:00",
-      "stadium": "היכל הספורט רמת גן"
-    },
-    "הפועל ירושלים מחזור 3 גביע המדינה": {
-      "date": "2026-01-28 20:30"
-    }
+    "מכבי חיפה מחזור 5 ליגה": "2026-02-15 19:00",
+    "הפועל ירושלים מחזור 3 גביע המדינה": "2026-01-28 20:30"
   }
 }

@@ -27,6 +27,7 @@ def load_game_overrides() -> Dict:
     """
     Load game overrides from JSON file.
     Returns empty dict if file doesn't exist.
+    Raises exception if file exists but is invalid (fail fast).
     """
     override_file = Path(__file__).parent / 'volleyball_game_overrides.json'
     
@@ -34,16 +35,13 @@ def load_game_overrides() -> Dict:
         _logger.info("No override file found, proceeding without overrides")
         return {}
     
-    try:
-        with open(override_file, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            # Filter out metadata fields (starting with _)
-            overrides = {k: v for k, v in data.items() if not k.startswith('_')}
-            _logger.info(f"Loaded {len(overrides)} game overrides")
-            return overrides
-    except Exception as e:
-        _logger.error(f"Failed to load overrides: {e}")
-        return {}
+    _logger.info(f"Loading overrides from: {override_file}")
+    with open(override_file, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+        # Filter out metadata fields (starting with _)
+        overrides = {game_id: date_string for game_id, date_string in data.items() if not game_id.startswith('_')}
+        _logger.info(f"Loaded {len(overrides)} game overrides")
+        return overrides
 
 
 def apply_overrides(games: List[VolleyballGame], overrides: Dict) -> List[VolleyballGame]:
@@ -51,6 +49,7 @@ def apply_overrides(games: List[VolleyballGame], overrides: Dict) -> List[Volley
     Apply date overrides to games from IVA site.
     Matches games by maccabipedia_id format: '{opponent} {fixture} {competition}'
     Override value is a date string in format: 'DD/MM/YYYY HH:MM' (same as IVA site)
+    Raises ValueError if date format is invalid (fail fast).
     """
     if not overrides:
         return games
@@ -59,14 +58,12 @@ def apply_overrides(games: List[VolleyballGame], overrides: Dict) -> List[Volley
         game_id = f"{game.opponent} {game.fixture} {game.competition}"
         
         if game_id in overrides:
-            date_override = overrides[game_id]
+            date_string = overrides[game_id]
             _logger.info(f"Applying date override to game: {game_id}")
             
-            try:
-                game.date = datetime.strptime(date_override, '%d/%m/%Y %H:%M')
-                _logger.info(f"  - Overriding date to: {game.date}")
-            except ValueError as e:
-                _logger.error(f"  - Invalid date format in override: {e}")
+            # Let ValueError propagate if date format is invalid
+            game.date = datetime.strptime(date_string, '%d/%m/%Y %H:%M')
+            _logger.info(f"  - Overriding date to: {game.date}")
     
     return games
 

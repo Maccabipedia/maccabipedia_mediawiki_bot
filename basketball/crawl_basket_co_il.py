@@ -1,9 +1,3 @@
-"""
-This script crawls basket.co.il for Maccabi Tel Aviv games and player stats.
-It extracts game metadata and detailed player statistics for specific seasons.
-
-Run: python basketball/crawl_basket_co_il.py
-"""
 import asyncio
 import json
 import logging
@@ -12,10 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Tuple
 
-try:
-    from basketball.basketball_game import BasketballGame, PlayerSummary
-except ImportError:
-    from basketball_game import BasketballGame, PlayerSummary
+from basketball.basketball_game import BasketballGame, PlayerSummary
 
 import aiohttp
 import bs4
@@ -30,8 +21,7 @@ BASKET_CO_IL_SITE_MACCABI_BASE_PAGE = "https://basket.co.il/team.asp?TeamId={tea
 COMPETITION_NAME = 'ליגת Winner סל'
 BASKET_CO_IL_SITE_PREFIX = 'https://basket.co.il/'
 
-# Using project root relative path for agents-temp as per .agent/AGENTS.md
-BASKETBALL_BASE_FOLDER = Path(__file__).parent.parent / ".agents-temp"
+BASKETBALL_BASE_FOLDER = Path("C:\\") / "maccabi" / "basketball"
 RESULTS_FILE = BASKETBALL_BASE_FOLDER / 'basket_co_il_results.json'
 
 MAX_CONNECTIONS = 100
@@ -88,7 +78,6 @@ def parse_players_events_from_soup_table_element(soup_table: BeautifulSoup) -> l
             free_throws_scored=one_points[0],
             defensive_rebounds=optional_int(11),
             offensive_rebounds=optional_int(12),
-            total_rebounds=optional_int(13),
             personal_total_fouls=optional_int(14),
             steals=optional_int(16),
             turnovers=optional_int(17),
@@ -141,19 +130,9 @@ async def build_seasons_games_metadata_from_season_url(session: ClientSession, s
 
         content = await response.text()
         soup = BeautifulSoup(content, "html.parser")
-        
-        # Try finding by h2 header first (modern structure)
-        header = soup.find(lambda tag: tag.name == "h2" and "לוח משחקים" in tag.get_text())
-        if header:
-            table = header.find_next("table", class_="stats_tbl")
-        else:
-            # Fallback for older seasons where header might be inside the table
-            table = soup.find(lambda tag: tag.name == "table" and "stats_tbl" in tag.get("class", []) and "לוח משחקים" in tag.get_text())
-        
-        if not table:
-            raise RuntimeError(f"Could not find games table for season {season} at {season_url}")
-
-        rows = table.select("tr.row")
+        rows = soup.find(lambda tag: tag.name == "h2" and "לוח משחקים" in tag.get_text()) \
+            .find_next("table", class_="stats_tbl") \
+            .select("tr.row")
 
         games = []
         for row in rows:
@@ -265,19 +244,8 @@ async def crawl_game_pages():
         logging.info(f'Seasons to team ids: {seasons_to_team_ids}')
 
         logging.info(f'Extracting specific games links from seasons pages')
-        
-        # Target seasons: 1988/89 to 2001/02
-        target_seasons = [
-            '1988/89', '1989/90', '1990/91', '1991/92', '1992/93', '1993/94', '1994/95',
-            '1995/96', '1996/97', '1997/98', '1998/99', '1999/00', '2000/01', '2001/02'
-        ]
-        
-        season_tasks = []
-        for season, team_id in seasons_to_team_ids.items():
-            if season in target_seasons:
-                season_tasks.append(extract_games_links_from_seasons_pages(session, season, team_id))
-            else:
-                logging.debug(f"Skipping season {season} as it is not in the target range")
+        season_tasks = [extract_games_links_from_seasons_pages(session, season, team_id) for (season, team_id) in
+                        seasons_to_team_ids.items()]
 
         basketball_games_from_season_pages = await asyncio.gather(*season_tasks)
 

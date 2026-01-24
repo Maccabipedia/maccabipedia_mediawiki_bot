@@ -1,7 +1,3 @@
-"""
-This module defines the data models for basketball games and player summaries.
-Used by crawlers and data processing scripts.
-"""
 from typing import Optional
 
 from datetime import datetime
@@ -37,20 +33,19 @@ class PlayerSummary(BaseModel):
             f"דקות={self.minutes_played}",
             f"חמישייה={'כן' if self.is_starting_five else 'לא'}",
             f"נק={self.total_points}",
-            f"זריקות שתי נק={self.field_goals_attempts}",
-            f"קליעות שתי נק={self.field_goals_scored}",
+            f"זריקות עונשין={self.field_goals_attempts}",
+            f"קליעות עונשין={self.field_goals_scored}",
             f"זריקות שלוש נק={self.three_scores_attempts}",
             f"קליעות שלוש נק={self.three_scores_scored}",
-            f"זריקות עונשין={self.free_throws_attempts}",
-            f"קליעות עונשין={self.free_throws_scored}",
-            f"ריבאונדים={self.total_rebounds}",
+            f"זריקות שתי נק={self.free_throws_attempts}",
+            f"קליעות שתי נק={self.free_throws_scored}",
             f"ריבאונד הגנה={self.defensive_rebounds}",
             f"ריבאונד התקפה={self.offensive_rebounds}",
-            f"אסיסטים={self.assists}",
-            f"חטיפות={self.steals}",
-            f"איבודים={self.turnovers}",
             f"פאולים={self.personal_total_fouls}",
             *(f"פאולים טכני={self.personal_technical_fouls}" if self.personal_technical_fouls is not None else []),
+            f"חטיפות={self.steals}",
+            f"איבודים={self.turnovers}",
+            f"אסיסטים={self.assists}",
             f"בלוקים={self.blocks}"
         ])
 
@@ -64,7 +59,7 @@ class BasketballGame(BaseModel):
     game_date: datetime
     home_team_score: int
     away_team_score: int
-    game_url: str
+    game_url: list[str]
     has_overtime: Optional[bool] = None
     arena: Optional[str] = None
     first_quarter_maccabi_points: Optional[int] = None
@@ -93,9 +88,9 @@ class BasketballGame(BaseModel):
     maccabi_coach: Optional[str] = None
     opponent_coach: Optional[str] = None
     referee: Optional[str] = None
-    referee_assistants: list[str] = Field(default_factory=list)
-    maccabi_players: list[PlayerSummary] = Field(default_factory=list)
-    opponent_players: list[PlayerSummary] = Field(default_factory=list)
+    referee_assistants: Optional[list[str]] = Field(default_factory=[])
+    maccabi_players: Optional[list[PlayerSummary]] = Field(default_factory=[])
+    opponent_players: Optional[list[PlayerSummary]] = Field(default_factory=[])
 
     @property
     def opponent_name(self):

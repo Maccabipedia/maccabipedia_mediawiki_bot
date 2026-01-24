@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -20,6 +21,52 @@ from upload_volleyball_games_from_iva_site import extract_games_metadata
 from volleyball_game import VolleyballGame
 
 _logger = logging.getLogger(__name__)
+
+
+def load_game_overrides() -> Dict:
+    """
+    Load game overrides from JSON file.
+    Returns empty dict if file doesn't exist.
+    Raises exception if file exists but is invalid (fail fast).
+    """
+    override_file = Path(__file__).parent / 'volleyball_game_overrides.json'
+    
+    if not override_file.exists():
+        _logger.info("No override file found, proceeding without overrides")
+        return {}
+    
+    _logger.info(f"Loading overrides from: {override_file}")
+    with open(override_file, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+        # Filter out metadata fields (starting with _)
+        overrides = {game_id: date_string for game_id, date_string in data.items() if not game_id.startswith('_')}
+        _logger.info(f"Loaded {len(overrides)} game overrides")
+        return overrides
+
+
+def apply_overrides(games: List[VolleyballGame], overrides: Dict) -> List[VolleyballGame]:
+    """
+    Apply date overrides to games from IVA site.
+    Matches games by their original date string format: 'DD/MM/YYYY HH:MM'
+    Override value is the new date string in the same format.
+    Raises ValueError if new date format is invalid (fail fast).
+    """
+    if not overrides:
+        return games
+    
+    for game in games:
+        # Format current game date to match override key format
+        current_date_str = game.date.strftime('%d/%m/%Y %H:%M')
+        
+        if current_date_str in overrides:
+            new_date_str = overrides[current_date_str]
+            _logger.info(f"Applying date override: {current_date_str} -> {new_date_str} (Game: {game.opponent} {game.fixture})")
+            
+            # Let ValueError propagate if new date format is invalid
+            game.date = datetime.strptime(new_date_str, '%d/%m/%Y %H:%M')
+            _logger.info(f"  - Overridden successfully")
+    
+    return games
 
 
 def search_event_in_calendar(event: Dict, events_list: List) -> Dict:
@@ -60,11 +107,19 @@ def sync_future_games_to_calendar(potential_new_events: List[Event], existing_ev
 def delete_unnecessary_events(events_list: List[Event], future_calendars_events: List[Event], calendar_id: str) -> None:
     """
     Deleting canceled/delayed/irrelevant events.
-    Event which is in the calendar but not in the events list will be deleted
+    Event which is in the calendar but not in the events list will be deleted.
+    Manual games (without iva_sourced flag) are protected from deletion.
     """
     _logger.info("--- Deleting Events: ---")
 
     for event in future_calendars_events:
+        # Protect manual games from deletion
+        if 'extendedProperties' not in event or \
+           'shared' not in event.get('extendedProperties', {}) or \
+           'iva_sourced' not in event['extendedProperties']['shared']:
+            _logger.info(f"Skipping manual game (not from IVA): {event['summary']}")
+            continue
+        
         exist_event = search_event_in_calendar(event, events_list)
 
         if exist_event == {}:
@@ -118,6 +173,7 @@ def cast_game_to_google_event(game: VolleyballGame) -> Event:
         'extendedProperties': {
             'shared': {
                 'maccabipedia_id': maccabipedia_id,
+                'iva_sourced': 'true',  # Games with this flag are managed by automation and can be deleted if not in IVA data
             }
         },
     }
@@ -131,8 +187,15 @@ def main(google_credentials: str, calendar_id: str):
 
     initialize_global_google_service_account_from_memory_json(google_credentials)
 
+    # Load overrides for incorrect IVA data
+    overrides = load_game_overrides()
+
     future_calendars_events = fetch_games_from_calendar(calendar_id, fetch_after_this_time=current_time)
     games_from_iva_site = extract_games_metadata(include_future_games=True)
+    
+    # Apply overrides to fix incorrect IVA data
+    games_from_iva_site = apply_overrides(games_from_iva_site, overrides)
+    
     # filter in only event from the current_time and later (as we do in the calendar fetch)
     future_games_from_iva_site = [game for game in games_from_iva_site if game.date >= current_datetime]
 

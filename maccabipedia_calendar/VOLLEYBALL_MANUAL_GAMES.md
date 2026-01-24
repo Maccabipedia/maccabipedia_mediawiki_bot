@@ -35,8 +35,8 @@ The volleyball calendar sync system now supports:
 
 ```json
 {
-  "מכבי חיפה מחזור 5 ליגה": "2026-02-15 19:00",
-  "הפועל ירושלים מחזור 3 גביע המדינה": "2026-01-28 20:30"
+  "מכבי חיפה מחזור 5 ליגה": "15/02/2026 19:00",
+  "הפועל ירושלים מחזור 3 גביע המדינה": "28/01/2026 20:30"
 }
 ```
 
@@ -51,11 +51,11 @@ The key must match the `maccabipedia_id` format:
 - `"הפועל ירושלים מחזור 3 גביע המדינה"`
 
 #### Date Format
-`YYYY-MM-DD HH:MM`
+`DD/MM/YYYY HH:MM` (same format as IVA site)
 
 **Examples:**
-- `"2026-02-15 19:00"`
-- `"2026-01-28 20:30"`
+- `"15/02/2026 19:00"`
+- `"28/01/2026 20:30"`
 
 ---
 
@@ -67,7 +67,7 @@ IVA shows game on Feb 10, but it's actually Feb 15:
 
 ```json
 {
-  "מכבי חיפה מחזור 5 ליגה": "2026-02-15 19:00"
+  "מכבי חיפה מחזור 5 ליגה": "15/02/2026 19:00"
 }
 ```
 
@@ -75,8 +75,8 @@ IVA shows game on Feb 10, but it's actually Feb 15:
 
 ```json
 {
-  "מכבי חיפה מחזור 5 ליגה": "2026-02-15 19:00",
-  "הפועל ירושלים מחזור 3 גביע המדינה": "2026-01-28 20:30"
+  "מכבי חיפה מחזור 5 ליגה": "15/02/2026 19:00",
+  "הפועל ירושלים מחזור 3 גביע המדינה": "28/01/2026 20:30"
 }
 ```
 
@@ -99,7 +99,7 @@ IVA shows game on Feb 10, but it's actually Feb 15:
 ### Adding a Date Override
 
 1. Open `maccabipedia_calendar/volleyball_game_overrides.json`
-2. Add entry: `"game_id": "YYYY-MM-DD HH:MM"`
+2. Add entry: `"game_id": "DD/MM/YYYY HH:MM"`
 3. Save the file
 4. Next sync will use the corrected date
 

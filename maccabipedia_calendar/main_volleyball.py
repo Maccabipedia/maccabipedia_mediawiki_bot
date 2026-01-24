@@ -50,7 +50,7 @@ def apply_overrides(games: List[VolleyballGame], overrides: Dict) -> List[Volley
     """
     Apply date overrides to games from IVA site.
     Matches games by maccabipedia_id format: '{opponent} {fixture} {competition}'
-    Override value is a date string in format: 'YYYY-MM-DD HH:MM'
+    Override value is a date string in format: 'DD/MM/YYYY HH:MM' (same as IVA site)
     """
     if not overrides:
         return games
@@ -63,7 +63,7 @@ def apply_overrides(games: List[VolleyballGame], overrides: Dict) -> List[Volley
             _logger.info(f"Applying date override to game: {game_id}")
             
             try:
-                game.date = datetime.strptime(date_override, '%Y-%m-%d %H:%M')
+                game.date = datetime.strptime(date_override, '%d/%m/%Y %H:%M')
                 _logger.info(f"  - Overriding date to: {game.date}")
             except ValueError as e:
                 _logger.error(f"  - Invalid date format in override: {e}")

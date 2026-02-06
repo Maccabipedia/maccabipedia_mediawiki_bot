@@ -191,7 +191,7 @@ def collect_related_pages_from_game(game: VolleyballGame) -> set[str]:
         pages_to_purge.add(f"כדורעף:עונת {game.season}")
 
     if game.competition:
-        pages_to_purge.add(game.competition)
+        pages_to_purge.add(f"כדורעף - {game.competition}")
 
     if game.stadium:
         pages_to_purge.add(game.stadium)

@@ -301,11 +301,11 @@ def collect_related_pages_from_game(game) -> set[str]:
     if game.maccabi_team.coach:
         pages_to_purge.add(game.maccabi_team.coach)
 
-    if game.not_maccabi_team.coach:
-        pages_to_purge.add(game.not_maccabi_team.coach)
-
     if game.season:
         pages_to_purge.add(f"עונת {game.season}")
+
+    if game.competition:
+        pages_to_purge.add(game.competition)
 
     if game.referee:
         pages_to_purge.add(game.referee)

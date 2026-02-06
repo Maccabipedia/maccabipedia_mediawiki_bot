@@ -53,6 +53,7 @@ JUST_EVENTS = True
 SHOULD_SAVE = True
 SHOULD_SHOW_DIFF = True
 SHOULD_CHECK_FOR_UPDATE_IN_EXISTING_PAGES = False
+SHOULD_PURGE_RELATED_PAGES = True  # Purge related pages (opponent, players, coaches) after game uploads
 
 
 def all_maccabi_games():
@@ -286,21 +287,92 @@ def get_games_that_has_existing_pages(games: List[AnyStr]):
     return existing_games
 
 
+def collect_related_pages_from_game(game) -> set[str]:
+    """Collect all pages that should be purged after this game is uploaded."""
+    pages_to_purge = set()
+
+    pages_to_purge.add(game.not_maccabi_team.name)
+
+    # Only Maccabi players have wiki pages, not opponents
+    for player in game.maccabi_team.players:
+        if player.name:
+            pages_to_purge.add(f"שחקן:{player.name}")
+
+    if game.maccabi_team.coach:
+        pages_to_purge.add(game.maccabi_team.coach)
+
+    if game.season:
+        pages_to_purge.add(f"עונת {game.season}")
+
+    if game.competition:
+        pages_to_purge.add(game.competition)
+
+    if game.referee:
+        pages_to_purge.add(game.referee)
+
+    if game.stadium:
+        pages_to_purge.add(game.stadium)
+
+    return pages_to_purge
+
+
+def purge_pages_batch(pages_to_purge: set[str]) -> None:
+    """Purge a batch of pages efficiently."""
+    if not pages_to_purge:
+        return
+
+    logging.info(f"Purging {len(pages_to_purge)} unique related pages...")
+    results = {"purged": 0, "skipped": 0, "failed": 0}
+
+    for page_name in sorted(pages_to_purge):
+        try:
+            page = pw.Page(site, page_name)
+            if page.exists():
+                logging.debug(f"Purging: {page_name}")
+                page.purge(forcelinkupdate=True)
+                results["purged"] += 1
+            else:
+                logging.debug(f"Page doesn't exist, skipping: {page_name}")
+                results["skipped"] += 1
+        except Exception as e:
+            logging.warning(f"Failed to purge {page_name}: {e}")
+            results["failed"] += 1
+
+    logging.info(f"Purge complete: {results['purged']} purged, {results['skipped']} skipped, {results['failed']} failed")
+
+
 def upload_games_to_maccabipedia(maccabi_games_to_add: MaccabiGamesStats):
     logging.info("")  # Empty line
 
     logging.info("Should save : {save}".format(save=SHOULD_SAVE))
     logging.info("Should show diff: {diff}\n".format(diff=SHOULD_SHOW_DIFF))
 
+    # Collect pages to purge across all games
+    all_pages_to_purge = set()
+
     for g in maccabi_games_to_add:
         create_or_update_game_page(g, overwrite_existing_pages=False)
+        pages_from_game = collect_related_pages_from_game(g)
+        all_pages_to_purge.update(pages_from_game)
 
     logging.info("Finished adding new games.")
+
+    # Batch purge all collected pages at the end
+    if SHOULD_SAVE and SHOULD_PURGE_RELATED_PAGES:
+        purge_pages_batch(all_pages_to_purge)
 
     if SHOULD_CHECK_FOR_UPDATE_IN_EXISTING_PAGES:
         logging.info("Now handling existing games:")
         existing_games = get_games_that_has_existing_pages(maccabi_games_to_add.games)
-        [create_or_update_game_page(game) for game in existing_games]
+
+        for game in existing_games:
+            create_or_update_game_page(game)
+            pages_from_game = collect_related_pages_from_game(game)
+            all_pages_to_purge.update(pages_from_game)
+
+        # Purge again if we updated existing games
+        if SHOULD_SAVE and SHOULD_PURGE_RELATED_PAGES:
+            purge_pages_batch(all_pages_to_purge)
     else:
         logging.info("Don't check for updates in existing pages")
 

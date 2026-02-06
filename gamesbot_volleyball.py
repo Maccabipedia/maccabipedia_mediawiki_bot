@@ -61,6 +61,7 @@ OPPONENT_FIFTH_SET = 'מערכה5 יריבה'
 
 SHOULD_SAVE = True
 SHOULD_SHOW_DIFF = True
+SHOULD_PURGE_RELATED_PAGES = True  # Purge related pages (opponent, season, competition) after game uploads
 
 FILES_TO_IGNORE = {'desktop.ini'}
 
@@ -180,6 +181,49 @@ def fill_page_content(game_page, volleyball_game: VolleyballGame):
     game_page.text = str(volleyball_game_template)
 
 
+def collect_related_pages_from_game(game: VolleyballGame) -> set[str]:
+    """Collect all pages that should be purged after this volleyball game is uploaded."""
+    pages_to_purge = set()
+
+    pages_to_purge.add(game.opponent)
+
+    if game.season:
+        pages_to_purge.add(f"כדורעף:עונת {game.season}")
+
+    if game.competition:
+        pages_to_purge.add(f"כדורעף:{game.competition}")
+
+    if game.stadium:
+        pages_to_purge.add(game.stadium)
+
+    return pages_to_purge
+
+
+def purge_pages_batch(pages_to_purge: set[str]) -> None:
+    """Purge a batch of pages efficiently."""
+    if not pages_to_purge:
+        return
+
+    logging.info(f"Purging {len(pages_to_purge)} unique related pages...")
+    results = {"purged": 0, "skipped": 0, "failed": 0}
+
+    for page_name in sorted(pages_to_purge):
+        try:
+            page = pw.Page(site, page_name)
+            if page.exists():
+                logging.debug(f"Purging: {page_name}")
+                page.purge(forcelinkupdate=True)
+                results["purged"] += 1
+            else:
+                logging.debug(f"Page doesn't exist, skipping: {page_name}")
+                results["skipped"] += 1
+        except Exception as e:
+            logging.warning(f"Failed to purge {page_name}: {e}")
+            results["failed"] += 1
+
+    logging.info(f"Purge complete: {results['purged']} purged, {results['skipped']} skipped, {results['failed']} failed")
+
+
 def create_or_update_game_page(volleyball_game: VolleyballGame, overwrite_existing_pages: bool = True):
     logging.info(f"create_or_update_game_page : {volleyball_game}")
 
@@ -214,10 +258,20 @@ def create_or_update_volleyball_game_pages(games_to_add: List[VolleyballGame]):
     logging.info("Should save : {save}".format(save=SHOULD_SAVE))
     logging.info("Should show diff: {diff}\n".format(diff=SHOULD_SHOW_DIFF))
 
+    # Collect pages to purge across all games
+    all_pages_to_purge = set()
+
     for volleyball_game in games_to_add:
         create_or_update_game_page(volleyball_game, overwrite_existing_pages=False)
+        pages_from_game = collect_related_pages_from_game(volleyball_game)
+        all_pages_to_purge.update(pages_from_game)
 
     logging.info("Finished adding new games.")
+
+    # Batch purge all collected pages at the end
+    if SHOULD_SAVE and SHOULD_PURGE_RELATED_PAGES:
+        purge_pages_batch(all_pages_to_purge)
+
     logging.info("Finished handling existing games.")
 
 

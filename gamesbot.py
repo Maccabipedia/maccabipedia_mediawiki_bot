@@ -352,11 +352,8 @@ def upload_games_to_maccabipedia(maccabi_games_to_add: MaccabiGamesStats):
 
     for g in maccabi_games_to_add:
         create_or_update_game_page(g, overwrite_existing_pages=False)
-
-        # Collect pages from this game
-        if SHOULD_SAVE:
-            pages_from_game = collect_related_pages_from_game(g)
-            all_pages_to_purge.update(pages_from_game)
+        pages_from_game = collect_related_pages_from_game(g)
+        all_pages_to_purge.update(pages_from_game)
 
     logging.info("Finished adding new games.")
 
@@ -368,12 +365,10 @@ def upload_games_to_maccabipedia(maccabi_games_to_add: MaccabiGamesStats):
         logging.info("Now handling existing games:")
         existing_games = get_games_that_has_existing_pages(maccabi_games_to_add.games)
 
-        # Collect pages from existing games too
         for game in existing_games:
             create_or_update_game_page(game)
-            if SHOULD_SAVE:
-                pages_from_game = collect_related_pages_from_game(game)
-                all_pages_to_purge.update(pages_from_game)
+            pages_from_game = collect_related_pages_from_game(game)
+            all_pages_to_purge.update(pages_from_game)
 
         # Purge again if we updated existing games
         if SHOULD_SAVE and SHOULD_PURGE_RELATED_PAGES:

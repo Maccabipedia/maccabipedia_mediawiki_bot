@@ -291,30 +291,25 @@ def collect_related_pages_from_game(game) -> set[str]:
     """Collect all pages that should be purged after this game is uploaded."""
     pages_to_purge = set()
 
-    # Opponent team page
     pages_to_purge.add(game.not_maccabi_team.name)
 
-    # Maccabi player pages (opponent players don't have wiki pages)
+    # Only Maccabi players have wiki pages, not opponents
     for player in game.maccabi_team.players:
         if player.name:
             pages_to_purge.add(f"שחקן:{player.name}")
 
-    # Coach pages
     if game.maccabi_team.coach:
         pages_to_purge.add(game.maccabi_team.coach)
 
     if game.not_maccabi_team.coach:
         pages_to_purge.add(game.not_maccabi_team.coach)
 
-    # Season page
     if game.season:
         pages_to_purge.add(f"עונת {game.season}")
 
-    # Referee page
     if game.referee:
         pages_to_purge.add(game.referee)
 
-    # Stadium page
     if game.stadium:
         pages_to_purge.add(game.stadium)
 

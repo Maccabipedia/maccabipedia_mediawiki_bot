@@ -63,19 +63,26 @@ def parse_team_record(raw_team_record: pd.Series) -> VolleyballTableTeamRecord:
     # Looking for columns that contain these patterns
     def find_column(series, patterns):
         """Find a column by checking if column name matches any of the patterns"""
+        # First try exact matches or substring matches
         for col in series.index:
             for pattern in patterns:
-                if pattern in col:
+                if pattern in str(col):
                     return series[col]
-        # If not found, raise an error with helpful info
-        raise KeyError(f"Column not found. Available columns: {list(series.index)}")
+        
+        # If still not found, log all available columns and raise error
+        logging.error(f"Column not found. Patterns sought: {patterns}")
+        logging.error(f"Available columns: {list(series.index)}")
+        raise KeyError(f"Column not found. Patterns: {patterns}, Available: {list(series.index)}")
     
     team_name = raw_team_record['קבוצה']  # This should be consistent
-    games = find_column(raw_team_record, ["מש'", "'מש"])
-    wins = find_column(raw_team_record, ["נצ'", "'נצ"])
-    losses = find_column(raw_team_record, ["הפ'", "'הפ"])
-    points_in_game_against, points_in_game_for = find_column(raw_team_record, ["סה\"כ נקודות", "סה\\\"כ נקודות"]).split("-")
-    sets_against, sets_for = find_column(raw_team_record, ["סטים"]).split("-")
+    # Be more flexible with column name patterns - handle different quote types
+    games = find_column(raw_team_record, ["מש", "משחקים", "games"])
+    wins = find_column(raw_team_record, ["נצ", "נצחונות", "wins"])
+    losses = find_column(raw_team_record, ["הפ", "הפסדים", "losses"])
+    points_str = find_column(raw_team_record, ["סה", "סה כ נקודות", "סה כ נקודות"])
+    points_in_game_against, points_in_game_for = str(points_str).split("-")
+    sets_str = find_column(raw_team_record, ["סטים", "sets"])
+    sets_against, sets_for = str(sets_str).split("-")
     points = raw_team_record["נקודות"]
     return VolleyballTableTeamRecord(name=team_name, games=games, wins=wins, losses=losses,
                                      points_in_game_for=points_in_game_for,

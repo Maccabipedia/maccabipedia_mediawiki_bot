@@ -59,12 +59,23 @@ class VolleyballTableTeamRecord:
 
 
 def parse_team_record(raw_team_record: pd.Series) -> VolleyballTableTeamRecord:
-    team_name = raw_team_record['קבוצה']  # Take everything after the first dot
-    games = raw_team_record["מש'"]
-    wins = raw_team_record["נצ'"]
-    losses = raw_team_record["הפ'"]
-    points_in_game_against, points_in_game_for = raw_team_record["סה\"כ נקודות"].split("-")
-    sets_against, sets_for = raw_team_record["סטים"].split("-")
+    # Try to find the correct column names - they may vary depending on how the HTML table is formatted
+    # Looking for columns that contain these patterns
+    def find_column(series, patterns):
+        """Find a column by checking if column name matches any of the patterns"""
+        for col in series.index:
+            for pattern in patterns:
+                if pattern in col:
+                    return series[col]
+        # If not found, raise an error with helpful info
+        raise KeyError(f"Column not found. Available columns: {list(series.index)}")
+    
+    team_name = raw_team_record['קבוצה']  # This should be consistent
+    games = find_column(raw_team_record, ["מש'", "'מש"])
+    wins = find_column(raw_team_record, ["נצ'", "'נצ"])
+    losses = find_column(raw_team_record, ["הפ'", "'הפ"])
+    points_in_game_against, points_in_game_for = find_column(raw_team_record, ["סה\"כ נקודות", "סה\\\"כ נקודות"]).split("-")
+    sets_against, sets_for = find_column(raw_team_record, ["סטים"]).split("-")
     points = raw_team_record["נקודות"]
     return VolleyballTableTeamRecord(name=team_name, games=games, wins=wins, losses=losses,
                                      points_in_game_for=points_in_game_for,

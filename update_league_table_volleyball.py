@@ -80,9 +80,27 @@ def parse_team_record(raw_team_record: pd.Series) -> VolleyballTableTeamRecord:
     wins = find_column(raw_team_record, ["נצ", "נצחונות", "wins"])
     losses = find_column(raw_team_record, ["הפ", "הפסדים", "losses"])
     points_str = find_column(raw_team_record, ["סה", "סה כ נקודות", "סה כ נקודות"])
-    points_in_game_against, points_in_game_for = str(points_str).split("-")
+    
+    # Handle splitting with better error handling
+    points_parts = str(points_str).split("-")
+    if len(points_parts) == 2:
+        points_in_game_against, points_in_game_for = points_parts
+    else:
+        logging.warning(f"Points string '{points_str}' doesn't have expected format (expected 'X-Y'). Available: {points_parts}")
+        points_in_game_against = points_parts[0] if points_parts else 0
+        points_in_game_for = points_parts[1] if len(points_parts) > 1 else 0
+    
     sets_str = find_column(raw_team_record, ["סטים", "sets"])
-    sets_against, sets_for = str(sets_str).split("-")
+    logging.debug(f"Sets string value: '{sets_str}'")
+    
+    sets_parts = str(sets_str).split("-")
+    if len(sets_parts) == 2:
+        sets_against, sets_for = sets_parts
+    else:
+        logging.warning(f"Sets string '{sets_str}' doesn't have expected format (expected 'X-Y'). Available: {sets_parts}")
+        sets_against = sets_parts[0] if sets_parts else 0
+        sets_for = sets_parts[1] if len(sets_parts) > 1 else 0
+    
     points = raw_team_record["נקודות"]
     return VolleyballTableTeamRecord(name=team_name, games=games, wins=wins, losses=losses,
                                      points_in_game_for=points_in_game_for,
@@ -95,6 +113,10 @@ def fetch_league_data_from_iva():
 
     tables = pd.read_html(iva_league_table_page_response.content)
     volleyball_league_table = tables[0]
+
+    # Debug: Log the actual columns for troubleshooting
+    logging.info(f"Fetched table columns: {list(volleyball_league_table.columns)}")
+    logging.info(f"Table shape: {volleyball_league_table.shape}")
 
     parsed_team_records = []
     for raw_table_team_record in volleyball_league_table.iterrows():

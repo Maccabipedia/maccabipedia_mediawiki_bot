@@ -62,13 +62,18 @@ def parse_team_record(raw_team_record: pd.Series) -> VolleyballTableTeamRecord:
     # Try to find the correct column names - they may vary depending on how the HTML table is formatted
     # Looking for columns that contain these patterns
     def find_column(series, patterns):
-        """Find a column by checking if column name matches any of the patterns"""
-        # First try exact matches or substring matches
-        for col in series.index:
-            for pattern in patterns:
+        """Find a column by checking if column name matches any of the patterns.
+        Prefer exact match, then substring match."""
+        # First try exact matches
+        for pattern in patterns:
+            for col in series.index:
+                if str(col).strip() == pattern:
+                    return series[col]
+        # Then try substring matches
+        for pattern in patterns:
+            for col in series.index:
                 if pattern in str(col):
                     return series[col]
-        
         # If still not found, log all available columns and raise error
         logging.error(f"Column not found. Patterns sought: {patterns}")
         logging.error(f"Available columns: {list(series.index)}")

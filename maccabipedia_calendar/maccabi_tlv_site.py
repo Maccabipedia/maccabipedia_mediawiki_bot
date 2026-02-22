@@ -162,6 +162,7 @@ def handle_game(game: bs4.element.Tag) -> Event:
     # Get link to game page at maccabipedia
     response = requests.get(
         f"https://www.maccabipedia.co.il/index.php?title=Special:CargoExport&format=json&tables=Football_Games&fields=_pageName&where=Football_Games.Date='{game_date.date()}'")
+    response.raise_for_status()
     page_name = json.loads(response.text)
     if page_name and '_pageName' in page_name[0]:
         page_name = page_name[0]['_pageName']

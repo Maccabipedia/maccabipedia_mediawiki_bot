@@ -5,17 +5,20 @@
 - Every new script must include a docstring explaining what it does, how to run it, and any dependencies.
 - Use **`cmd`** for command-line operations — avoid PowerShell syntax (`$env:VAR`, backtick continuations). Use `^` for line continuation.
 
-## 3. Automation & Data Integrity
+## 2. Automation & Data Integrity
 - **Zero Tolerance for Silent Failures**: treat every discrepancy as an exception.
 - **Fail Fast**: never silence exceptions with empty `try/except`. Let scripts crash so errors are visible.
 - **Handle Edge Cases**: missing data, network timeouts, invalid wiki syntax.
 - **Interactive Verification**: for fuzzy matching or data correction, prefer interactive scripts that cache user decisions.
 
-## 4. Git Hygiene
+## 4. Environment
+- GitHub CLI is available as `gh.exe` (not `gh`) in WSL.
+
+## 3. Git Hygiene
 - Before any `git add`, run `git status` and review every file. Only stage files directly related to the current task.
 - At the end of every task involving a git branch, switch back to `master` and confirm the branch is clean.
 
-## 5. Lessons Learned (CRITICAL — read every session)
+## 6. Lessons Learned (CRITICAL — read every session)
 
 ### Always validate API responses before parsing
 Cargo Export returns HTML error pages on internal errors — not JSON. Always check `response.status_code == 200` and `'application/json' in response.headers.get('Content-Type', '')` before calling `.json()`. Log the raw response on failure.
@@ -34,6 +37,6 @@ After completing and merging a task, always `git checkout master` and confirm th
 
 ---
 
-## 6. MaccabiPedia Structure (CRITICAL — read every session)
+## 7. MaccabiPedia Structure (CRITICAL — read every session)
 
 Always read `.claude/maccabipedia_structure_knowledge.md` before working with game pages, player pages, templates, or the Cargo API.

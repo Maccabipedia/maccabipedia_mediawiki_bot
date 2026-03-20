@@ -35,6 +35,20 @@ Files created during experimentation must be cleaned up before staging. Never us
 ### Switch back to `master` after finishing a feature
 After completing and merging a task, always `git checkout master` and confirm the branch is clean.
 
+### Never use pywikibot's file_page.upload() — use requests directly
+pywikibot's MIME multipart builder (based on Python's `email.mime` library) produces malformed HTTP requests:
+- Adds `MIME-Version: 1.0` to every body part (email header, invalid in HTTP)
+- Uses LF-only `\n` line endings instead of CRLF `\r\n` (required by RFC 2046)
+
+Apache returns 400 Bad Request. Use `requests.post(..., files={'file': ('FAKE-NAME', data, mime_type)})` with cookies and CSRF token from pywikibot's session instead. See `upload_basketball_tickets.py` → `_upload_file_via_requests()` for the reference implementation.
+
+### Running scripts requires MACCABIPEDIA_UA_SCRIPT env var
+Scripts that upload to Maccabipedia must set the user-agent to a whitelisted script name via:
+```
+source ~/.secrets && MACCABIPEDIA_UA_SCRIPT=gamesbot_basketball python script.py
+```
+The server's ModSecurity WAF blocks requests from unknown user-agent script names.
+
 ---
 
 ## 7. MaccabiPedia Structure (CRITICAL — read every session)

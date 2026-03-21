@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from basketball.basketball_game import BasketballGame, PlayerSummary
+from maccabipediabot.basketball.basketball_game import BasketballGame, PlayerSummary
 
 
 # ---------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+pytest>=8.0
 mwparserfromhell==0.6.6
 pywikibot==9.6.0
 requests==2.32.3

@@ -234,7 +234,8 @@ def handle_new_page(game_page, game):
     game_page.text = str(football_game_template)
 
 
-def create_or_update_game_page(game, overwrite_existing_pages: bool = True):
+def create_or_update_game_page(game, overwrite_existing_pages: bool = True) -> bool:
+    """Returns True if the page was saved, False if skipped."""
     logging.info(f"create_or_update_game_page : {game}")
 
     page_name = generate_page_name_from_game(game)
@@ -245,7 +246,7 @@ def create_or_update_game_page(game, overwrite_existing_pages: bool = True):
     if game_page.exists():
         if not overwrite_existing_pages:
             logging.info(f"Don't edit existing pages, skipping: {page_name}")
-            return
+            return False
 
         logging.info("Page : {name} exists, check for updates\n".format(name=page_name))
         handle_existing_page(game_page, game)
@@ -265,6 +266,8 @@ def create_or_update_game_page(game, overwrite_existing_pages: bool = True):
         sort_player_events_in_games_page(game_page)
     else:
         logging.info("Not saving {name}".format(name=game_page.title()))
+
+    return True
 
 
 def get_games_that_has_existing_pages(games: List[AnyStr]):
@@ -293,13 +296,16 @@ def collect_related_pages_from_game(game) -> set[str]:
 
     pages_to_purge.add(game.not_maccabi_team.name)
 
-    # Only Maccabi players have wiki pages, not opponents
+    # Player pages live in the main namespace (no prefix)
     for player in game.maccabi_team.players:
         if player.name:
-            pages_to_purge.add(f"שחקן:{player.name}")
+            pages_to_purge.add(player.name)
 
-    if game.maccabi_team.coach:
+    if game.maccabi_team.coach and game.maccabi_team.coach != "Cant found coach":
         pages_to_purge.add(game.maccabi_team.coach)
+
+    if game.not_maccabi_team.coach and game.not_maccabi_team.coach != "Cant found coach":
+        pages_to_purge.add(game.not_maccabi_team.coach)
 
     if game.season:
         pages_to_purge.add(f"עונת {game.season}")
@@ -307,7 +313,7 @@ def collect_related_pages_from_game(game) -> set[str]:
     if game.competition:
         pages_to_purge.add(game.competition)
 
-    if game.referee:
+    if game.referee and game.referee != "Cant found referee":
         pages_to_purge.add(game.referee)
 
     if game.stadium:
@@ -351,9 +357,10 @@ def upload_games_to_maccabipedia(maccabi_games_to_add: MaccabiGamesStats):
     all_pages_to_purge = set()
 
     for g in maccabi_games_to_add:
-        create_or_update_game_page(g, overwrite_existing_pages=False)
-        pages_from_game = collect_related_pages_from_game(g)
-        all_pages_to_purge.update(pages_from_game)
+        was_saved = create_or_update_game_page(g, overwrite_existing_pages=False)
+        if was_saved:
+            pages_from_game = collect_related_pages_from_game(g)
+            all_pages_to_purge.update(pages_from_game)
 
     logging.info("Finished adding new games.")
 

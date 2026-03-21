@@ -88,9 +88,9 @@ class BasketballGame(BaseModel):
     maccabi_coach: Optional[str] = None
     opponent_coach: Optional[str] = None
     referee: Optional[str] = None
-    referee_assistants: Optional[list[str]] = Field(default_factory=[])
-    maccabi_players: Optional[list[PlayerSummary]] = Field(default_factory=[])
-    opponent_players: Optional[list[PlayerSummary]] = Field(default_factory=[])
+    referee_assistants: Optional[list[str]] = Field(default_factory=list)
+    maccabi_players: Optional[list[PlayerSummary]] = Field(default_factory=list)
+    opponent_players: Optional[list[PlayerSummary]] = Field(default_factory=list)
 
     @property
     def opponent_name(self):

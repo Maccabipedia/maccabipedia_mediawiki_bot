@@ -3,7 +3,7 @@ import logging
 import mwparserfromhell
 import requests
 
-from maccabipediabot.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
 
 _LEAGUE_TABLE_TEMPLATE_ON_MACCABIPEDIA = 'תבנית:טבלת_ליגת_כדורסל_2025/26'
 _TABLE_STATUS_KEY = 'טבלה'

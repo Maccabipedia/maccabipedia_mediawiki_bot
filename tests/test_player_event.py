@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import pytest
 
-from maccabipediabot.maccabistats_player_event import PlayerEvent
+from maccabipediabot.common.maccabistats_player_event import PlayerEvent
 
 
 # ---------------------------------------------------------------------------

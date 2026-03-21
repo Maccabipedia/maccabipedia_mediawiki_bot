@@ -1,6 +1,6 @@
 import logging
 
-from maccabipediabot.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
 
 run_boilerplate()
 

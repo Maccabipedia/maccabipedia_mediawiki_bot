@@ -11,8 +11,8 @@ print("Python version:", sys.version)
 print("Requests version:", requests.__version__)
 print("SSL version:", ssl.OPENSSL_VERSION)
 
-from maccabipediabot.pywikibot_boilerplate import run_boilerplate
-from maccabipediabot.volleyball_common import TEAM_NAMES_REPLACER
+from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.volleyball.volleyball_common import TEAM_NAMES_REPLACER
 
 # Local overrides for team names mapping. Use the original team name string from the IVA
 # table as the key and the desired modified name as the value. If a team name is not

@@ -4,7 +4,7 @@ import mwparserfromhell
 import requests
 from pywikibot import pagegenerators, Category
 
-from maccabipediabot.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
@@ -21,19 +21,18 @@ def update_games_prefixes() -> None:
     logging.info(f'Iterating game pages')
     category_iterator = pagegenerators.CategorizedPageGenerator(Category(site, FOOTBALL_GAMES_CATEGORY_NAME),
                                                                 recurse=True)
+    old = 0
+    new = 0
 
     for game_page in category_iterator:
         if not game_page.title().startswith(OLD_PREFIX):
             logging.info(f'Skipping page: {game_page.title()}')
+            new += 1
             continue
 
-        new_title = game_page.title().replace(OLD_PREFIX, "משחק:")
-        game_page.move(newtitle=new_title, reason="MaccabiBot Fix Whatsapp page name bug")
-        
-        game_page.purge(forcelinkupdate=True, forcerecursivelinkupdate=True)
-        game_page.touch(botflag=True)
+        old += 1
 
-        logging.info(f"Moved page to: {new_title}")
+    logging.info(f"old: {old}, new: {new}")
 
 
 if __name__ == '__main__':

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List
 
 from pywikibot import pagegenerators, Category
-from maccabipediabot.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 

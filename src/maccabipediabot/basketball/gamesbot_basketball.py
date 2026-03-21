@@ -4,7 +4,7 @@ from pathlib import Path
 from pydantic import TypeAdapter
 
 from basketball.basketball_game import BasketballGame, PlayerSummary
-from maccabipediabot.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
 
 run_boilerplate()
 
@@ -16,7 +16,7 @@ from mwparserfromhell.nodes.template import Template
 site = pw.Site()
 site.login()
 
-from maccabipediabot.prettify_games_pages import prettify_game_page_main_template
+from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 

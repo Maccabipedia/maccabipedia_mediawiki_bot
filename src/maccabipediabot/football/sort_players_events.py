@@ -4,7 +4,7 @@ import mwparserfromhell as mw
 import pywikibot as pw
 from pywikibot import pagegenerators
 
-from maccabipediabot.maccabistats_player_event import PlayerEvent, SQUAD, CARDS_AND_SUBS, GOALS_INVOLVED
+from maccabipediabot.common.maccabistats_player_event import PlayerEvent, SQUAD, CARDS_AND_SUBS, GOALS_INVOLVED
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 

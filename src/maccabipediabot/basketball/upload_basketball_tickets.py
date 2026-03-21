@@ -29,7 +29,7 @@ from pathlib import Path
 from datetime import datetime
 import contextlib
 
-from maccabipediabot.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
 import pywikibot as pw
 from pywikibot.comms import http as pw_http
 

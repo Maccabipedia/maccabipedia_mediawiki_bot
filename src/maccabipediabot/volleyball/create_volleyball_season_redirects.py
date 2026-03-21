@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from maccabipediabot.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
 
 run_boilerplate()
 
@@ -14,9 +14,9 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 logger = logging.getLogger(__name__)
 
 # Configuration
-START_YEAR = 1953  # First season will be 1953/54
-END_YEAR = 2024    # Last season will be 2024/25
-NAMESPACE = "כדורסל"  # Basketball namespace
+START_YEAR = 1972  # First season will be 1972/73
+END_YEAR = 2025    # Last season will be 2024/25
+NAMESPACE = "כדורעף"  # Volleyball namespace
 DRY_RUN = False     # Set to True to preview without creating pages
 
 
@@ -35,8 +35,8 @@ def create_redirect_page(short_name: str, full_name: str) -> None:
     """
     Create a redirect page from short_name to full_name
     
-    :param short_name: The redirect page name (e.g., "כדורסל:2012/13")
-    :param full_name: The target page name (e.g., "כדורסל:עונת 2012/13")
+    :param short_name: The redirect page name (e.g., "כדורעף:2012/13")
+    :param full_name: The target page name (e.g., "כדורעף:עונת 2012/13")
     """
     redirect_page = pw.Page(site, short_name)
     
@@ -52,15 +52,15 @@ def create_redirect_page(short_name: str, full_name: str) -> None:
         logger.info(f"[DRY RUN] Content: {redirect_text}")
     else:
         redirect_page.text = redirect_text
-        redirect_page.save(summary="MaccabiBot - Create season redirect")
+        redirect_page.save(summary="MaccabiBot - Create volleyball season redirect")
         logger.info(f"Created redirect: {short_name} -> {full_name}")
 
 
 def create_all_season_redirects() -> None:
     """
-    Create redirect pages for all basketball seasons in the configured range
+    Create redirect pages for all seasons in the configured range
     """
-    logger.info(f"Starting to create season redirects from {START_YEAR}/{START_YEAR+1-2000} to {END_YEAR}/{END_YEAR+1-2000}")
+    logger.info(f"Starting to create season redirects from {START_YEAR}/{str(START_YEAR+1)[-2:]} to {END_YEAR}/{str(END_YEAR+1)[-2:]}")
     logger.info(f"Dry run mode: {DRY_RUN}")
     
     created_count = 0

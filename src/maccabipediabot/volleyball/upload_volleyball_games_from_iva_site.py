@@ -9,8 +9,8 @@ from typing import List
 import pandas as pd
 import requests
 
-from maccabipediabot.volleyball_common import TEAM_NAMES_REPLACER, STADIUMS_NAMES
-from maccabipediabot.gamesbot_volleyball import VolleyballGame, create_or_update_volleyball_game_pages
+from maccabipediabot.volleyball.volleyball_common import TEAM_NAMES_REPLACER, STADIUMS_NAMES
+from maccabipediabot.volleyball.gamesbot_volleyball import VolleyballGame, create_or_update_volleyball_game_pages
 
 WEB_ADDRESS_FOR_MACCABI_LEAGUE_GAMES = 'https://iva.org.il/team/?TeamId=34149&cYear=2026'
 MACCABI_NAMES = ['מכבי יעדים תל-אביב', 'מכבי תל אביב', 'מכבי יעדים תל אביב']

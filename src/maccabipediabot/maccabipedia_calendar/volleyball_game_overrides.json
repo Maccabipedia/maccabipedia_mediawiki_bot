@@ -1,0 +1,9 @@
+{
+  "_comment": "Override file for volleyball games with incorrect dates from IVA website",
+  "_format": "Format: 'OLD_DATE_TIME': 'NEW_DATE_TIME'",
+  "_date_format": "DD/MM/YYYY HH:MM (same format as IVA site)",
+  "_examples": {
+    "15/02/2026 19:30": "15/02/2026 19:00"
+  },
+  "27/01/2026 19:00": "10/02/2026 19:00"
+}

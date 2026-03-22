@@ -11,7 +11,7 @@ print("Python version:", sys.version)
 print("Requests version:", requests.__version__)
 print("SSL version:", ssl.OPENSSL_VERSION)
 
-from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.wiki_login import get_site
 from maccabipediabot.volleyball.volleyball_common import TEAM_NAMES_REPLACER
 
 # Local overrides for team names mapping. Use the original team name string from the IVA
@@ -34,7 +34,7 @@ IVA_LEAGUE_TABLE_URL = 'https://iva.org.il/league/?LeagueId=7505&cYear=2026'
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 # We need to log before we run any of our maccabipedia (pywikibot or it's import) related code
-site = run_boilerplate()
+site = get_site()
 
 import pywikibot as pw
 

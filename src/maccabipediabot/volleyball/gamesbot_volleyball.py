@@ -3,9 +3,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
-from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.wiki_login import get_site
 
-run_boilerplate()
 
 from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 from maccabipediabot.volleyball.volleyball_game import VolleyballGame
@@ -13,8 +12,7 @@ from maccabipediabot.volleyball.volleyball_game import VolleyballGame
 import pywikibot as pw
 from mwparserfromhell.nodes.template import Template
 
-site = pw.Site()
-site.login()
+site = get_site()
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 

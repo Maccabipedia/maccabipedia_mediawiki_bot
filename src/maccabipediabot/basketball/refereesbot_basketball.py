@@ -9,12 +9,11 @@ Template used     : {{שופט כדורסל |שם להצגה=NAME}}
 
 How to run
 ----------
-    source ~/.secrets && MACCABIPEDIA_UA_SCRIPT=gamesbot_basketball python basketball/refereesbot_basketball.py
+    source ~/.secrets && MACCABIPEDIA_UA_SCRIPT=gamesbot_basketball python -m maccabipediabot.basketball.refereesbot_basketball
 
 Dependencies
 ------------
-    pywikibot, requests  (see requirements.txt)
-    pywikibot_boilerplate must be importable (run from repo root or add it to PYTHONPATH)
+    pywikibot, requests  (see pyproject.toml)
 """
 
 import logging
@@ -22,7 +21,7 @@ import sys
 
 import requests
 
-from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.wiki_login import get_site
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -92,7 +91,7 @@ def create_referee_page(site, referee_name):
 
 
 def main():
-    site = run_boilerplate()
+    site = get_site()
 
     logger.info('Fetching referee names from Cargo...')
     referee_names = fetch_all_referee_names()

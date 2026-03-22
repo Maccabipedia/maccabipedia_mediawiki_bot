@@ -2,12 +2,12 @@ import logging
 
 from pywikibot import pagegenerators, Category
 
-from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.wiki_login import get_site
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 # We need to log before we run any of our maccabipedia (pywikibot or it's import) related code
-site = run_boilerplate()
+site = get_site()
 from mwparserfromhell.nodes.template import Template
 
 import pywikibot as pw

@@ -2,6 +2,7 @@ import logging
 import re
 from datetime import datetime
 from typing import Iterable, Optional
+from maccabipediabot.common.wiki_login import get_site
 
 import mwparserfromhell
 import pywikibot as pw
@@ -12,8 +13,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
-site = pw.Site()
-site.login()
+site = get_site()
 
 maariv_papers_category = 'קטעי עיתונות מ-"מעריב"'
 mark_as_paper_template_name = 'תיוג עיתונים'
@@ -58,7 +58,7 @@ def handle_maariv_paper_page(paper_page: pw.Page) -> None:
 
     paper_page.text = parsed_mw_text
     if SHOULD_SAVE:
-        paper_page.save(summary="MaccabiBotAdd publish dates for maariv papers", botflag=True)
+        paper_page.save(summary="MaccabiBotAdd publish dates for maariv papers", bot=True)
 
 
 # Assuming that the date is in the page title with this format: (31-12-1970)

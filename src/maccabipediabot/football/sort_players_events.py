@@ -1,4 +1,5 @@
 import logging
+from maccabipediabot.common.wiki_login import get_site
 
 import mwparserfromhell as mw
 import pywikibot as pw
@@ -8,7 +9,7 @@ from maccabipediabot.common.maccabistats_player_event import PlayerEvent, SQUAD,
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
-site = pw.Site()
+site = get_site()
 
 games_page_prefix = "משחק:"
 games_template_name = "קטלוג משחקים"
@@ -56,7 +57,7 @@ def _save_page_changes(game_page, new_text):
         return
 
     game_page.text = new_text
-    game_page.save(summary="MaccabiBot - Sort players events", botflag=True)
+    game_page.save(summary="MaccabiBot - Sort players events", bot=True)
 
 
 def matches_games_template(*args, **kwargs):

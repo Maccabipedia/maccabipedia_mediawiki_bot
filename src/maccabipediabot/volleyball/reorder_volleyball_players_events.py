@@ -1,13 +1,14 @@
 import logging
 from dataclasses import dataclass
 from typing import Dict, Optional
+from maccabipediabot.common.wiki_login import get_site
 
 import mwparserfromhell as mw
 import pywikibot as pw
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
-site = pw.Site()
+site = get_site()
 
 games_template_name = "משחק כדורעף"
 
@@ -62,7 +63,7 @@ def _save_page_changes(game_page, new_text):
         return
 
     game_page.text = new_text
-    game_page.save(summary="MaccabiBot - Sort players events", botflag=True)
+    game_page.save(summary="MaccabiBot - Sort players events", bot=True)
 
 
 def matches_games_template(*args, **kwargs):
@@ -173,7 +174,7 @@ def reorder_game_page(game_page):
         return
 
     game_page.text = parsed_mw_text
-    game_page.save(summary="MaccabiPediaBot - Reordering volleyball players events", botflag=True)
+    game_page.save(summary="MaccabiPediaBot - Reordering volleyball players events", bot=True)
 
 
 def main():

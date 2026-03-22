@@ -1,6 +1,7 @@
 import json
 import logging
 import sys
+from maccabipediabot.common.wiki_login import get_site
 
 import pywikibot as pw
 from maccabistats import get_maccabi_stats_as_newest_wrapper
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
-site = pw.Site()
+site = get_site()
 
 UPLOAD_FULL_GAMES_LINKS = True
 UPLOAD_HIGHLIGHTS_LINKS = True

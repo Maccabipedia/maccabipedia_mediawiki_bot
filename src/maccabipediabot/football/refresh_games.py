@@ -1,5 +1,6 @@
 import logging
 import sys
+from maccabipediabot.common.wiki_login import get_site
 
 import pywikibot as pw
 from maccabistats import load_from_maccabipedia_source
@@ -9,8 +10,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
-site = pw.Site()
-site.login()
+site = get_site()
 
 football_games_prefix = "משחק"
 
@@ -43,6 +43,6 @@ if __name__ == '__main__':
 
         if game_page.exists():
             game_page.purge()
-            game_page.touch(botflag=True)
+            game_page.touch(bot=True)
 
     logger.info(f'Finished')

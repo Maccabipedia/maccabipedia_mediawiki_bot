@@ -1,14 +1,12 @@
 import logging
 from pathlib import Path
 
-from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.wiki_login import get_site
 
-run_boilerplate()
 
 import pywikibot as pw
 
-site = pw.Site()
-site.login()
+site = get_site()
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)

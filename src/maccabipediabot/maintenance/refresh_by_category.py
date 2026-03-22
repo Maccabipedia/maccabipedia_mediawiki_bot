@@ -4,12 +4,12 @@ from pathlib import Path
 from typing import List
 
 from pywikibot import pagegenerators, Category
-from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.wiki_login import get_site
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 # We need to log before we run any of our maccabipedia (pywikibot or it's import) related code
-site = run_boilerplate()
+site = get_site()
 
 CACHE_FILE = Path("C://") / "maccabipedia" / "volleyball_code" / "cache.json"
 
@@ -34,7 +34,7 @@ def refresh_category(category: str, hard_refresh: bool = False) -> None:
         if hard_refresh:
             page.purge()
         else:
-            page.touch(botflag=True)
+            page.touch(bot=True)
         cache.append(page.title())
         CACHE_FILE.write_text(json.dumps(cache))
 

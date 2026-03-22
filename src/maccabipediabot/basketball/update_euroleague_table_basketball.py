@@ -3,7 +3,7 @@ import logging
 import mwparserfromhell
 import requests
 
-from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.wiki_login import get_site
 
 TABLE_TEMPLATE_ON_MACCABIPEDIA = 'תבנית:טבלת_יורוליג_2025/26'
 TABLE_STATUS_KEY = 'טבלה'
@@ -38,7 +38,7 @@ LINKS_TO_FETCH_TABLE_FROM = [
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 # We need to log before we run any of our maccabipedia (pywikibot or it's import) related code
-site = run_boilerplate()
+site = get_site()
 
 import pywikibot as pw
 

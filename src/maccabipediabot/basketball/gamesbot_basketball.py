@@ -4,17 +4,15 @@ from pathlib import Path
 from pydantic import TypeAdapter
 
 from basketball.basketball_game import BasketballGame, PlayerSummary
-from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.wiki_login import get_site
 
-run_boilerplate()
 
 import mwparserfromhell
 import tldextract
 import pywikibot as pw
 from mwparserfromhell.nodes.template import Template
 
-site = pw.Site()
-site.login()
+site = get_site()
 
 from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 

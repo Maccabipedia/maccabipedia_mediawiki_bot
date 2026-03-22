@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+from maccabipediabot.common.wiki_login import get_site
 
 import math
 import pywikibot as pw
@@ -32,8 +33,7 @@ _PAPER_RELATED_GAME_PARAM_NAME = "שיוך משחק"
 
 _PAPER_NAME_ENV_VAR_NAME = "PAPER_NAME"
 
-site = pw.Site()
-site.login()
+site = get_site()
 
 SHOULD_SAVE = True
 

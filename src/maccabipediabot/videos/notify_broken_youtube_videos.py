@@ -1,11 +1,12 @@
 import os
 from urllib import parse
+from maccabipediabot.common.wiki_login import get_site
 
 import requests
 
 import pywikibot as pw
 
-site = pw.Site()
+site = get_site()
 
 from maccabistats.parse.maccabipedia.maccabipedia_cargo_chunks_crawler import MaccabiPediaCargoChunksCrawler
 import logging
@@ -48,7 +49,7 @@ def report_bad_youtube_link(missing_youtube_links_maccabipedia_page, link, page_
     new_text = missing_youtube_links_maccabipedia_page.text
     new_text += f"\n# בעמוד [[{page_name}]] הלינק ל{video_type} שבור: {link}, תייגתי את: {{{{משתמשי תקצירים}}}} , בתודה ~~~~"
     missing_youtube_links_maccabipedia_page.text = new_text
-    missing_youtube_links_maccabipedia_page.save(botflag=True, summary="Found new broken youtube link")
+    missing_youtube_links_maccabipedia_page.save(bot=True, summary="Found new broken youtube link")
 
 
 def crawl_videos():

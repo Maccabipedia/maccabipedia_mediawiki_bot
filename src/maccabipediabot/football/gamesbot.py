@@ -3,17 +3,15 @@ import re
 from datetime import timedelta
 from typing import AnyStr, List
 
-from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.wiki_login import get_site
 
-run_boilerplate()
 
 import mwparserfromhell
 import pywikibot as pw
 from mwparserfromhell.nodes.template import Template
 from pywikibot import pagegenerators, Category
 
-site = pw.Site()
-site.login()
+site = get_site()
 
 from maccabistats import get_maccabi_stats_as_newest_wrapper
 from maccabistats.models.player_game_events import GameEventTypes

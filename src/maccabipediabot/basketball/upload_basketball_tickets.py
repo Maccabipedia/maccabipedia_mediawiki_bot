@@ -29,7 +29,7 @@ from pathlib import Path
 from datetime import datetime
 import contextlib
 
-from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.wiki_login import get_site
 import pywikibot as pw
 from pywikibot.comms import http as pw_http
 
@@ -37,7 +37,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 logger = logging.getLogger(__name__)
 
 # Connect to maccabipedia
-site = run_boilerplate()
+site = get_site()
 
 API_URL = 'https://www.maccabipedia.co.il/api.php'
 

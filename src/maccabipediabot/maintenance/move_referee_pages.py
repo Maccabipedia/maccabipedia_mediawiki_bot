@@ -2,12 +2,12 @@ import logging
 
 from pywikibot import pagegenerators, Category
 
-from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.wiki_login import get_site
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 # We need to log before we run any of our maccabipedia (pywikibot or it's import) related code
-site = run_boilerplate()
+site = get_site()
 from mwparserfromhell.nodes.template import Template
 
 import pywikibot as pw
@@ -38,7 +38,7 @@ def update_referee_pages() -> None:
 
         new_page = pw.Page(site, new_title)
         new_page.text = str(new_template)
-        new_page.save(summary="MaccabiBot - Using new referee template (football)", botflag=True)
+        new_page.save(summary="MaccabiBot - Using new referee template (football)", bot=True)
 
 
 if __name__ == '__main__':

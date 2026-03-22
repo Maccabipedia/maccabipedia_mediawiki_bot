@@ -3,12 +3,12 @@ from pathlib import Path
 
 import pywikibot as pw
 
-from maccabipediabot.common.pywikibot_boilerplate import run_boilerplate
+from maccabipediabot.common.wiki_login import get_site
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
 # We need to log before we run any of our maccabipedia (pywikibot or it's import) related code
-site = run_boilerplate()
+site = get_site()
 BASKETBALL_PREFIX = "כדורסל"
 PARENT_FOLDER = Path(rf"D:/maccabipedia_google_drive/מכביפדיה_ראשי/כדורסל/איסוף מידע לאתר/מוכן להעלאה")
 

@@ -1,5 +1,6 @@
 import logging
 from typing import List
+from maccabipediabot.common.wiki_login import get_site
 
 import mwparserfromhell as mw
 import pywikibot as pw
@@ -8,7 +9,7 @@ from pywikibot import pagegenerators, Category
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
-site = pw.Site()
+site = get_site()
 
 games_template_name = "משחק כדורעף"
 volleyball_games_category_name = "קטגוריה:משחקי כדורעף"
@@ -45,7 +46,7 @@ def _save_page_changes(game_page, new_text):
         return
 
     game_page.text = new_text
-    game_page.save(summary="MaccabiBot - Split sets parameter", botflag=True)
+    game_page.save(summary="MaccabiBot - Split sets parameter", bot=True)
 
 
 def matches_games_template(*args, **kwargs):

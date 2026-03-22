@@ -213,5 +213,5 @@ if __name__ == '__main__':
         _logger.info(f'Found Paper name env var: {os.environ[_PAPER_NAME_ENV_VAR_NAME]}, '
                      f'override this as the only paper name in this chunk')
 
-    upload_games_papers_bot = UploadGamesPapers(_CURRENT_FOLDER.parent / 'games_papers_to_upload')
+    upload_games_papers_bot = UploadGamesPapers(_CURRENT_FOLDER.parent.parent / 'games_papers_to_upload')
     upload_games_papers_bot.upload_papers()

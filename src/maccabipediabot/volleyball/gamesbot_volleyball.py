@@ -183,7 +183,7 @@ def collect_related_pages_from_game(game: VolleyballGame) -> set[str]:
     """Collect all pages that should be purged after this volleyball game is uploaded."""
     pages_to_purge = set()
 
-    pages_to_purge.add(game.opponent)
+    pages_to_purge.add(f"{volleyball_games_prefix}:{game.opponent}")
 
     if game.season:
         pages_to_purge.add(f"כדורעף:עונת {game.season}")

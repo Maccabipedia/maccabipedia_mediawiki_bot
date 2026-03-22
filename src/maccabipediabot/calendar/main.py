@@ -7,9 +7,9 @@ from typing import Dict, List
 import requests
 from dotenv import load_dotenv
 
-from maccabipediabot.maccabipedia_calendar.calendar_operations import fetch_games_from_calendar, update_event, upload_event, delete_event, Event
-from maccabipediabot.maccabipedia_calendar.google_calendar_api import initialize_global_google_service_account_from_memory_json
-from maccabipediabot.maccabipedia_calendar.maccabi_tlv_site import fetch_games_from_maccabi_tlv_site
+from maccabipediabot.calendar.calendar_operations import fetch_games_from_calendar, update_event, upload_event, delete_event, Event
+from maccabipediabot.calendar.google_calendar_api import initialize_global_google_service_account_from_memory_json
+from maccabipediabot.calendar.maccabi_tlv_site import fetch_games_from_maccabi_tlv_site
 
 _logger = logging.getLogger(__name__)
 

@@ -14,31 +14,31 @@ jobs:
           python-version: 3.11
           architecture: x64
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -e .
       - name: Fetch Football league table and update MaccabiPedia
         env:
           PYWIKIBOT_DIR: pywikibot_configs/
           MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
           MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
-        run: python update_league_table.py
+        run: python -m maccabipediabot.football.update_league_table
       - name: Fetch Volleyball league table and update MaccabiPedia
         env:
           PYWIKIBOT_DIR: pywikibot_configs/
           MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
           MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
-        run: python update_league_table_volleyball.py
+        run: python -m maccabipediabot.volleyball.update_league_table_volleyball
       - name: Fetch Basketball league table and update MaccabiPedia
         env:
           PYWIKIBOT_DIR: pywikibot_configs/
           MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
           MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
-        run: python update_league_table_basketball.py
+        run: python -m maccabipediabot.basketball.update_league_table_basketball
       - name: Fetch Basketball euroleague table and update MaccabiPedia
         env:
           PYWIKIBOT_DIR: pywikibot_configs/
           MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
           MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
-        run: python update_euroleague_table_basketball.py
+        run: python -m maccabipediabot.basketball.update_euroleague_table_basketball
   workflow-keepalive:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest

@@ -24,6 +24,11 @@ maccabistats_sub_events_to_maccabipedia_events = {GoalTypes.OWN_GOAL.value: "ע�
                                                   GoalTypes.UNKNOWN.value: None,
                                                   GoalTypes.HEADER.value: "נגיחה",
                                                   GoalTypes.FREE_KICK.value: "בעיטה חופשית",
+                                                  GoalTypes.NORMAL_KICK.value: None,
+                                                  GoalTypes.UNCATEGORIZED.value: None,
+                                                  GoalTypes.BICYCLE_KICK.value: "עקרב",
+                                                  GoalTypes.CORNER.value: "קרנר",
+                                                  GoalTypes.CHEST.value: "חזה",
                                                   }
 
 SQUAD_RANK = {"הרכב": 0,

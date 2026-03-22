@@ -19,7 +19,7 @@ jobs:
         run: python -m maccabipediabot.football.fetch_games_from_maccabi_tlv_site
       - name: Upload Last Game To MaccabiPedia
         env:
-          PYWIKIBOT_DIR: pywikibot_configs/
+          PYWIKIBOT_DIR: src/maccabipediabot/pywikibot_configs/
           MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
           MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
         run: python -m maccabipediabot.football.upload_last_game_to_maccabipedia

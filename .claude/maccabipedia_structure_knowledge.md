@@ -2,15 +2,17 @@
 
 ## 1. Namespaces and Page Prefixes
 
-| Sport | Game Format | Player Pages |
-|-------|-------------|--------------|
-| **Football** | `משחק: DD-MM-YYYY [Home] נגד [Away] - [Competition]` | `Name` (main namespace, no prefix) |
-| **Basketball** | `כדורסל:DD-MM-YYYY [Home] נגד [Away] - [Competition]` | `כדורסל:Name` |
-| **Volleyball** | `כדורעף:DD-MM-YYYY [Home] נגד [Away] - [Competition]` | `כדורעף:Name` |
+| Sport | Game Format | Player/Coach Pages | Opponent Pages | Season Pages |
+|-------|-------------|-------------------|----------------|--------------|
+| **Football** | `משחק: DD-MM-YYYY [Home] נגד [Away] - [Competition]` | `Name` (main namespace) | `Name` (main namespace) | `עונת YYYY/YY` (main namespace) |
+| **Basketball** | `כדורסל:DD-MM-YYYY [Home] נגד [Away] - [Competition]` | `כדורסל:Name` | `כדורסל:Name` | `כדורסל:עונת YYYY/YY` |
+| **Volleyball** | `כדורעף:DD-MM-YYYY [Home] נגד [Away] - [Competition]` | `כדורעף:Name` | `כדורעף:Name` | `כדורעף:עונת YYYY/YY` |
 
 > **Note:** Football game pages use `משחק: ` with a space after the colon (confirmed via Cargo API). Football player pages, coaches, referees, and stadiums all live in the **main namespace** with no prefix — e.g. `שגיב יחזקאל`, not `שחקן:שגיב יחזקאל`.
 
-Season/competition pages use the sport prefix (e.g. `כדורסל:עונת YYYY/YY`, `כדורעף:עונת YYYY/YY`).
+> **Warning:** Some team names (e.g. `הפועל ירושלים`, `מכבי רחובות`) exist in **both** main namespace (as football pages) and `כדורעף:`/`כדורסל:` namespace. Always use the sport-specific prefix for volleyball/basketball operations.
+
+Competition pages use the sport prefix (e.g. `כדורסל:ליגת העל`, `כדורעף:ליגת העל`).
 
 ## 2. Core Templates
 
@@ -21,14 +23,23 @@ Season/competition pages use the sport prefix (e.g. `כדורסל:עונת YYYY/
 | Volleyball | `משחק כדורעף` (set-by-set results) |
 
 ## 3. Page Purging
-After uploading/updating a game, purge all related pages using a **batch purge** (collect a `set[str]`, one `purge(forcelinkupdate=True)` at the end):
-1. Opponent page — plain name, main namespace
-2. Season page — `עונת YYYY/YY`, main namespace
-3. Competition page — plain name, main namespace
-4. Stadium/Arena page — plain name, main namespace
-5. Maccabi players' pages — plain name, **no `שחקן:` prefix** (confirmed: `שחקן:Name` does not exist)
-6. Maccabi coach + Opponent coach — plain name, main namespace
-7. Referee — plain name, main namespace
+After uploading/updating a game, purge all related pages using a **batch purge** (collect a `set[str]`, one `purge(forcelinkupdate=True)` at the end).
+
+**Football** (all pages in main namespace):
+1. Opponent page — `Name`
+2. Season page — `עונת YYYY/YY`
+3. Competition page — `Name`
+4. Stadium page — `Name`
+5. Maccabi players — `Name` (no `שחקן:` prefix; confirmed `שחקן:Name` does not exist)
+6. Maccabi coach + Opponent coach — `Name`
+7. Referee — `Name`
+
+**Volleyball** (all pages under `כדורעף:` prefix, confirmed via GH Actions logs + wiki API):
+1. Opponent page — `כדורעף:Name`
+2. Season page — `כדורעף:עונת YYYY/YY`
+3. Competition page — `כדורעף:Name`
+4. Stadium page — main namespace (stadium pages do **not** exist on the wiki yet; all purges are skipped)
+5. Players, coaches, referees — `כדורעף:Name` (not yet implemented; `VolleyballGame` model does not carry these fields)
 
 Filter maccabistats sentinel values before purging: skip `"Cant found coach"`, `"Cant found referee"`, etc.
 Only purge related pages if the game page was actually saved (not skipped).

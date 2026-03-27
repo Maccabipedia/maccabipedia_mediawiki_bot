@@ -78,3 +78,40 @@ Hebrew redirect syntax: `#הפניה [[Target_Page_Name]]`
 
 **Fan Songs** (`שיר:` namespace, template `{{שיר}}`):
 - Parameters: `קטגוריה`, `שם השיר`, `עונת בכורה`, `על השיר`, `ביצוע לשיר`, `מילים`
+
+## 9. External Research Sources (מקורות שימושיים)
+
+MaccabiPedia maintains an official curated list of approved research sources at:
+`https://www.maccabipedia.co.il/מקורות_שימושיים`
+
+Organized by sport → category (historical, video, songs, photos, tickets).
+
+### Football
+**Historical/Archival:**
+- **JPress** — digitized historical Jewish press (browsable by year)
+- **RSSSF** — historical league results and top scorers by season
+- **NLI Ephemera collection** — old Maccabi posters (National Library of Israel)
+- **State Archives of Israel** — general archival materials
+- **Ynet Archive**, **Walla Sports** — modern press
+- **Trove** (Australian newspapers) — relevant for Australia tour coverage
+- **Newspapers.com** (US newspapers) — relevant for US tour coverage
+- **Yedioth Ahronoth Archive** + **ProQuest** — require Tel Aviv University institutional access
+
+**Video:**
+- Primary: `maccabi-videos` channel on both Vimeo and YouTube
+- ~15 additional named YouTube channels (NirHoori, Rak Maccabi, MTAGold, mtaarchive, etc.)
+- Israeli Film Archive, State Archives YouTube
+
+### Basketball
+- **Kadorsela** (`כדורסלע`) dictionary — historical statistics
+- **Safsal site** — cup final games
+- **maccabifans** (Web Archive) — historical roster pages
+- **"The Israeli Basketball Book"** by Eliyahu Shochat (available on Yumpu)
+
+### Volleyball
+- **Volleybox** — statistics and video
+- **Premier League stats from 2010/11** — structured statistics
+- **Walla Sports Volleyball Archive**
+
+### Cross-Sport
+- **12p.co.il** (fan forum) — heavily referenced for songs, tifos, old photos, discussions across all sports

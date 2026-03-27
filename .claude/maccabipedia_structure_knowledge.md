@@ -106,6 +106,7 @@ MaccabiPedia maintains an official curated list of approved research sources at:
 | Yedioth Ahronoth Archive | http://192.115.83.120.rproxy.tau.ac.il/Olive/APA/Test/ | Full-text archive (**requires TAU access**) |
 | ProQuest Global | https://www.proquest.com/?accountid=14765 | Global newspapers (**requires TAU access**) |
 | Kan Sport Archive | https://www.kan.org.il/lobby/kan_sport/ | Broadcast archives |
+| **Old official Maccabi site** (Web Archive) | https://web.archive.org/web/20021201114805/http://www.maccabita.co.il/default.asp | Old maccabita.co.il — **useful for players/rosters across all sports** |
 | Getty Images | https://www.gettyimages.com/photos/maccabi-tel-aviv | Professional photography |
 
 ### Football — Video
@@ -162,9 +163,9 @@ The מקורות שימושיים page only lists **song sources** for handball:
 - 12p forum — 2010/11 player songs: https://forum.12p.co.il/index.php?app=forums&module=forums&controller=topic&id=126273
 
 For **finding handball players and rosters**, no dedicated source is listed on the page. Useful cross-sport options:
+- **Old official Maccabi site** (maccabita.co.il via Web Archive) — see Football section above
 - **maccabifans Web Archive** (see basketball section) — may contain handball rosters
 - **12p.co.il forum** — search handball topics for player mentions
-- Old official Maccabi Tel Aviv website (via Web Archive / Wayback Machine)
 
 ---
 

@@ -15,6 +15,7 @@
 - GitHub CLI is available as `gh.exe` (not `gh`) in WSL.
 
 ## 3. Git Hygiene
+- **Always work on a feature branch.** Before making any code changes, check the current branch. If on `master`, create a feature branch first.
 - Before any `git add`, run `git status` and review every file. Only stage files directly related to the current task.
 - At the end of every task involving a git branch, switch back to `master` and confirm the branch is clean.
 

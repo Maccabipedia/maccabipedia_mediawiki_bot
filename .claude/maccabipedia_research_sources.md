@@ -8,6 +8,9 @@ Wiki page with full list: `https://www.maccabipedia.co.il/מקורות_שימו�
 - maccabita.co.il (~2002): https://web.archive.org/web/20021201114805/http://www.maccabita.co.il/default.asp — old official site, useful for rosters across all sports
 - maccabifans.co.il (~2004–2007): https://web.archive.org/web/20070508213837/http://www.maccabifans.co.il/ — roster pages: https://web.archive.org/web/20040310150332/http://www.maccabifans.co.il/segel_show.asp?num=15
 - Ultras 96: https://web.archive.org/web/20040822043201/http://www.ultras.co.il/one_news.asp?IDNews=1028
+- hamaccabim.net (~2021): https://web.archive.org/web/*/hamaccabim.net — fan/information site (check snapshots for rosters & match data)
+- tzahevet.co.il (~2002): https://web.archive.org/web/20020120161603/http://tzahevet.co.il/ — fan site (צהבת = "Yellow", Maccabi colors)
+- gate11.co.il (~2006): https://web.archive.org/web/20060613183922/http://www.gate11.co.il/ — fan site/forum "Gate 11" (check for photos, match reports)
 
 **National archives:**
 - Israel State Archives: https://catalog.archives.gov.il/

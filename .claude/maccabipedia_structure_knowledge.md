@@ -67,7 +67,12 @@ Hebrew redirect syntax: `#הפניה [[Target_Page_Name]]`
 - File naming: `{שם_עיתון}_{תאריך_המשחק}_{שם_היריבה}_{מספר}_{(תאריך_פרסום)}`
 
 **Tickets** (`File:` pages):
-- Basketball: `{{תיוג משחק כדורסל|שם משחק=PAGE_NAME}}`
+- Basketball: `{{תיוג כרטיס משחק כדורסל|משחק=PAGE_NAME}}`
+
+**Posters** (`File:` pages):
+- Basketball: `{{תיוג כרזת כדורסל|משחק=PAGE_NAME}}`
+- If no matching game page found in Cargo, upload with `{{תיוג כרזת כדורסל}}` (no `משחק=`) for tracking
+- Filename convention: `כרזת משחק כדורסל DD-MM-YYYY.jpg`
 
 **Fan Songs** (`שיר:` namespace, template `{{שיר}}`):
 - Parameters: `קטגוריה`, `שם השיר`, `עונת בכורה`, `על השיר`, `ביצוע לשיר`, `מילים`

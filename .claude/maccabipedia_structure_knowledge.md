@@ -78,3 +78,35 @@ Hebrew redirect syntax: `#הפניה [[Target_Page_Name]]`
 
 **Fan Songs** (`שיר:` namespace, template `{{שיר}}`):
 - Parameters: `קטגוריה`, `שם השיר`, `עונת בכורה`, `על השיר`, `ביצוע לשיר`, `מילים`
+
+## 9. External Research Sources
+
+Full curated list with links: `https://www.maccabipedia.co.il/מקורות_שימושיים`
+
+### Where to search by need
+
+| I need... | Check these sources |
+|-----------|-------------------|
+| **Football match results (historical)** | RSSSF (league tables + top scorers), Football Association Archive, WildStat |
+| **Football match results (modern)** | Walla Sports, Cargo API |
+| **Football player rosters / transfers** | Old maccabita.co.il (Wayback Machine), Twitter thread by @austurgi |
+| **Football newspaper coverage** | JPress (Hebrew press, browsable by year), Ynet archive, Hadashot (color). For tours: Trove (Australia), Newspapers.com (US). Institutional: Yedioth Ahronoth + ProQuest (require TAU access) |
+| **Football video** | maccabi-videos (Vimeo + YouTube) as primary, ~25 more YouTube channels on the sources page |
+| **Football songs** | 12p forum (4 threads covering 2003–2014) |
+| **Basketball stats / results** | Hebrew Wikipedia (league + cup seasons), Safsal (cup finals) |
+| **Basketball player rosters** | maccabifans (Wayback Machine — has numbered roster pages), Kadorsela dictionary |
+| **Basketball history** | "The Israeli Basketball Book" by Eliyahu Shochat (on Yumpu) |
+| **Volleyball stats** | IVA dataproject (from 2010/11 only), Walla Sports Volleyball archive (from ~2006) |
+| **Volleyball players** | Volleybox (player profiles + videos) |
+| **Volleyball pre-2010 history** | Wincol PDF ("pre-establishment years"), Facebook group "כדורעף ושאר סיפורים" |
+| **Handball** | Almost no sources. Only: 12p forum song threads (2009–2011). For rosters, try maccabita.co.il and maccabifans via Wayback Machine |
+| **Photos (all sports)** | Getty Images, Facebook old photos album, retro blogs, 12p forum 1980s thread, Maccabiah exhibition |
+| **Old official Maccabi websites** | maccabita.co.il (Wayback ~2002), maccabifans.co.il (Wayback ~2004–2007), Ultras 96 (Wayback) |
+| **General archives** | Israel State Archives, NLI (newspapers + Ephemera/posters), Israeli Museums Portal, Harvard Digital Collections, Israeli Film Archive |
+
+### Key coverage gaps
+
+- **Handball**: no stats, no rosters, no video — only fan songs exist
+- **Volleyball 1960s–2010**: IVA starts at 2010/11, Wincol PDF covers pre-establishment — the middle decades are largely undocumented
+- **Football pre-1950s**: RSSSF has tables but no lineups/match details; JPress is the best bet for filling these in
+- **Basketball video**: no known sources listed

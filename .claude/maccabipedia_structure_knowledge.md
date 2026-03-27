@@ -84,34 +84,91 @@ Hebrew redirect syntax: `#הפניה [[Target_Page_Name]]`
 MaccabiPedia maintains an official curated list of approved research sources at:
 `https://www.maccabipedia.co.il/מקורות_שימושיים`
 
-Organized by sport → category (historical, video, songs, photos, tickets).
+---
 
-### Football
-**Historical/Archival:**
-- **JPress** — digitized historical Jewish press (browsable by year)
-- **RSSSF** — historical league results and top scorers by season
-- **NLI Ephemera collection** — old Maccabi posters (National Library of Israel)
-- **State Archives of Israel** — general archival materials
-- **Ynet Archive**, **Walla Sports** — modern press
-- **Trove** (Australian newspapers) — relevant for Australia tour coverage
-- **Newspapers.com** (US newspapers) — relevant for US tour coverage
-- **Yedioth Ahronoth Archive** + **ProQuest** — require Tel Aviv University institutional access
+### Football — Historical/Archival
 
-**Video:**
-- Primary: `maccabi-videos` channel on both Vimeo and YouTube
-- ~15 additional named YouTube channels (NirHoori, Rak Maccabi, MTAGold, mtaarchive, etc.)
-- Israeli Film Archive, State Archives YouTube
+| Source | URL | Useful for |
+|--------|-----|-----------|
+| JPress (NLI Hebrew press) | https://jpress.org.il/Olive/APA/NLI_heb/ | Newspaper articles browsable by year |
+| RSSSF — league tables | http://www.rsssf.com/tablesi/israhist.html | Historical league results |
+| RSSSF — top scorers | http://www.rsssf.com/tablesi/isratops.html | Goal scorers by season |
+| Football Association Archive | http://archive.football.org.il/search.asp | Match results & league records |
+| WildStat | http://wildstat.com/p/5015/club/ISR_Maccabi_Tel_Aviv | Match data and stats |
+| Walla Sports | https://sports.walla.co.il/leagueround/5070?leagueId=361 | Match reports |
+| NLI (Ephemera — posters) | http://primo.nli.org.il/primo-explore/search | Old match posters |
+| NLI (newspapers / Hadashot) | https://www.nli.org.il/he/newspapers/ | Historical newspaper pages |
+| Israel State Archives | https://catalog.archives.gov.il/ | Official state records |
+| Israeli Museums Portal | https://museums.gov.il/he/items/Pages/default.aspx | Museum collections |
+| Harvard Digital Collections | https://digitalcollections.library.harvard.edu/catalog | Historical materials |
+| Trove (Australia) | https://trove.nla.gov.au/ | Coverage of Maccabi tours to Australia |
+| Newspapers.com (US) | https://www.newspapers.com/ | Coverage of Maccabi tours to the US |
+| Yedioth Ahronoth Archive | http://192.115.83.120.rproxy.tau.ac.il/Olive/APA/Test/ | Full-text archive (**requires TAU access**) |
+| ProQuest Global | https://www.proquest.com/?accountid=14765 | Global newspapers (**requires TAU access**) |
+| Kan Sport Archive | https://www.kan.org.il/lobby/kan_sport/ | Broadcast archives |
+| Getty Images | https://www.gettyimages.com/photos/maccabi-tel-aviv | Professional photography |
+
+### Football — Video
+
+| Source | URL | Notes |
+|--------|-----|-------|
+| maccabi-videos (Vimeo) | https://vimeo.com/428829885 | Primary video archive |
+| maccabi-videos (YouTube) | https://www.youtube.com/channel/UCxnAYpW-2OJUXbrSil5EeQQ | Official channel |
+| NirHoori | https://www.youtube.com/@NirHoori-ii2vk | Match recordings |
+| mtaarchive | https://m.youtube.com/user/mtaarchive | Team archives |
+| MTAGold | https://www.youtube.com/user/eman12b/videos | Archive content |
+| maccabifullgame | https://www.youtube.com/channel/UCD5xM1VeIT7VaMhqv3xOZVw | Complete matches |
+| Old VHS cassettes | https://www.youtube.com/@old-vhs-cassettes | Vintage footage |
+| Israeli Film Archive | https://jfc.org.il/ | Documentary films |
+| State Archives (YouTube) | https://www.youtube.com/user/israelarchive/search | Official archives |
+| Sport2 Archive | https://www.youtube.com/user/GamesSportsHD | Broadcast recordings |
+| Sport1 Archive | https://www.youtube.com/channel/UC3fmhtLpKrJ525atoWJ4CCA | Broadcast recordings |
+| Maccabi in UEFA (blog) | https://mtainuefa.weebly.com/ | European competition coverage |
+| Retro photos blog | https://futboltelevisionretro.blogspot.com/2015/07/maccabi-tel-aviv-tv.html | Old photos |
+
+---
 
 ### Basketball
-- **Kadorsela** (`כדורסלע`) dictionary — historical statistics
-- **Safsal site** — cup final games
-- **maccabifans** (Web Archive) — historical roster pages
-- **"The Israeli Basketball Book"** by Eliyahu Shochat (available on Yumpu)
+
+| Source | URL | Useful for |
+|--------|-----|-----------|
+| Kadorsela dictionary | http://www.cadursela.co.il/Dictionary.asp | Historical player/stats reference |
+| Safsal — cup finals | https://safsal.co.il/?page_id=17580 | Cup final game records |
+| maccabifans (Web Archive, site) | https://web.archive.org/web/20070508213837/http://www.maccabifans.co.il/ | Old fan site, general history |
+| maccabifans (Web Archive, **rosters**) | https://web.archive.org/web/20040310150332/http://www.maccabifans.co.il/segel_show.asp?num=15 | **Historical player rosters** — very useful for finding past players |
+| "The Israeli Basketball Book" (Yumpu) | https://www.yumpu.com/ar/document/read/61848121/- | Comprehensive written history by Eliyahu Shochat |
+| Wikipedia — Premier League seasons | https://he.wikipedia.org/wiki/עונת_2002/2003_בליגת_העל_בכדורסל | Season statistics |
+| Wikipedia — State Cup | https://he.wikipedia.org/wiki/גביע_המדינה_בכדורסל_2002/2003 | Cup tournament info |
+
+---
 
 ### Volleyball
-- **Volleybox** — statistics and video
-- **Premier League stats from 2010/11** — structured statistics
-- **Walla Sports Volleyball Archive**
 
-### Cross-Sport
-- **12p.co.il** (fan forum) — heavily referenced for songs, tifos, old photos, discussions across all sports
+| Source | URL | Useful for |
+|--------|-----|-----------|
+| Volleybox — team page | https://volleybox.net/maccabi-tel-aviv-t1631/movies | Match videos |
+| Volleybox — **player profiles** | https://volleybox.net/maccabi-tel-aviv-t1631/players | **Finding players and their details** |
+| IVA stats (from 2010/11) | https://iva-web.dataproject.com/History.aspx?ID=29 | League standings history |
+| Walla Sports Volleyball Archive | https://sports.walla.co.il/archive/191?year=2006&month=3 | Match coverage |
+| Volleyball history PDF (Wincol) | https://www.wincol.ac.il/wincol.ac.il/originals/netunim-caduraf.pdf | Pre-establishment history |
+| Facebook group | https://www.facebook.com/groups/254545287973398 | "Volleyball and Other Stories" community |
+
+---
+
+### Handball (כדוריד)
+
+The מקורות שימושיים page only lists **song sources** for handball:
+- 12p forum — 2009/10 player songs: https://forum.12p.co.il/index.php?app=forums&module=forums&controller=topic&id=107974
+- 12p forum — 2010/11 player songs: https://forum.12p.co.il/index.php?app=forums&module=forums&controller=topic&id=126273
+
+For **finding handball players and rosters**, no dedicated source is listed on the page. Useful cross-sport options:
+- **maccabifans Web Archive** (see basketball section) — may contain handball rosters
+- **12p.co.il forum** — search handball topics for player mentions
+- Old official Maccabi Tel Aviv website (via Web Archive / Wayback Machine)
+
+---
+
+### Cross-Sport Notes
+- **12p.co.il / forum.12p.co.il** — the primary fan forum, referenced across all sports for songs, tifos, old photos, and player discussions
+- **Web Archive (archive.org)** — frequently used to access dead Maccabi fan sites and old official pages
+- Many sources are **Hebrew-only**; some football sources are international (RSSSF, Trove, Newspapers.com)

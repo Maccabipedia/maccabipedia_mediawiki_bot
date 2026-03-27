@@ -13,15 +13,16 @@ After processing, each file is moved to one of three sub-folders:
 
 Usage:
     source ~/.secrets && MACCABIPEDIA_UA_SCRIPT=gamesbot_basketball python upload_basketball_posters.py
+    source ~/.secrets && MACCABIPEDIA_UA_SCRIPT=gamesbot_basketball python upload_basketball_posters.py --dry-run
 
 Dependencies:
     pywikibot, requests
 
 Configuration:
     Set POSTERS_BASE_FOLDER to the batch folder containing the 'input' sub-folder.
-    Set SHOULD_SAVE = False to do a dry-run without uploading.
 """
 
+import argparse
 import logging
 import re
 import requests
@@ -42,8 +43,7 @@ site = get_site()
 API_URL = 'https://www.maccabipedia.co.il/api.php'
 
 # Configuration
-POSTERS_BASE_FOLDER = Path(r"C:\maccabipedia\automations\basketball-posters-03-2026")
-SHOULD_SAVE = True
+POSTERS_BASE_FOLDER = Path("/mnt/c/maccabipedia/automations/basketball-posters-03-2026")
 
 TEMPLATE_NAME = "תיוג כרזת כדורסל"
 TEMPLATE_PARAM_GAME_NAME = "משחק="
@@ -169,7 +169,7 @@ def _upload_file_via_requests(poster_file: Path, text: str) -> None:
         raise RuntimeError(f"Unexpected upload result: {result}")
 
 
-def upload_poster(poster_file: Path) -> None:
+def upload_poster(poster_file: Path, dry_run: bool = False) -> None:
     """
     Uploads a single poster file to Maccabipedia and moves it to the appropriate sub-folder.
     """
@@ -177,8 +177,13 @@ def upload_poster(poster_file: Path) -> None:
 
     try:
         game_date = _extract_date_from_filename(poster_file.stem)
-        page_name = _get_game_page_name(game_date)
-        logger.info(f"Matched game date {game_date.strftime('%d-%m-%Y')} to game page: {page_name}")
+        try:
+            page_name = _get_game_page_name(game_date)
+            logger.info(f"Matched game date {game_date.strftime('%d-%m-%Y')} to game page: {page_name}")
+            template_text = f"{{{{{TEMPLATE_NAME}|{TEMPLATE_PARAM_GAME_NAME}{page_name}}}}}"
+        except ValueError:
+            logger.warning(f"No game page found for {game_date.strftime('%d-%m-%Y')} — uploading without משחק= param.")
+            template_text = f"{{{{{TEMPLATE_NAME}}}}}"
 
         file_page = pw.FilePage(site, poster_file.name)
         if file_page.exists():
@@ -186,36 +191,37 @@ def upload_poster(poster_file: Path) -> None:
             poster_file.rename(_duplicate_folder() / poster_file.name)
             return
 
-        template_text = f"{{{{{TEMPLATE_NAME}|{TEMPLATE_PARAM_GAME_NAME}{page_name}}}}}"
-
-        if SHOULD_SAVE:
+        if not dry_run:
             _upload_file_via_requests(poster_file, template_text)
             logger.info(f"Successfully uploaded: {poster_file.name}")
+            poster_file.rename(_passed_folder() / poster_file.name)
         else:
             logger.info(f"[DRY RUN] Would upload: {poster_file.name} with template: {template_text}")
 
-        poster_file.rename(_passed_folder() / poster_file.name)
-
     except Exception as e:
         logger.error(f"Failed to process {poster_file.name}: {e}")
-        poster_file.rename(_failed_folder() / poster_file.name)
+        if not dry_run:
+            poster_file.rename(_failed_folder() / poster_file.name)
 
 
-def upload_all_posters() -> None:
+def upload_all_posters(dry_run: bool = False) -> None:
     """
     Processes all poster files in the input folder.
     """
     _ensure_folders_exist()
 
-    logger.info(f"Starting to upload posters from: {_input_folder()}")
+    logger.info(f"Starting to upload posters from: {_input_folder()}" + (" [DRY RUN]" if dry_run else ""))
     uploaded = 0
     for file_path in sorted(_input_folder().iterdir()):
         if file_path.is_file() and file_path.suffix.lower() in SUPPORTED_EXTENSIONS:
-            upload_poster(file_path)
+            upload_poster(file_path, dry_run=dry_run)
             uploaded += 1
 
     logger.info(f"Done. Processed {uploaded} files.")
 
 
 if __name__ == '__main__':
-    upload_all_posters()
+    parser = argparse.ArgumentParser(description='Upload basketball posters to Maccabipedia.')
+    parser.add_argument('--dry-run', action='store_true', help='Preview actions without uploading.')
+    args = parser.parse_args()
+    upload_all_posters(dry_run=args.dry_run)

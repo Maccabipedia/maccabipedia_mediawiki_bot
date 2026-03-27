@@ -78,3 +78,7 @@ Hebrew redirect syntax: `#הפניה [[Target_Page_Name]]`
 
 **Fan Songs** (`שיר:` namespace, template `{{שיר}}`):
 - Parameters: `קטגוריה`, `שם השיר`, `עונת בכורה`, `על השיר`, `ביצוע לשיר`, `מילים`
+
+## 9. External Research Sources
+
+See `.claude/maccabipedia_research_sources.md` for the full reference of where to search for data by sport and type (stats, rosters, video, etc.).

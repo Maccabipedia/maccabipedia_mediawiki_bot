@@ -55,3 +55,7 @@ The server's ModSecurity WAF blocks requests from unknown user-agent script name
 ## 7. MaccabiPedia Structure (CRITICAL — read every session)
 
 Always read `.claude/maccabipedia_structure_knowledge.md` before working with game pages, player pages, templates, or the Cargo API.
+
+## 8. Research Sources (read when searching for external data)
+
+Read `.claude/maccabipedia_research_sources.md` when you need to find data from external sources — player rosters, match results, historical records, photos, or video for any sport.

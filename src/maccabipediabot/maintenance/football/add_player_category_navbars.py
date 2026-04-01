@@ -1,12 +1,14 @@
 """
 Add pill-style navigation bars to player achievement category pages.
 
-For each sport and competition-type series (e.g. "שחקני כדורגל שזכו ב-N אליפויות"),
-this script:
-  1. Discovers all existing numbered categories via the MediaWiki API.
-  2. Creates (or updates) one navigation template per competition type,
+Auto-discovers all category series matching the pattern:
+  "שחקני {sport} שזכו ב-{N} {type}"  (e.g. שחקני כדורגל שזכו ב-3 אליפויות)
+  "שחקני {sport} שזכו {N} {type}"    (e.g. שחקני כדורגל שזכו 5 עונות במכבי)
+
+For each discovered series this script:
+  1. Creates (or updates) one navigation template per competition type,
      e.g. "תבנית:ניווט שחקני כדורגל - אליפויות".
-  3. Edits each category page to prepend the template call so the nav bar
+  2. Edits each category page to prepend the template call so the nav bar
      appears above the member list.
 
 Usage:
@@ -39,84 +41,117 @@ logger = logging.getLogger(__name__)
 _PILL_CLASS = "nmpAchievementsNavPill"
 _PILL_ACTIVE_CLASS = "nmpAchievementsNavPillActive"
 
+# Human-readable labels for known competition types.
+# Fallback: "{type_name}:"
+TYPE_LABELS = {
+    "אליפויות":             "זכיות באליפות:",
+    "אלוף האלופים":         "זכיות באלוף האלופים:",
+    "אלוף האליפיים":        "זכיות באלוף האלופים:",
+    "גביעי מדינה":          "זכיות בגביע המדינה:",
+    "גביעי טוטו":           "זכיות בגביע הטוטו:",
+    "גביעי ליליאן":         "זכיות בגביע ליליאן:",
+    "גביעי אסיה לאלופות":   "זכיות בגביע אסיה לאלופות:",
+    "גביעי אטקין":          "זכיות בגביע אטקין:",
+    "תארים":                "סך כל התארים:",
+    "תאריים":               "סך כל התארים:",
+    "עונות במכבי":          "עונות במכבי:",
+    "עונות":                "עונות במכבי:",
+}
+
+# Patterns to match category names (order matters — most specific first):
+#   Pattern A:  "שחקני {sport} שזכו ב-{N} {type}"  e.g. שחקני כדורגל שזכו ב-3 אליפויות
+#   Pattern B:  "שחקני {sport} שזכו {N} {type}"    e.g. שחקני כדורגל שזכו 5 תארים
+#   Pattern C:  "שחקני {sport} ששיחקו {N} {type}"  e.g. שחקני כדורגל ששיחקו 7 עונות במכבי
+#   Pattern D:  "שחקנים ששיחקו {N} {type}"          e.g. שחקנים ששיחקו 10 עונות
+_PATTERN_A = re.compile(r"^שחקני (.+?) שזכו ב-(\d+) (.+)$")
+_PATTERN_B = re.compile(r"^שחקני (.+?) שזכו (\d+) (.+)$")
+_PATTERN_C = re.compile(r"^שחקני (.+?) ששיחקו (\d+) (.+)$")
+_PATTERN_D = re.compile(r"^שחקנים ששיחקו (\d+) (.+)$")
+
 
 @dataclass
-class SportConfig:
-    name: str           # e.g. "כדורגל"
-    category_prefix: str  # prefix for allcategories query
-    template_prefix: str  # prefix for template titles
-    type_labels: dict[str, str]  # type_name -> label shown above pills
+class CategorySeries:
+    sport: str        # e.g. "כדורגל"
+    type_name: str    # e.g. "אליפויות"
+    cat_prefix: str   # e.g. "שחקני כדורגל שזכו ב-" or "שחקני כדורגל שזכו "
+    numbers: list[int]
+
+    @property
+    def template_name(self) -> str:
+        return f"ניווט שחקני {self.sport} - {self.type_name}"
+
+    def cat_title(self, n: int) -> str:
+        # cat_prefix already ends with the right separator (e.g. "ב-" or " ")
+        return f"קטגוריה:{self.cat_prefix}{n} {self.type_name}"
+
+    def template_call(self, n: int) -> str:
+        return f"{{{{{self.template_name}|{n}}}}}"
 
 
-SPORTS = [
-    SportConfig(
-        name="כדורגל",
-        category_prefix="שחקני כדורגל שזכו ב-",
-        template_prefix="ניווט שחקני כדורגל - ",
-        type_labels={
-            "אליפויות":             "זכיות באליפות:",
-            "אלוף האלופים":         "זכיות באלוף האלופים:",
-            "אלוף האליפיים":        "זכיות באלוף האלופים:",
-            "גביעי מדינה":          "זכיות בגביע המדינה:",
-            "גביעי טוטו":           "זכיות בגביע הטוטו:",
-            "גביעי ליליאן":         "זכיות בגביע ליליאן:",
-            "גביעי אסיה לאלופות":   "זכיות בגביע אסיה לאלופות:",
-            "תאריים":               "סך כל התארים:",
-        },
-    ),
-    SportConfig(
-        name="כדורעף",
-        category_prefix="שחקני כדורעף שזכו ב-",
-        template_prefix="ניווט שחקני כדורעף - ",
-        type_labels={
-            "אליפויות":     "זכיות באליפות:",
-            "גביעי אטקין":  "זכיות בגביע אטקין:",
-            "גביעי מדינה":  "זכיות בגביע המדינה:",
-            "תאריים":       "סך כל התארים:",
-            "תארים":        "סך כל התארים:",
-        },
-    ),
-]
-
-
-def discover_categories(site: pywikibot.Site, sport: SportConfig) -> dict[str, list[int]]:
+def discover_all_series(
+    site: pywikibot.Site, sport_filter: str | None = None
+) -> list[CategorySeries]:
     """
-    Query the wiki for all categories matching this sport's prefix.
-    Returns a dict mapping type_name -> sorted list of numbers.
+    Query all categories starting with 'שחקני' and parse them into series.
+    Handles both 'שזכו ב-N' and 'שזכו N' patterns automatically.
     """
-    logger.info(f"[{sport.name}] Querying categories with prefix: {sport.category_prefix!r}")
-    raw_cats = [
-        cat.title(with_ns=False)
-        for cat in site.allcategories(prefix=sport.category_prefix)
+    logger.info("Querying all 'שחקני' categories from wiki...")
+    grouped: dict[tuple, dict] = defaultdict(lambda: {"cat_prefix": None, "numbers": []})
+
+    # "שחקני" covers both "שחקני {sport}" and "שחקנים" (since שחקנים starts with שחקני)
+    for cat in site.allcategories(prefix="שחקני"):
+            title = cat.title(with_ns=False)
+
+            ma = _PATTERN_A.match(title)
+            mb = _PATTERN_B.match(title)
+            mc = _PATTERN_C.match(title)
+            md = _PATTERN_D.match(title)
+
+            if ma:
+                sport, n, type_name = ma.group(1), int(ma.group(2)), ma.group(3)
+                cat_prefix = f"שחקני {sport} שזכו ב-"
+            elif mb:
+                sport, n, type_name = mb.group(1), int(mb.group(2)), mb.group(3)
+                cat_prefix = f"שחקני {sport} שזכו "
+            elif mc:
+                sport, n, type_name = mc.group(1), int(mc.group(2)), mc.group(3)
+                cat_prefix = f"שחקני {sport} ששיחקו "
+            elif md:
+                sport, n, type_name = "כללי", int(md.group(1)), md.group(2)
+                cat_prefix = "שחקנים ששיחקו "
+            else:
+                continue
+
+            if sport_filter and sport != sport_filter:
+                continue
+
+            key = (sport, type_name)
+            grouped[key]["cat_prefix"] = cat_prefix
+            grouped[key]["numbers"].append(n)
+
+    series = [
+        CategorySeries(
+            sport=key[0],
+            type_name=key[1],
+            cat_prefix=data["cat_prefix"],
+            numbers=sorted(data["numbers"]),
+        )
+        for key, data in grouped.items()
     ]
-    logger.info(f"[{sport.name}] Found {len(raw_cats)} matching categories")
 
-    pattern = re.compile(r"^.+שזכו ב-(\d+) (.+)$")
-    grouped: dict[str, list[int]] = defaultdict(list)
-    for cat in raw_cats:
-        m = pattern.match(cat)
-        if m:
-            n, type_name = int(m.group(1)), m.group(2)
-            grouped[type_name].append(n)
-        else:
-            logger.warning(f"Unexpected category name, skipping: {cat!r}")
-
-    return {t: sorted(ns) for t, ns in grouped.items()}
+    logger.info(f"Discovered {len(series)} category series")
+    return series
 
 
-def build_template_wikitext(
-    sport: SportConfig, type_name: str, label: str, numbers: list[int]
-) -> str:
+def build_template_wikitext(series: CategorySeries, label: str) -> str:
     """Build the full wikitext for a pill-navigation template."""
     pills = []
-    for n in numbers:
-        cat_full = f"קטגוריה:{sport.category_prefix}{n} {type_name}"
+    for n in series.numbers:
+        cat_full = series.cat_title(n)
         current_html = f'<span class="{_PILL_ACTIVE_CLASS}">{n}</span>'
-        linked_html = f'[[:{ cat_full }|<span class="{_PILL_CLASS}">{n}</span>]]'
+        linked_html = f'[[:{cat_full}|<span class="{_PILL_CLASS}">{n}</span>]]'
         pill = "{{#ifeq:{{{1}}}|" + str(n) + "|" + current_html + "|" + linked_html + "}}"
         pills.append(pill)
-
-    pills_wikitext = "\n".join(pills)
 
     return (
         "<includeonly>\n"
@@ -124,7 +159,7 @@ def build_template_wikitext(
         'border:1px solid #a2a9b1;border-radius:4px;margin:4px 0 10px 0;">\n'
         f'<div style="font-size:12px;color:#72777d;margin-bottom:6px;">{label}</div>\n'
         "<div>\n"
-        f"{pills_wikitext}\n"
+        + "\n".join(pills) + "\n"
         "</div>\n"
         "</div>\n"
         "</includeonly>\n"
@@ -133,16 +168,11 @@ def build_template_wikitext(
 
 
 def create_or_update_template(
-    site: pywikibot.Site,
-    sport: SportConfig,
-    type_name: str,
-    label: str,
-    numbers: list[int],
-    dry_run: bool,
+    site: pywikibot.Site, series: CategorySeries, label: str, dry_run: bool
 ) -> None:
-    template_title = f"תבנית:{sport.template_prefix}{type_name}"
+    template_title = f"תבנית:{series.template_name}"
     page = pywikibot.Page(site, template_title)
-    new_content = build_template_wikitext(sport, type_name, label, numbers)
+    new_content = build_template_wikitext(series, label)
 
     if page.exists() and page.text == new_content:
         logger.info(f"Template already up-to-date: {template_title}")
@@ -159,17 +189,12 @@ def create_or_update_template(
 
 
 def add_navbar_to_category_page(
-    site: pywikibot.Site,
-    sport: SportConfig,
-    type_name: str,
-    n: int,
-    dry_run: bool,
+    site: pywikibot.Site, series: CategorySeries, n: int, dry_run: bool
 ) -> None:
-    template_call = f"{{{{{sport.template_prefix}{type_name}|{n}}}}}"
-    cat_title = f"קטגוריה:{sport.category_prefix}{n} {type_name}"
+    template_call = series.template_call(n)
+    cat_title = series.cat_title(n)
     page = pywikibot.Page(site, cat_title)
-
-    existing = page.text  # '' for category pages with no explicit wikitext
+    existing = page.text
 
     if template_call in existing:
         logger.info(f"Nav already present: {cat_title}")
@@ -186,35 +211,21 @@ def add_navbar_to_category_page(
     page.save(summary="בוט: הוספת ניווט לקטגוריה", minor=True)
 
 
-def process_sport(
-    site: pywikibot.Site, sport: SportConfig, dry_run: bool, test: bool
-) -> None:
-    type_map = discover_categories(site, sport)
-    logger.info(f"[{sport.name}] Types found: {list(type_map.keys())}")
+def main(dry_run: bool = True, test: bool = False, sport_filter: str | None = None) -> None:
+    site = get_site()
+    all_series = discover_all_series(site, sport_filter=sport_filter)
 
-    for type_name, numbers in sorted(type_map.items()):
-        label = sport.type_labels.get(type_name, f"זכיות ב{type_name}:")
-        logger.info(f"\n--- [{sport.name}] {type_name} ({numbers}) ---")
+    for series in sorted(all_series, key=lambda s: (s.sport, s.type_name)):
+        label = TYPE_LABELS.get(series.type_name, f"{series.type_name}:")
+        logger.info(f"\n--- [{series.sport}] {series.type_name} ({series.numbers}) ---")
 
-        create_or_update_template(site, sport, type_name, label, numbers, dry_run)
+        create_or_update_template(site, series, label, dry_run)
 
-        for n in numbers:
-            add_navbar_to_category_page(site, sport, type_name, n, dry_run)
+        for n in series.numbers:
+            add_navbar_to_category_page(site, series, n, dry_run)
             if test:
                 logger.info("Test mode: stopping after first page.")
                 return
-
-
-def main(dry_run: bool = True, test: bool = False, sport_filter: str | None = None) -> None:
-    site = get_site()
-
-    sports = [s for s in SPORTS if sport_filter is None or s.name == sport_filter]
-    if not sports:
-        logger.error(f"Unknown sport: {sport_filter!r}. Available: {[s.name for s in SPORTS]}")
-        return
-
-    for sport in sports:
-        process_sport(site, sport, dry_run, test)
 
     logger.info("\nDone.")
 

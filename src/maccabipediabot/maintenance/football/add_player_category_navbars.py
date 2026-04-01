@@ -215,8 +215,15 @@ def main(dry_run: bool = True, test: bool = False, sport_filter: str | None = No
     site = get_site()
     all_series = discover_all_series(site, sport_filter=sport_filter)
 
+    unknown_types: list[str] = []
+
     for series in sorted(all_series, key=lambda s: (s.sport, s.type_name)):
-        label = TYPE_LABELS.get(series.type_name, f"{series.type_name}:")
+        if series.type_name not in TYPE_LABELS:
+            unknown_types.append(f"  [{series.sport}] {series.type_name!r} — e.g. {series.cat_title(series.numbers[0])}")
+            logger.warning(f"Unknown type_name {series.type_name!r} for sport {series.sport!r} — skipping (add to TYPE_LABELS)")
+            continue
+
+        label = TYPE_LABELS[series.type_name]
         logger.info(f"\n--- [{series.sport}] {series.type_name} ({series.numbers}) ---")
 
         create_or_update_template(site, series, label, dry_run)
@@ -226,6 +233,12 @@ def main(dry_run: bool = True, test: bool = False, sport_filter: str | None = No
             if test:
                 logger.info("Test mode: stopping after first page.")
                 return
+
+    if unknown_types:
+        raise ValueError(
+            "New competition type(s) found — add them to TYPE_LABELS with a human-readable label:\n"
+            + "\n".join(unknown_types)
+        )
 
     logger.info("\nDone.")
 

@@ -45,3 +45,7 @@ Read `.claude/maccabipedia_structure_knowledge.md` when working with game pages,
 ## 8. Research Sources (read when searching for external data)
 
 Read `.claude/maccabipedia_research_sources.md` when you need to find data from external sources — player rosters, match results, historical records, photos, or video for any sport.
+
+## 9. maccabistats Package (read when working with football statistics or game data)
+
+Read `.claude/maccabistats_knowledge.md` for the full API reference of the maccabistats Python package — data loading, fluent filter API, stats modules, data models, event enums, and bot integration patterns.

@@ -118,3 +118,8 @@ pywikibot.lwp
 # AI Agents
 .agents-temp/*
 !.agents-temp/.gitkeep
+
+# Claude Code
+.claude/worktrees/
+.claude/scratch/
+.claude/research/

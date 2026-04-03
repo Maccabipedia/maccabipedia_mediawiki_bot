@@ -38,6 +38,7 @@ Wiki page with full list: `https://www.maccabipedia.co.il/מקורות_שימו�
 
 **Forums:**
 - 12p forum (songs, tifos, photos, all sports): https://forum.12p.co.il/
+- **12p offline archive**: Full dump (98K topics, 3.7M posts) as SQLite DB + raw HTML on MaccabiPedia shared Google Drive. See `README.md` next to the DB for schema and queries. Searchable offline without accessing the forum.
 
 ## Football
 

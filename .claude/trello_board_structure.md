@@ -51,6 +51,18 @@ Claude Code connects to Trello via `@delorenj/mcp-server-trello` MCP server.
 - Permissions: `mcp__trello__*` auto-approved in `.claude/settings.json`
 - Board ID: `n9Zz1CSL`
 
+## Verifying if a task is done
+
+When checking if a Trello task is already done, check **all relevant layers** — not just git:
+
+1. **Git history** — commits, PRs
+2. **Rendered site** — visual check of the actual page as users see it
+3. **Cargo API data** — underlying database values
+4. **Wikitext source** — raw templates (`?action=raw`)
+5. **Bot code** — whether logic exists in this repo
+
+These layers can disagree. For example, wikitext may store data in the correct order but the template re-sorts it during rendering. Always verify the layer the task actually targets.
+
 ## Workflow with Claude Code
 
 1. **Adding tasks**: Tell Claude to add a card — it goes to Inbox with auto-labels.

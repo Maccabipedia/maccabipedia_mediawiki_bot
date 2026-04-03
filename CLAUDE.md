@@ -1,29 +1,21 @@
 # Maccabipedia MediaWiki Bot — Claude Code Guide
 
-## 1. Coding Standards
-- Follow PEP 8: `snake_case` for functions/variables, `PascalCase` for classes.
-- Every new script must include a docstring explaining what it does, how to run it, and any dependencies.
-- Use **`cmd`** for command-line operations — avoid PowerShell syntax (`$env:VAR`, backtick continuations). Use `^` for line continuation.
+## 1. Script Execution
+- **NEVER use `python3 -c`**, `python -c`, or any inline Python. No exceptions. Not even one-liners.
+- **NEVER use multiline bash commands**, heredocs (`<< 'EOF'`), or commands containing `#` comments.
+- **Always write scripts and temp data to files** at `/tmp/maccabipedia/<branch_name>/`. Use the Write tool to create the file, then `Bash` to run it. This keeps parallel sessions isolated and auto-cleans on reboot.
+- Determine the current branch with `git rev-parse --abbrev-ref HEAD` to set the temp directory path.
+- To open files/URLs: `bash .claude/scripts/open-in-browser.sh <url-or-path>`
 
-## Script Execution
-- **Always write scripts to files** (`.claude/scratch/<name>.py`, `.sh`, etc.) instead of inline `python3 -c` or multiline bash. Use the Write/Edit tools to create the file, then `Bash` to run it. This avoids escaping issues and multiline permission prompts.
-- To open files/URLs: use `explorer.exe`, never `cmd.exe /c start`.
+## 2. Environment
+- Running scripts requires `MACCABIPEDIA_UA_SCRIPT` env var — set in `settings.json` env. Pywikibot reads credentials from `user-password.py` directly; never use `source ~/.secrets`.
 
-## 2. Automation & Data Integrity
-- **Zero Tolerance for Silent Failures**: treat every discrepancy as an exception.
-- **Fail Fast**: never silence exceptions with empty `try/except`. Let scripts crash so errors are visible.
-- **Handle Edge Cases**: missing data, network timeouts, invalid wiki syntax.
-- **Interactive Verification**: for fuzzy matching or data correction, prefer interactive scripts that cache user decisions.
-
-## 4. Environment
-- GitHub CLI is available as `gh.exe` (not `gh`) in WSL.
-
-## 3. Git Hygiene
-- **Always work on a feature branch.** Before making any changes — code, docs, or `.claude/` files — check the current branch. If on `master`, create a feature branch first. Nothing is committed directly to `master`; everything goes through a PR.
+## 3. Git Workflow
+- **Always work on a feature branch.** Nothing is committed directly to `master`; everything goes through a PR.
+- **Use worktrees** for feature branches to avoid collisions between parallel sessions. Hooks in `.claude/hooks/` automatically create worktrees at `../maccabipedia_mediawikibot-wt/<name>/` with config and venv.
 - Before any `git add`, run `git status` and review every file. Only stage files directly related to the current task.
-- At the end of every task involving a git branch, switch back to `master` and confirm the branch is clean.
 
-## 6. Lessons Learned
+## 4. Lessons Learned
 
 ### Always validate API responses before parsing
 Cargo Export returns HTML error pages on internal errors — not JSON. Always check `response.status_code == 200` and `'application/json' in response.headers.get('Content-Type', '')` before calling `.json()`. Log the raw response on failure.
@@ -37,19 +29,7 @@ Use `utf-8-sig` encoding when writing CSV/TXT/JSON files with Hebrew text that m
 ### Never use pywikibot's file_page.upload() — use requests directly
 Produces malformed HTTP (bad MIME headers, LF-only line endings) → Apache 400. Use `requests.post(..., files=...)` with pywikibot session cookies. Reference: `upload_basketball_tickets.py` → `_upload_file_via_requests()`.
 
-### Running scripts requires MACCABIPEDIA_UA_SCRIPT env var
-ModSecurity WAF blocks unknown user-agent script names. Always: `source ~/.secrets && MACCABIPEDIA_UA_SCRIPT=<name> python script.py`
-
----
-
-## 7. MaccabiPedia Structure
-
-Read `.claude/maccabipedia_structure_knowledge.md` when working with game pages, player pages, templates, or the Cargo API.
-
-## 8. Research Sources (read when searching for external data)
-
-Read `.claude/maccabipedia_research_sources.md` when you need to find data from external sources — player rosters, match results, historical records, photos, or video for any sport.
-
-## 9. maccabistats Package (read when working with football statistics or game data)
-
-Read `.claude/maccabistats_knowledge.md` for the full API reference of the maccabistats Python package — data loading, fluent filter API, stats modules, data models, event enums, and bot integration patterns.
+## 5. Reference Files
+- `.claude/maccabipedia_structure_knowledge.md` — Game pages, player pages, templates, Cargo API
+- `.claude/maccabipedia_research_sources.md` — External data sources: rosters, match results, historical records, photos, video
+- `.claude/maccabistats_knowledge.md` — maccabistats Python package API reference

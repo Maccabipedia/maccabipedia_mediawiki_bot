@@ -44,16 +44,6 @@ Board URL: https://trello.com/b/n9Zz1CSL/maccabipedia
 - Add a **sport label** only if the task is specific to that sport
 - Add `Claude` label to tasks that can be automated/scripted
 
-## Board members
-
-| Member | Username | Role |
-|--------|----------|------|
-| Roee | roeebb | CEO/CTO |
-| Oren Yaniv | orenyaniv | Content Lead |
-| Oron | oronza8 | Data Editor |
-| Shlomi | shlomihafif | Contributor |
-| Maccabipedia | maccabipedia | Bot/Service account |
-
 ## MCP Integration
 
 Claude Code connects to Trello via `@delorenj/mcp-server-trello` MCP server.

@@ -15,11 +15,14 @@ Wiki page with full list: `https://www.maccabipedia.co.il/מקורות_שימו�
 **National archives:**
 - Israel State Archives: https://catalog.archives.gov.il/
 - NLI — JPress (Hebrew press by year): https://jpress.org.il/Olive/APA/NLI_heb/
+- NLI — Jrayed (enhanced search, Arabic+Hebrew): https://jrayed.org/en/newspapers/home
 - NLI — Ephemera/posters: http://primo.nli.org.il/primo-explore/search?query=any,contains,%D7%9E%D7%9B%D7%91%D7%99%20%D7%AA%22%D7%90&tab=default_tab&search_scope=Ephemera1&vid=NNL_Ephemera&sortby=rank&lang=iw_IL
 - NLI — Hadashot newspaper (color): https://www.nli.org.il/he/newspapers/
 - Israeli Museums Portal: https://museums.gov.il/he/items/Pages/default.aspx
 - Harvard Digital Collections: https://digitalcollections.library.harvard.edu/catalog
 - Israeli Film Archive: https://jfc.org.il/
+- GPO National Photo Collection: https://gpophoto.gov.il/ — 160K+ digitized photos since pre-1948
+- Maccabi World Union Archive: https://www.maccabi.org/who-we-are/archive — ~30K photos, posters, films from early 20th century
 
 **Press:**
 - Ynet archive: https://www.ynet.co.il/home/0,7340,L-4269-77-57,00.html
@@ -27,6 +30,8 @@ Wiki page with full list: `https://www.maccabipedia.co.il/מקורות_שימו�
 - Pendel magazines: http://www.pendelmag.com/index.html
 - Trove (Australian newspapers — Maccabi tours): https://trove.nla.gov.au/
 - Newspapers.com (US — Maccabi tours): https://www.newspapers.com/
+- British Newspaper Archive (UK — Mandate-era + European matches): https://www.britishnewspaperarchive.co.uk/
+- Europeana (European newspapers 1618–1996): https://www.europeana.eu/
 - Yedioth Ahronoth full archive (**requires TAU access**): http://192.115.83.120.rproxy.tau.ac.il/Olive/APA/Test/
 - ProQuest Global (**requires TAU access**): https://www.proquest.com/?accountid=14765
 
@@ -35,6 +40,7 @@ Wiki page with full list: `https://www.maccabipedia.co.il/מקורות_שימו�
 - Facebook old photos album: https://www.facebook.com/media/set/?set=a.10201605865284990&type=3
 - Retro blog 1: https://futboltelevisionretro.blogspot.com/2015/07/maccabi-tel-aviv-tv.html
 - Retro blog 2: https://lagaleriadelfutbol.blogspot.com/2015/07/maccabitelaviv.html
+- Alamy (including B&W historical): https://www.alamy.com/stock-photo/maccabi-tel-aviv.html
 
 **Forums:**
 - 12p forum (songs, tifos, photos, all sports): https://forum.12p.co.il/
@@ -44,8 +50,13 @@ Wiki page with full list: `https://www.maccabipedia.co.il/מקורות_שימו�
 **Stats & results:**
 - RSSSF league tables: http://www.rsssf.com/tablesi/israhist.html
 - RSSSF top scorers: http://www.rsssf.com/tablesi/isratops.html
+- RSSSF Israel in European Cups: https://www.rsssf.org/tablesi/isra-ec.html
 - Football Association Archive: http://archive.football.org.il/
 - WildStat: http://wildstat.com/p/5015/club/ISR_Maccabi_Tel_Aviv
+- Transfermarkt: https://www.transfermarkt.us/maccabi-tel-aviv/startseite/verein/119 — squads, transfers, market values, all seasons
+- FBref: https://fbref.com/en/squads/04c011d8/history/Maccabi-Tel-Aviv-FC-Stats-and-History — advanced stats (xG etc.) from 1992-93
+- WorldFootball.net: https://www.worldfootball.net/teams/maccabi-tel-aviv/ — all results + all-time player list
+- Wikipedia — International Football: https://en.wikipedia.org/wiki/Maccabi_Tel_Aviv_F.C._in_international_football
 
 **Video (primary channels):**
 - maccabi-videos Vimeo: https://vimeo.com/428829885
@@ -63,10 +74,14 @@ Wiki page with full list: `https://www.maccabipedia.co.il/מקורות_שימו�
 - Hebrew Wikipedia (league seasons): https://he.wikipedia.org/wiki/עונת_2002/2003_בליגת_העל_בכדורסל
 - Hebrew Wikipedia (state cup): https://he.wikipedia.org/wiki/גביע_המדינה_בכדורסל_2002/2003
 - Safsal (cup finals): https://safsal.co.il/?page_id=17580
+- EuroLeague Official: https://www.euroleaguebasketball.net/en/euroleague/teams/maccabi-rapyd-tel-aviv/tel/ — stats, rosters, results, records
+- basket.co.il (Israeli Basketball Association): https://basket.co.il/team.asp?TeamId=1096&lang=en — official league stats per season (~2000-01+)
 
 **Rosters & players:**
 - Kadorsela dictionary: http://www.cadursela.co.il/Dictionary.asp
 - maccabifans roster pages (Wayback): see cross-sport section
+- maccabi.co.il Official Club Site: https://maccabi.co.il/data.asp?id=153&lang=en — rosters back to 1986-87, hall of fame, video archive
+- Wikipedia Past Rosters: https://en.wikipedia.org/wiki/Maccabi_Tel_Aviv_B.C._past_rosters
 
 **Books:**
 - "The Israeli Basketball Book" by Eliyahu Shochat: https://www.yumpu.com/ar/document/read/61848121/-
@@ -80,6 +95,9 @@ Wiki page with full list: `https://www.maccabipedia.co.il/מקורות_שימו�
 **Players & video:**
 - Volleybox players: https://volleybox.net/maccabi-tel-aviv-t1631/players
 - Volleybox videos: https://volleybox.net/maccabi-tel-aviv-t1631/movies
+- Maccabi TLV VC Official YouTube: https://www.youtube.com/@maccabitelavivvc
+- Israel Volleyball Association YouTube: https://www.youtube.com/@israelvolleyballassociation — full match broadcasts
+- CEV (European Volleyball) YouTube: https://www.youtube.com/@CEVolleyball — Champions League highlights
 
 **History:**
 - Wincol PDF (pre-establishment): https://www.wincol.ac.il/wincol.ac.il/originals/netunim-caduraf.pdf

@@ -12,10 +12,7 @@
 
 ## 3. Git Workflow
 - **Always work on a feature branch.** Nothing is committed directly to `master`; everything goes through a PR.
-- **Use worktrees** for feature branches to avoid collisions between parallel sessions:
-  - Create: `bash .claude/scripts/create-worktree.sh <branch-name>`
-  - Remove: `bash .claude/scripts/remove-worktree.sh <branch-name>`
-  - Worktrees are created at `../maccabipedia_mediawikibot-wt/<branch-name>/`
+- **Use worktrees** for feature branches to avoid collisions between parallel sessions. Hooks in `.claude/hooks/` automatically create worktrees at `../maccabipedia_mediawikibot-wt/<name>/` with config and venv.
 - Before any `git add`, run `git status` and review every file. Only stage files directly related to the current task.
 
 ## 4. Lessons Learned

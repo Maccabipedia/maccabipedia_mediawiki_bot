@@ -54,5 +54,29 @@
       "mcp__trello__*",
       "mcp__youtube__*"
     ]
+  },
+  "hooks": {
+    "WorktreeCreate": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/create-worktree.sh"
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/remove-worktree.sh"
+          }
+        ]
+      }
+    ]
   }
 }

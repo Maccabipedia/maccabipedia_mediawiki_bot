@@ -5,6 +5,10 @@
 - Every new script must include a docstring explaining what it does, how to run it, and any dependencies.
 - Use **`cmd`** for command-line operations — avoid PowerShell syntax (`$env:VAR`, backtick continuations). Use `^` for line continuation.
 
+## Script Execution
+- **Always write scripts to files** (`.claude/scratch/<name>.py`, `.sh`, etc.) instead of inline `python3 -c` or multiline bash. Use the Write/Edit tools to create the file, then `Bash` to run it. This avoids escaping issues and multiline permission prompts.
+- To open files/URLs: use `explorer.exe`, never `cmd.exe /c start`.
+
 ## 2. Automation & Data Integrity
 - **Zero Tolerance for Silent Failures**: treat every discrepancy as an exception.
 - **Fail Fast**: never silence exceptions with empty `try/except`. Let scripts crash so errors are visible.

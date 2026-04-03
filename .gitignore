@@ -123,3 +123,4 @@ pywikibot.lwp
 .claude/worktrees/
 .claude/scratch/
 .claude/research/
+.mcp.json

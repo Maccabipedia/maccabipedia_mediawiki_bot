@@ -57,6 +57,7 @@
       "Bash(sed:*)",
       "Bash(host:*)",
       "Bash(curl:*)",
+      "Bash(uv run:*)",
       "mcp__trello__*",
       "mcp__youtube__*"
     ]

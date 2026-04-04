@@ -49,8 +49,8 @@
       "Bash(curl:*)",
       "Bash(mkdir -p /tmp/maccabipedia/*)",
       "Bash(python3 /tmp/maccabipedia/*)",
-      "Write(/tmp/maccabipedia/*)",
-      "Read(/tmp/maccabipedia/*)",
+      "Write(//tmp/maccabipedia/**)",
+      "Read(//tmp/maccabipedia/**)",
       "mcp__trello__*",
       "mcp__youtube__*"
     ]

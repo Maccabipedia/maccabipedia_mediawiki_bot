@@ -37,7 +37,6 @@
       "Bash(bash .claude/scripts/*)",
       "Bash(chmod +x .claude/scripts/*)",
       "Bash(acli:*)",
-      "Bash(open:*)",
       "Bash(diff:*)",
       "Bash(stat:*)",
       "Bash(file:*)",
@@ -48,9 +47,10 @@
       "Bash(sed:*)",
       "Bash(host:*)",
       "Bash(curl:*)",
-      "Bash(mkdir -p /tmp/maccabipedia/:*)",
-      "Write(/tmp/maccabipedia/)",
-      "Read(/tmp/maccabipedia/)",
+      "Bash(mkdir -p /tmp/maccabipedia/*)",
+      "Bash(python3 /tmp/maccabipedia/*)",
+      "Write(/tmp/maccabipedia/*)",
+      "Read(/tmp/maccabipedia/*)",
       "mcp__trello__*",
       "mcp__youtube__*"
     ]

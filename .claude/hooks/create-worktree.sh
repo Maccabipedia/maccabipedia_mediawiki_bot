@@ -31,6 +31,18 @@ if [ -f "$SRC" ]; then
     cp "$SRC" "${WT_DIR}/.claude/settings.local.json"
 fi
 
+# Copy MCP config (gitignored, lives at repo root)
+MCP_SRC="${REPO_ROOT}/.mcp.json"
+if [ -f "$MCP_SRC" ]; then
+    cp "$MCP_SRC" "${WT_DIR}/.mcp.json"
+fi
+
+# Copy calendar .env (gitignored, has Google/API credentials)
+CAL_ENV="${REPO_ROOT}/src/maccabipediabot/calendar/.env"
+if [ -f "$CAL_ENV" ]; then
+    cp "$CAL_ENV" "${WT_DIR}/src/maccabipediabot/calendar/.env"
+fi
+
 # Create independent venv with packages (uv is ~10x faster than pip)
 if [ ! -e "${WT_DIR}/.venv" ]; then
     uv sync --directory "${WT_DIR}" >&2

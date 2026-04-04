@@ -29,13 +29,11 @@ SRC="${REPO_ROOT}/.claude/settings.local.json"
 if [ -f "$SRC" ]; then
     mkdir -p "${WT_DIR}/.claude"
     cp "$SRC" "${WT_DIR}/.claude/settings.local.json"
-    echo "  copied settings.local.json" >&2
 fi
 
-# Symlink .venv
-if [ -d "${REPO_ROOT}/.venv" ] && [ ! -e "${WT_DIR}/.venv" ]; then
-    ln -s "${REPO_ROOT}/.venv" "${WT_DIR}/.venv"
-    echo "  linked .venv" >&2
+# Create independent venv with packages (uv is ~10x faster than pip)
+if [ ! -e "${WT_DIR}/.venv" ]; then
+    uv sync --directory "${WT_DIR}" >&2
 fi
 
 # Output the worktree path (required by Claude Code)

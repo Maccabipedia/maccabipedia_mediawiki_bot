@@ -8,6 +8,7 @@
 
 ## 2. Environment
 - Running scripts requires `MACCABIPEDIA_UA_SCRIPT` env var — set in `settings.json` env. Pywikibot reads credentials from `user-password.py` directly; never use `source ~/.secrets`.
+- **Always use `uv run python` instead of `python`** — this auto-detects the local `.venv` without activation. Works in both the main repo and worktrees.
 
 ## 3. Git Workflow
 - **Always work on a feature branch.** Nothing is committed directly to `master`; everything goes through a PR.

@@ -8,5 +8,4 @@ if [ $# -lt 1 ]; then
     exit 1
 fi
 
-# explorer.exe returns exit code 1 even on success in WSL
-explorer.exe "$1" || true
+wslview "$1"

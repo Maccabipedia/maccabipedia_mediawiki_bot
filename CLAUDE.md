@@ -3,8 +3,7 @@
 ## 1. Script Execution
 - **NEVER use `python3 -c`**, `python -c`, or any inline Python. No exceptions. Not even one-liners.
 - **NEVER use multiline bash commands**, heredocs (`<< 'EOF'`), or commands containing `#` comments.
-- **Always write scripts and temp data to files** at `/tmp/maccabipedia/<branch_name>/`. Use the Write tool to create the file, then `Bash` to run it. This keeps parallel sessions isolated and auto-cleans on reboot.
-- Determine the current branch with `git rev-parse --abbrev-ref HEAD` to set the temp directory path.
+- **Always write scripts and temp data to files**, not inline. Use the Write tool to create the file, then `Bash` to run it. With worktrees, each session has its own working directory so files stay isolated.
 - To open files/URLs: `bash .claude/scripts/open-in-browser.sh <url-or-path>`
 
 ## 2. Environment

@@ -86,6 +86,111 @@ class WikiClient:
         data = resp.json()
         return [row["title"] for row in data.get("cargoquery", [])]
 
+    def _post(self, data: dict[str, Any]) -> requests.Response:
+        data.setdefault("format", "json")
+        return self._session.post(self._api, data=data)
+
+    # -- Auth --
+
+    def _ensure_authenticated(self) -> dict | None:
+        if self._csrf_token:
+            return None
+        if not self._config.username or not self._config.password:
+            return {"error": True, "code": "no_credentials", "message": "No credentials configured — set MACCABIPEDIA_BOT_USERNAME and MACCABIPEDIA_BOT_PASSWORD"}
+
+        # Step 1: get login token
+        resp = self._get({"action": "query", "meta": "tokens", "type": "login"})
+        login_token = resp.json()["query"]["tokens"]["logintoken"]
+
+        # Step 2: login
+        resp = self._post({
+            "action": "login",
+            "lgname": self._config.username,
+            "lgpassword": self._config.password,
+            "lgtoken": login_token,
+        })
+        login_result = resp.json().get("login", {})
+        if login_result.get("result") != "Success":
+            return {"error": True, "code": "login_failed", "message": f"Login failed: {login_result.get('reason', 'unknown')}"}
+
+        # Step 3: get CSRF token
+        self._fetch_csrf_token()
+        return None
+
+    def _fetch_csrf_token(self) -> None:
+        resp = self._get({"action": "query", "meta": "tokens", "type": "csrf"})
+        self._csrf_token = resp.json()["query"]["tokens"]["csrftoken"]
+
+    def _do_edit(self, params: dict[str, Any], retry: bool = True) -> dict:
+        auth_err = self._ensure_authenticated()
+        if auth_err:
+            return auth_err
+
+        params["token"] = self._csrf_token
+        params["action"] = "edit"
+        resp = self._post(params)
+        data = resp.json()
+
+        if "error" in data:
+            if data["error"]["code"] == "badtoken" and retry:
+                self._fetch_csrf_token()
+                return self._do_edit(params, retry=False)
+            return {"error": True, "code": data["error"]["code"], "message": data["error"]["info"]}
+
+        edit = data["edit"]
+        return {"success": True, "title": edit["title"], "revid": edit.get("newrevid")}
+
+    # -- Page write tools --
+
+    def create_page(self, title: str, text: str, summary: str) -> dict:
+        return self._do_edit({"title": title, "text": text, "summary": summary, "createonly": "1"})
+
+    def edit_page(self, title: str, text: str, summary: str) -> dict:
+        return self._do_edit({"title": title, "text": text, "summary": summary, "nocreate": "1"})
+
+    def upload_file(self, filename: str, file_path: str, text: str, comment: str) -> dict:
+        auth_err = self._ensure_authenticated()
+        if auth_err:
+            return auth_err
+
+        with open(file_path, "rb") as f:
+            file_data = f.read()
+
+        resp = self._session.post(
+            self._api,
+            data={
+                "action": "upload",
+                "filename": filename,
+                "comment": comment,
+                "text": text,
+                "token": self._csrf_token,
+                "ignorewarnings": "1",
+                "format": "json",
+            },
+            files={"file": (filename, file_data)},
+        )
+        data = resp.json()
+        if "error" in data:
+            return {"error": True, "code": data["error"]["code"], "message": data["error"]["info"]}
+        upload = data["upload"]
+        if upload.get("result") != "Success":
+            return {"error": True, "code": "upload_failed", "message": f"Upload failed: {upload.get('result')}"}
+        return {"success": True, "filename": upload["filename"]}
+
+    def purge_pages(self, titles: list[str]) -> list[dict]:
+        results = []
+        # Batch in groups of 50
+        for i in range(0, len(titles), 50):
+            batch = titles[i:i + 50]
+            resp = self._post({
+                "action": "purge",
+                "titles": "|".join(batch),
+                "forcelinkupdate": "1",
+            })
+            for item in resp.json().get("purge", []):
+                results.append({"title": item["title"], "purged": "purged" in item})
+        return results
+
     # -- Page read tools --
 
     def get_page(self, title: str) -> dict:

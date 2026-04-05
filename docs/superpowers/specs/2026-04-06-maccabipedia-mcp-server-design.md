@@ -112,9 +112,9 @@ Lists pages in a given category.
 - **Returns:** List of page titles
 - **Implementation:** `GET /api.php?action=query&list=categorymembers&cmtitle=...`
 
-### 3.3 Page Write Tools (4, requires auth)
+### 3.3 Page Write Tools (3, requires auth) + Purge (no auth)
 
-All write tools trigger lazy authentication on first call.
+Write tools (except `purge_pages`) trigger lazy authentication on first call.
 
 #### `create_page`
 

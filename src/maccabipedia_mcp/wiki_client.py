@@ -48,6 +48,29 @@ class WikiClient:
         fields = resp.json()["cargofields"]
         return [{"name": name, "type": ftype} for name, ftype in fields.items()]
 
+    @staticmethod
+    def _fix_cargo_field_aliases(fields: str) -> str:
+        """Auto-alias fields whose alias would start with '_'.
+
+        The Cargo API rejects aliases starting with underscore.
+        E.g. ``_pageName`` becomes ``_pageName=pageName``,
+        but ``Table._pageName=MyAlias`` is left alone (alias is fine).
+        """
+        fixed = []
+        for field in fields.split(","):
+            field = field.strip()
+            if "=" in field:
+                # Explicit alias — leave as-is
+                fixed.append(field)
+            else:
+                # Effective alias is the part after the last dot, or the whole field
+                alias = field.rsplit(".", 1)[-1]
+                if alias.startswith("_"):
+                    fixed.append(f"{field}={alias.lstrip('_')}")
+                else:
+                    fixed.append(field)
+        return ",".join(fixed)
+
     def query_cargo(
         self,
         tables: str,
@@ -60,6 +83,7 @@ class WikiClient:
         limit: int = 50,
         offset: int = 0,
     ) -> list[dict] | dict:
+        fields = self._fix_cargo_field_aliases(fields)
         params: dict[str, Any] = {
             "action": "cargoquery",
             "tables": tables,

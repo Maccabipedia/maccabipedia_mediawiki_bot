@@ -60,13 +60,37 @@ def test_query_cargo_with_all_params(client):
     )
     params = responses.calls[0].request.params
     assert params["tables"] == "Football_Games"
-    assert params["fields"] == "_pageName"
+    assert params["fields"] == "_pageName=pageName"
     assert params["where"] == "Date='2025-01-01'"
     assert params["group_by"] == "Season"
     assert params["having"] == "COUNT(*)>1"
     assert params["order_by"] == "Date ASC"
     assert params["limit"] == "10"
     assert params["offset"] == "5"
+
+
+from maccabipedia_mcp.wiki_client import WikiClient
+
+
+def test_fix_cargo_field_aliases_bare_underscore():
+    assert WikiClient._fix_cargo_field_aliases("_pageName") == "_pageName=pageName"
+
+
+def test_fix_cargo_field_aliases_qualified():
+    assert WikiClient._fix_cargo_field_aliases("Table._pageName") == "Table._pageName=pageName"
+
+
+def test_fix_cargo_field_aliases_explicit_alias_left_alone():
+    assert WikiClient._fix_cargo_field_aliases("_pageName=MyName") == "_pageName=MyName"
+
+
+def test_fix_cargo_field_aliases_mixed():
+    result = WikiClient._fix_cargo_field_aliases("_pageName, Date, Table._foo")
+    assert result == "_pageName=pageName,Date,Table._foo=foo"
+
+
+def test_fix_cargo_field_aliases_no_underscores():
+    assert WikiClient._fix_cargo_field_aliases("Date,Opponent") == "Date,Opponent"
 
 
 @responses.activate

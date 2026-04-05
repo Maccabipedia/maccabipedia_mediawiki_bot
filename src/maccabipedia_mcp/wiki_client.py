@@ -85,3 +85,69 @@ class WikiClient:
 
         data = resp.json()
         return [row["title"] for row in data.get("cargoquery", [])]
+
+    # -- Page read tools --
+
+    def get_page(self, title: str) -> dict:
+        resp = self._get({
+            "action": "query",
+            "titles": title,
+            "prop": "revisions",
+            "rvprop": "content",
+            "redirects": "1",
+        })
+        data = resp.json()
+        pages = data["query"]["pages"]
+        page = next(iter(pages.values()))
+
+        if "missing" in page:
+            return {"exists": False, "title": title, "wikitext": "", "redirect_target": None}
+
+        redirect_target = None
+        redirects = data["query"].get("redirects", [])
+        for r in redirects:
+            if r["from"] == title:
+                redirect_target = r["to"]
+                break
+
+        wikitext = page.get("revisions", [{}])[0].get("*", "")
+        return {
+            "exists": True,
+            "title": page["title"],
+            "wikitext": wikitext,
+            "redirect_target": redirect_target,
+        }
+
+    def page_exists(self, title: str) -> dict:
+        resp = self._get({"action": "query", "titles": title})
+        pages = resp.json()["query"]["pages"]
+        page = next(iter(pages.values()))
+        exists = "missing" not in page
+        redirect = "redirect" in page
+        return {"exists": exists, "redirect": redirect}
+
+    def search_pages(self, query: str, namespace: int | None = None, limit: int = 10) -> list[dict]:
+        params: dict[str, Any] = {
+            "action": "query",
+            "list": "search",
+            "srsearch": query,
+            "srlimit": limit,
+        }
+        if namespace is not None:
+            params["srnamespace"] = namespace
+        resp = self._get(params)
+        return [
+            {"title": r["title"], "snippet": r["snippet"]}
+            for r in resp.json()["query"]["search"]
+        ]
+
+    def list_category_pages(self, category: str, limit: int = 50) -> list[str]:
+        if not category.startswith("קטגוריה:"):
+            category = f"קטגוריה:{category}"
+        resp = self._get({
+            "action": "query",
+            "list": "categorymembers",
+            "cmtitle": category,
+            "cmlimit": limit,
+        })
+        return [m["title"] for m in resp.json()["query"]["categorymembers"]]

@@ -1,2 +1,2 @@
-# maccabipediabot is installed as an editable package (pip install -e .)
+# maccabipediabot is installed as a uv workspace member (uv sync)
 # No sys.path manipulation needed.

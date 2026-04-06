@@ -46,7 +46,10 @@ class WikiClient:
         if err:
             return err
         fields = resp.json()["cargofields"]
-        return [{"name": name, "type": ftype} for name, ftype in fields.items()]
+        return [
+            {"name": name, "type": ftype["type"] if isinstance(ftype, dict) else ftype}
+            for name, ftype in fields.items()
+        ]
 
     @staticmethod
     def _fix_cargo_field_aliases(fields: str) -> str:
@@ -230,7 +233,7 @@ class WikiClient:
         page = next(iter(pages.values()))
 
         if "missing" in page:
-            return {"exists": False, "title": title, "wikitext": "", "redirect_target": None}
+            return {"exists": False, "pageid": None, "ns": None, "title": title, "wikitext": "", "redirect_target": None}
 
         redirect_target = None
         redirects = data["query"].get("redirects", [])
@@ -242,6 +245,8 @@ class WikiClient:
         wikitext = page.get("revisions", [{}])[0].get("*", "")
         return {
             "exists": True,
+            "pageid": page.get("pageid"),
+            "ns": page.get("ns"),
             "title": page["title"],
             "wikitext": wikitext,
             "redirect_target": redirect_target,
@@ -253,7 +258,7 @@ class WikiClient:
         page = next(iter(pages.values()))
         exists = "missing" not in page
         redirect = "redirect" in page
-        return {"exists": exists, "redirect": redirect}
+        return {"exists": exists, "pageid": page.get("pageid"), "redirect": redirect}
 
     def search_pages(self, query: str, namespace: int | None = None, limit: int = 10) -> list[dict]:
         params: dict[str, Any] = {
@@ -266,7 +271,7 @@ class WikiClient:
             params["srnamespace"] = namespace
         resp = self._get(params)
         return [
-            {"title": r["title"], "snippet": r["snippet"]}
+            {"pageid": r["pageid"], "title": r["title"], "snippet": r["snippet"]}
             for r in resp.json()["query"]["search"]
         ]
 
@@ -278,5 +283,9 @@ class WikiClient:
             "list": "categorymembers",
             "cmtitle": category,
             "cmlimit": limit,
+            "cmprop": "ids|title|type",
         })
-        return [m["title"] for m in resp.json()["query"]["categorymembers"]]
+        return [
+            {"pageid": m["pageid"], "ns": m["ns"], "title": m["title"], "type": m.get("type", "page")}
+            for m in resp.json()["query"]["categorymembers"]
+        ]

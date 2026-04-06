@@ -21,6 +21,8 @@ def test_get_page_exists(client):
     )
     result = client.get_page("Test Page")
     assert result["exists"] is True
+    assert result["pageid"] == 123
+    assert result["ns"] is None  # not in mock response
     assert result["title"] == "Test Page"
     assert result["wikitext"] == "== Hello ==\nContent here"
     assert result["redirect_target"] is None
@@ -43,6 +45,7 @@ def test_get_page_missing(client):
     )
     result = client.get_page("No Such Page")
     assert result["exists"] is False
+    assert result["pageid"] is None
     assert result["wikitext"] == ""
 
 
@@ -76,6 +79,7 @@ def test_page_exists_true(client):
     )
     result = client.page_exists("X")
     assert result["exists"] is True
+    assert result["pageid"] == 123
 
 
 @responses.activate
@@ -86,6 +90,7 @@ def test_page_exists_false(client):
     )
     result = client.page_exists("X")
     assert result["exists"] is False
+    assert result["pageid"] is None
 
 
 @responses.activate
@@ -95,14 +100,15 @@ def test_search_pages(client):
         json={
             "query": {
                 "search": [
-                    {"title": "Page A", "snippet": "found <span>here</span>"},
-                    {"title": "Page B", "snippet": "also <span>here</span>"},
+                    {"pageid": 10, "title": "Page A", "snippet": "found <span>here</span>"},
+                    {"pageid": 20, "title": "Page B", "snippet": "also <span>here</span>"},
                 ]
             }
         },
     )
     result = client.search_pages("test query")
     assert len(result) == 2
+    assert result[0]["pageid"] == 10
     assert result[0]["title"] == "Page A"
 
 
@@ -121,14 +127,16 @@ def test_list_category_pages(client):
         json={
             "query": {
                 "categorymembers": [
-                    {"title": "Game 1"},
-                    {"title": "Game 2"},
+                    {"pageid": 1, "ns": 0, "title": "Game 1", "type": "page"},
+                    {"pageid": 2, "ns": 0, "title": "Game 2", "type": "page"},
                 ]
             }
         },
     )
     result = client.list_category_pages("משחקים")
-    assert result == ["Game 1", "Game 2"]
+    assert len(result) == 2
+    assert result[0] == {"pageid": 1, "ns": 0, "title": "Game 1", "type": "page"}
+    assert result[1]["title"] == "Game 2"
 
 
 @responses.activate

@@ -68,7 +68,7 @@ def search_pages(query: str, namespace: int | None = None, limit: int = 10) -> l
 
 
 @mcp.tool
-def list_category_pages(category: str, limit: int = 50) -> list[str]:
+def list_category_pages(category: str, limit: int = 50) -> list[dict]:
     """List pages in a category. Prefix 'קטגוריה:' is added automatically if missing."""
     return _client.list_category_pages(category, limit=limit)
 

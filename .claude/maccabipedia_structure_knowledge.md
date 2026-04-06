@@ -56,6 +56,10 @@ Prefer Cargo over scraping wiki text.
 - **Main tables**: `Football_Games`, `Basketball_Games`, `Volleyball_Games`
 - **Explore all tables**: `https://www.maccabipedia.co.il/Special:CargoTables`
 - Find game page names by querying Cargo by date and extracting `_pageName`.
+- **Two Cargo endpoints exist:**
+  - `Special:CargoExport` — allows `_pageName` directly, returns flat JSON arrays
+  - `action=cargoquery` (API) — rejects field aliases starting with `_`. Must alias: `_pageName=pageName`. The MCP server handles this automatically.
+- **MCP server:** Use `mcp__maccabipedia__query_cargo` — it uses `action=cargoquery` and auto-aliases underscore fields so callers can just write `_pageName`.
 
 ## 6. Redirects
 Hebrew redirect syntax: `#הפניה [[Target_Page_Name]]`

@@ -58,6 +58,7 @@
       "Bash(host:*)",
       "Bash(curl:*)",
       "Bash(uv run:*)",
+      "mcp__maccabipedia__*",
       "mcp__trello__*",
       "mcp__youtube__*"
     ]

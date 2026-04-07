@@ -302,7 +302,7 @@ The package queries MaccabiPedia's MediaWiki Cargo extension:
 ## 8. Bot Integration Patterns
 
 ### Event Translation Layer
-`src/maccabipediabot/common/maccabistats_player_event.py` — `PlayerEvent` class translates maccabistats enums to Hebrew wiki labels:
+`packages/maccabipediabot/src/maccabipediabot/common/maccabistats_player_event.py` — `PlayerEvent` class translates maccabistats enums to Hebrew wiki labels:
 ```python
 PlayerEvent.from_maccabistats_event_type(name, number, time_occur,
     GameEventTypes.GOAL_SCORE, GoalTypes.PENALTY, maccabi_player=True)

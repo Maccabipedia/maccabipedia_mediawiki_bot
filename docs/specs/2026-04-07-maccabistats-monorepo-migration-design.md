@@ -97,6 +97,8 @@ testpaths = [
 
 No change needed to `[tool.uv.workspace]` — `members = ["packages/*"]` already picks up the new package.
 
+**Note:** The maccabistats tests make live HTTP calls to MaccabiPedia's Cargo API (via a session-scoped fixture). This means `uv run pytest` will be slower and require network access. This matches the original repo's behavior and is accepted as-is.
+
 ## Step 5: Migrate CI workflows
 
 Move both workflows from `packages/maccabistats/.github/workflows/` into `.github/workflows/`, adapting them to match the monorepo pattern (reference: `update_league_table_status.yaml`).

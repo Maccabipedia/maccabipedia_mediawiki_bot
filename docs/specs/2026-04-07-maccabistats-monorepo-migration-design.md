@@ -145,15 +145,15 @@ ROOT_FOLDER = Path(__file__).absolute().parent.parent.parent.parent
 
 In the standalone repo, this resolves to the repo root. After migration to `packages/maccabistats/src/maccabistats/github_actions_scripts/`, four `.parent` calls only reach `packages/maccabistats/` — not the workspace root. The Telegram action step looks for the output file at the workspace root.
 
-**Fix:** Change the script to use `$GITHUB_WORKSPACE` or compute the git toplevel:
+**Fix:** Move `ROOT_FOLDER` computation out of module scope and into the function body (e.g., inside `show_all_errors()`), using `git rev-parse --show-toplevel`:
 ```python
-import subprocess
-ROOT_FOLDER = Path(subprocess.check_output(
-    ['git', 'rev-parse', '--show-toplevel'], text=True
-).strip())
+def _get_repo_root() -> Path:
+    return Path(subprocess.check_output(
+        ['git', 'rev-parse', '--show-toplevel'], text=True
+    ).strip())
 ```
 
-This works both locally and in CI, and is resilient to further directory moves.
+This keeps imports side-effect-free (important for verification step 9c) and only runs the git command when the script is actually executed. Works both locally and in CI, and is resilient to further directory moves.
 
 ## Step 7: Cleanup subtree artifacts
 

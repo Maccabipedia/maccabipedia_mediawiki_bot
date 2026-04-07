@@ -6,6 +6,15 @@ resolution-markers = [
     "python_full_version < '3.12'",
 ]
 
+[manifest]
+members = [
+    "maccabipedia-mcp",
+    "maccabipediabot",
+]
+
+[manifest.dependency-groups]
+dev = [{ name = "pytest", specifier = ">=8.0" }]
+
 [[package]]
 name = "aiofile"
 version = "3.9.0"
@@ -1051,12 +1060,34 @@ wheels = [
 ]
 
 [[package]]
+name = "maccabipedia-mcp"
+version = "0.1.0"
+source = { editable = "packages/maccabipedia-mcp" }
+dependencies = [
+    { name = "fastmcp" },
+    { name = "requests" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "responses" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastmcp", specifier = ">=2.0" },
+    { name = "requests", specifier = ">=2.32" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "responses", specifier = ">=0.25" }]
+
+[[package]]
 name = "maccabipediabot"
 version = "0.1.0"
-source = { editable = "." }
+source = { editable = "packages/maccabipediabot" }
 dependencies = [
     { name = "beautifulsoup4" },
-    { name = "fastmcp" },
     { name = "google-api-python-client" },
     { name = "google-auth-oauthlib" },
     { name = "html5lib" },
@@ -1071,16 +1102,9 @@ dependencies = [
     { name = "tldextract" },
 ]
 
-[package.optional-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "responses" },
-]
-
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.9.3" },
-    { name = "fastmcp", specifier = ">=2.0" },
     { name = "google-api-python-client", specifier = "==1.12.8" },
     { name = "google-auth-oauthlib", specifier = "==0.4.2" },
     { name = "html5lib", specifier = "==1.1" },
@@ -1089,14 +1113,11 @@ requires-dist = [
     { name = "mwparserfromhell", specifier = "==0.6.6" },
     { name = "pandas", specifier = "==2.2.3" },
     { name = "pydantic", specifier = ">=2.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "pywikibot", specifier = "==9.6.0" },
     { name = "requests", specifier = "==2.32.3" },
-    { name = "responses", marker = "extra == 'dev'", specifier = ">=0.25" },
     { name = "tldextract", specifier = "==5.3.0" },
 ]
-provides-extras = ["dev"]
 
 [[package]]
 name = "maccabistats"

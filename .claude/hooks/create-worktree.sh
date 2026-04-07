@@ -38,9 +38,9 @@ if [ -f "$MCP_SRC" ]; then
 fi
 
 # Copy calendar .env (gitignored, has Google/API credentials)
-CAL_ENV="${REPO_ROOT}/src/maccabipediabot/calendar/.env"
+CAL_ENV="${REPO_ROOT}/packages/maccabipediabot/src/maccabipediabot/calendar/.env"
 if [ -f "$CAL_ENV" ]; then
-    cp "$CAL_ENV" "${WT_DIR}/src/maccabipediabot/calendar/.env"
+    cp "$CAL_ENV" "${WT_DIR}/packages/maccabipediabot/src/maccabipediabot/calendar/.env"
 fi
 
 # Create independent venv with packages (uv is ~10x faster than pip)

@@ -1,6 +1,7 @@
 import responses
 
-from tests.mcp.conftest import API_URL
+WIKI_URL = "https://test.wiki.co.il"
+API_URL = f"{WIKI_URL}/api.php"
 
 
 @responses.activate

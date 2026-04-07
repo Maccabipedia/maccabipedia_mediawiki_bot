@@ -10,6 +10,7 @@ resolution-markers = [
 members = [
     "maccabipedia-mcp",
     "maccabipediabot",
+    "maccabistats",
 ]
 
 [manifest.dependency-groups]
@@ -1109,7 +1110,7 @@ requires-dist = [
     { name = "google-auth-oauthlib", specifier = "==0.4.2" },
     { name = "html5lib", specifier = "==1.1" },
     { name = "lxml", specifier = ">=4.9.1,<5" },
-    { name = "maccabistats", specifier = ">=2.50" },
+    { name = "maccabistats", editable = "packages/maccabistats" },
     { name = "mwparserfromhell", specifier = "==0.6.6" },
     { name = "pandas", specifier = "==2.2.3" },
     { name = "pydantic", specifier = ">=2.0" },
@@ -1121,8 +1122,7 @@ requires-dist = [
 
 [[package]]
 name = "maccabistats"
-version = "2.51"
-source = { registry = "https://pypi.org/simple" }
+source = { editable = "packages/maccabistats" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "lxml" },
@@ -1131,8 +1131,15 @@ dependencies = [
     { name = "python-dateutil" },
     { name = "requests" },
 ]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c2/a5/dc8993a2a5a18d71b22089d128a39dd8174ffd0811be33ab331a96114463/maccabistats-2.51-py3-none-any.whl", hash = "sha256:ff89547f139465d21a84a9a12a8cc3cfba0e57f73c47b33fa4ac9fb184b98a23", size = 125436, upload-time = "2025-07-14T05:50:39.913Z" },
+
+[package.metadata]
+requires-dist = [
+    { name = "beautifulsoup4", specifier = ">=4.12,<5" },
+    { name = "lxml", specifier = ">=4.9.1,<5" },
+    { name = "matplotlib", specifier = ">=3.6.0,<4" },
+    { name = "progressbar2", specifier = ">=4.0.0,<5" },
+    { name = "python-dateutil", specifier = ">=2.7,<3" },
+    { name = "requests", specifier = ">=2.28,<3" },
 ]
 
 [[package]]

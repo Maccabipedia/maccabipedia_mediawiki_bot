@@ -1,0 +1,46 @@
+name: Find MaccabiPedia Errors
+on:
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+jobs:
+  maccabipedia-errors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+          architecture: x64
+      - uses: astral-sh/setup-uv@v6
+      - name: Install dependencies
+        run: uv sync
+      - name: Fetch MaccabiPedia Data
+        run: uv run python -m maccabistats.github_actions_scripts.fetch_games_from_maccabipedia
+      - name: Find Errors
+        run: uv run python -m maccabistats.github_actions_scripts.find_maccabipedia_errors
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y_%m_%d')" >> $GITHUB_OUTPUT
+      - name: Send Errors to Telegram (before 1950)
+        uses: appleboy/telegram-action@v2.25.0
+        with:
+          to: ${{ secrets.MACCABIPEDIA_ERRORS_TELEGRAM_TO }}
+          token: ${{ secrets.MACCABIPEDIA_ERRORS_TELEGRAM_TOKEN }}
+          message: MaccabiPedia errors for game before 1950
+          document: ${{ steps.date.outputs.date }}__maccabipedia_errors_before_1950.txt
+      - name: Send Errors to Telegram (After 1950)
+        uses: appleboy/telegram-action@v2.25.0
+        with:
+          to: ${{ secrets.MACCABIPEDIA_ERRORS_TELEGRAM_TO }}
+          token: ${{ secrets.MACCABIPEDIA_ERRORS_TELEGRAM_TOKEN }}
+          message: MaccabiPedia errors for game after 1950
+          document: ${{ steps.date.outputs.date }}__maccabipedia_errors_after_1950.txt
+  workflow-keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: liskin/gh-workflow-keepalive@v1

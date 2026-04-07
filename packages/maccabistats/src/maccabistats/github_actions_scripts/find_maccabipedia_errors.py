@@ -1,4 +1,5 @@
 import logging
+import subprocess
 from datetime import datetime
 from logging import FileHandler
 from pathlib import Path
@@ -7,8 +8,11 @@ from maccabistats import load_from_maccabipedia_source, ErrorsFinder
 from maccabistats.maccabilogging import remove_live_logging
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
-ROOT_FOLDER = Path(__file__).absolute().parent.parent.parent.parent
-BASE_LOG_FILE_NAME = ROOT_FOLDER / f'{datetime.now().strftime("%Y_%m_%d")}__maccabipedia_errors'
+
+def _get_repo_root() -> Path:
+    return Path(subprocess.check_output(
+        ['git', 'rev-parse', '--show-toplevel'], text=True
+    ).strip())
 
 logging.basicConfig(format='%(message)s', level=logging.INFO)
 
@@ -100,16 +104,20 @@ def show_errors_for_maccabi_games(maccabi_games: MaccabiGamesStats) -> None:
 
 def show_all_errors() -> None:
     remove_live_logging()
+
+    root_folder = _get_repo_root()
+    base_log_file_name = root_folder / f'{datetime.now().strftime("%Y_%m_%d")}__maccabipedia_errors'
+
     logging.info('Loading MaccabiPedia games, official games only, no friendly games')
     maccabipedia_games = load_from_maccabipedia_source().official_games
     logging.info(f'Loaded MaccabiPedia games: {maccabipedia_games}')
 
-    old_games_file_handler = FileHandler(f'{BASE_LOG_FILE_NAME}_before_1950.txt', encoding='utf8')
+    old_games_file_handler = FileHandler(f'{base_log_file_name}_before_1950.txt', encoding='utf8')
     logging.getLogger().addHandler(old_games_file_handler)
     show_errors_for_maccabi_games(maccabipedia_games.played_before("1950"))
     logging.getLogger().removeHandler(old_games_file_handler)
 
-    new_games_file_handler = FileHandler(f'{BASE_LOG_FILE_NAME}_after_1950.txt', encoding='utf8')
+    new_games_file_handler = FileHandler(f'{base_log_file_name}_after_1950.txt', encoding='utf8')
     logging.getLogger().addHandler(new_games_file_handler)
     show_errors_for_maccabi_games(maccabipedia_games.played_after("1951"))
     logging.getLogger().removeHandler(new_games_file_handler)

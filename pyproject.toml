@@ -8,4 +8,5 @@ dev-dependencies = ["pytest>=8.0"]
 testpaths = [
     "packages/maccabipediabot/tests",
     "packages/maccabipedia-mcp/tests",
+    "packages/maccabistats/tests",
 ]

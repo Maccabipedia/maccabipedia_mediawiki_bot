@@ -1,0 +1,32 @@
+name: Upload MaccabiPedia Games FTP
+on:
+  schedule:
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+
+jobs:
+  maccabipedia-games-to-maccabipedia-host:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+          architecture: x64
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip
+          pip install -e .
+      - name: Fetch MaccabiPedia Data
+        run: python src/maccabistats/github_actions_scripts/fetch_games_from_maccabipedia.py
+      - name: Upload Games File To MaccabiPedia FTP
+        env:
+            MACCABIPEDIA_FTP: ${{ secrets.MACCABIPEDIA_FTP }}
+            MACCABIPEDIA_FTP_USERNAME: ${{ secrets.MACCABIPEDIA_FTP_USERNAME }}
+            MACCABIPEDIA_FTP_PASSWORD: ${{ secrets.MACCABIPEDIA_FTP_PASSWORD }}
+        run: python src/maccabistats/github_actions_scripts/upload_maccabipedia_games_to_ftp.py
+      - name: Notify Telegram Latest Games Uploaded
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.MACCABIPEDIA_ERRORS_TELEGRAM_TO }}
+          token: ${{ secrets.MACCABIPEDIA_ERRORS_TELEGRAM_TOKEN }}
+          message: Latest MaccabiPedia games uploaded to our FTP

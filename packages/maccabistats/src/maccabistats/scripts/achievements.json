@@ -1,0 +1,1712 @@
+{
+  "cargoquery": [
+    {
+      "title": {
+        "ConnectedCompID": "0",
+        "Season": "1996/97",
+        "Achievement": "סיבוב 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "0",
+        "Season": "1999/00",
+        "Achievement": "סיבוב 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "0",
+        "Season": "2001/02",
+        "Achievement": "סיבוב 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "0",
+        "Season": "2002/03",
+        "Achievement": "סיבוב 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "0",
+        "Season": "2005/06",
+        "Achievement": "מוקדמות - סיבוב 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "0",
+        "Season": "2007/08",
+        "Achievement": "מוקדמות - סיבוב 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "0",
+        "Season": "2011/12",
+        "Achievement": "בתים - מקום 4"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "0",
+        "Season": "2013/14",
+        "Achievement": "32 האחרונות"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "0",
+        "Season": "2014/15",
+        "Achievement": "מוקדמות - פלייאוף"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "0",
+        "Season": "2016/17",
+        "Achievement": "בתים - מקום 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "0",
+        "Season": "2017/18",
+        "Achievement": "בתים - מקום 4"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "0",
+        "Season": "2018/19",
+        "Achievement": "מוקדמות - פלייאוף"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "0",
+        "Season": "2019/20",
+        "Achievement": "מוקדמות - סיבוב 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1931/32",
+        "Achievement": "מקום 5"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1933/34",
+        "Achievement": "מקום 5"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1934/35",
+        "Achievement": "מקום 5"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1935/36",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1937",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1937/38",
+        "Achievement": "מקום 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1938/39",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1939/40",
+        "Achievement": "מקום 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1941/42",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1943/44",
+        "Achievement": "מקום 4"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1944/45",
+        "Achievement": "מקום 8"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1946/47",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1949/50",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1951/52",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1953/54",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1955",
+        "Achievement": "מקום 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1955/56",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1956/57",
+        "Achievement": "מקום 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1957/58",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1958/59",
+        "Achievement": "מקום 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1959/60",
+        "Achievement": "מקום 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1960/61",
+        "Achievement": "מקום 4"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1961/62",
+        "Achievement": "מקום 10"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1962/63",
+        "Achievement": "מקום 7"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1963/64",
+        "Achievement": "מקום 5"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1964/65",
+        "Achievement": "מקום 4"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1965/66",
+        "Achievement": "מקום 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1966/68",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1968/69",
+        "Achievement": "מקום 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1969/70",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1970/71",
+        "Achievement": "מקום 10"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1971/72",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1972/73",
+        "Achievement": "מקום 4"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1973/74",
+        "Achievement": "מקום 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1974/75",
+        "Achievement": "מקום 4"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1975/76",
+        "Achievement": "מקום 7"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1976/77",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1977/78",
+        "Achievement": "מקום 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1978/79",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1979/80",
+        "Achievement": "מקום 5"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1980/81",
+        "Achievement": "מקום 8"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1981/82",
+        "Achievement": "מקום 8"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1982/83",
+        "Achievement": "מקום 5"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1983/84",
+        "Achievement": "מקום 5"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1984/85",
+        "Achievement": "מקום 7"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1985/86",
+        "Achievement": "מקום 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1986/87",
+        "Achievement": "מקום 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1987/88",
+        "Achievement": "מקום 12"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1988/89",
+        "Achievement": "מקום 8"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1989/90",
+        "Achievement": "מקום 4"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1990/91",
+        "Achievement": "מקום 5"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1991/92",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1992/93",
+        "Achievement": "מקום 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1993/94",
+        "Achievement": "מקום 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1994/95",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1995/96",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1996/97",
+        "Achievement": "מקום 6"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1997/98",
+        "Achievement": "מקום 6"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1998/99",
+        "Achievement": "מקום 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "1999/00",
+        "Achievement": "מקום 6"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2000/01",
+        "Achievement": "מקום 4"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2001/02",
+        "Achievement": "מקום 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2002/03",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2003/04",
+        "Achievement": "מקום 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2004/05",
+        "Achievement": "מקום 8"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2005/06",
+        "Achievement": "מקום 6"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2006/07",
+        "Achievement": "מקום 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2007/08",
+        "Achievement": "מקום 6"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2008/09",
+        "Achievement": "מקום 6"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2009/10",
+        "Achievement": "מקום 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2010/11",
+        "Achievement": "מקום 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2011/12",
+        "Achievement": "מקום 6"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2012/13",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2013/14",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2014/15",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2015/16",
+        "Achievement": "מקום 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2016/17",
+        "Achievement": "מקום 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2017/18",
+        "Achievement": "מקום 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2018/19",
+        "Achievement": "מקום 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2019/20",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "1",
+        "Season": "2020/21",
+        "Achievement": "מקום 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1928",
+        "Achievement": "רבע גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1928/29",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1929/30",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1931/32",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1932/33",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1933/34",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1934/35",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1937",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1937/38",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1938/39",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1939/40",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1941",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1941/42",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1943",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1944/45",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1945/46",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1946/47",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1949/50",
+        "Achievement": "רבע גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1951/52",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1953/54",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1955",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1956/57",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1957/58",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1958/59",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1960/61",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1961/62",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1962/63",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1963/64",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1964/65",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1965/66",
+        "Achievement": "רבע גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1966/67",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1967/68",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1968/69",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1969/70",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1970/71",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1971/72",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1972/73",
+        "Achievement": "רבע גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1973/74",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1974/75",
+        "Achievement": "סיבוב ד'"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1975/76",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1976/77",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1977/78",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1978/79",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1979/80",
+        "Achievement": "רבע גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1980/81",
+        "Achievement": "סיבוב ז'"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1981/82",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1982/83",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1983/84",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1984/85",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1985/86",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1986/87",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1987/88",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1988/89",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1989/90",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1990/91",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1991/92",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1992/93",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1993/94",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1994/95",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1995/96",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1996/97",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1997/98",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1998/99",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "1999/00",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2000/01",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2001/02",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2002/03",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2003/04",
+        "Achievement": "רבע גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2004/05",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2005/06",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2006/07",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2007/08",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2008/09",
+        "Achievement": "סיבוב ט'"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2009/10",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2010/11",
+        "Achievement": "סיבוב ח'"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2011/12",
+        "Achievement": "סיבוב ח'"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2012/13",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2013/14",
+        "Achievement": "סיבוב ח'"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2014/15",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2015/16",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2016/17",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2017/18",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2018/19",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2019/20",
+        "Achievement": "סיבוב ח'"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "5",
+        "Season": "2020/21",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "1984/85",
+        "Achievement": "שלב הבתים"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "1985/86",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "1986/87",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "1987/88",
+        "Achievement": "שלב הבתים"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "1990/91",
+        "Achievement": "שלב הבתים"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "1991/92",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "1992/93",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "1993/94",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "1994/95",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "1996/97",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "1997/98",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "1998/99",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "1999/00",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2000/01",
+        "Achievement": "שמינית גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2001/02",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2002/03",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2003/04",
+        "Achievement": "שלב הבתים"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2004/05",
+        "Achievement": "רבע גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2005/06",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2006/07",
+        "Achievement": "שלב הבתים"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2007/08",
+        "Achievement": "רבע גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2008/09",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2009/10",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2010/11",
+        "Achievement": "חצי גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2011/12",
+        "Achievement": "רבע גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2012/13",
+        "Achievement": "רבע גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2014/15",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2015/16",
+        "Achievement": "שלב הבתים"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2016/17",
+        "Achievement": "רבע גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2017/18",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2018/19",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2019/20",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "7",
+        "Season": "2020/21",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "8",
+        "Season": "1965/66",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "8",
+        "Season": "1968/69",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "8",
+        "Season": "1970/71",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "8",
+        "Season": "1977/78",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "8",
+        "Season": "1979/80",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "8",
+        "Season": "1988/89",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "8",
+        "Season": "2015/16",
+        "Achievement": "גמר"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "8",
+        "Season": "2019/20",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "8",
+        "Season": "2020/21",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "9",
+        "Season": "1986/87",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "9",
+        "Season": "1987/88",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "1968/69",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "1970/71",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "1977/78",
+        "Achievement": "שלב הבתים - מקום 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "1978/79",
+        "Achievement": "שלב הבתים - מקום 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "1980/81",
+        "Achievement": "שלב הבתים - מקום 4"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "1992/93",
+        "Achievement": "מוקדמות - סיבוב 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "1993/94",
+        "Achievement": "שלב הבתים - מקום 4"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "1994/95",
+        "Achievement": "סיבוב ראשון"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "1995/96",
+        "Achievement": "מוקדמות - סיבוב 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "1996/97",
+        "Achievement": "מוקדמות - סיבוב 1"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "2003/04",
+        "Achievement": "מוקדמות - סיבוב 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "2004/05",
+        "Achievement": "בתים - מקום 4"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "2010/11",
+        "Achievement": "מוקדמות - פלייאוף"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "2013/14",
+        "Achievement": "מוקדמות - סיבוב 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "2014/15",
+        "Achievement": "מוקדמות - סיבוב 3"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "2015/16",
+        "Achievement": "בתים - מקום 4"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "2019/20",
+        "Achievement": "מוקדמות - סיבוב 2"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "2020/21",
+        "Achievement": "32 האחרונות"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "11",
+        "Season": "2020/21",
+        "Achievement": "מוקדמות - פלייאוף"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "17",
+        "Season": "1949/50",
+        "Achievement": "זכיה"
+      }
+    },
+    {
+      "title": {
+        "ConnectedCompID": "17",
+        "Season": "1950/51",
+        "Achievement": "חצי גמר"
+      }
+    }
+  ]
+}

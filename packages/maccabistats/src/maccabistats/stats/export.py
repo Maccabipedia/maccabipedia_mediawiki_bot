@@ -222,15 +222,12 @@ class ExportMaccabiGamesStats(object):
         file_path = folder_path / 'games_data_maccabistats.csv'
 
         games_data = self._create_all_games_data()
-        first_game_data = games_data[0]
 
         with file_path.open(mode='w', encoding='utf8', newline='') as csv_file:
             writer = csv.DictWriter(csv_file,
                                     delimiter=',',
-                                    fieldnames=list(first_game_data.keys()))
+                                    fieldnames=list(games_data[0].keys()))
             writer.writeheader()
-
-            writer.writerow(first_game_data)  # Because we popped it out to set the header
             writer.writerows(games_data)
 
         return file_path

@@ -22,6 +22,17 @@ class TestAverages:
         # Wins should have higher goals_for average
         assert wins.averages.goals_for_maccabi > maccabi_games.averages.goals_for_maccabi
 
+    def test_averages_empty_games_raises_zero_division(self):
+        """averages.py has no zero-division guard — this documents the production behavior."""
+        import pytest
+        empty = MaccabiGamesStats([])
+        with pytest.raises(ZeroDivisionError):
+            empty.averages.goals_for_maccabi
+        with pytest.raises(ZeroDivisionError):
+            empty.averages.goals_against_maccabi
+        with pytest.raises(ZeroDivisionError):
+            empty.averages.maccabi_diff
+
 
 class TestRatioEdgeCases:
     def test_goals_ratio_zero_against(self):

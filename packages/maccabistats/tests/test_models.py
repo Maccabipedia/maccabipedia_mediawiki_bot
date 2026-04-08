@@ -65,8 +65,9 @@ class TestGameData:
         # Find the own goal event (by opponent at minute 60)
         own_goal = [g for g in goals if g.get('goal_type') == 'OwnGoal']
         assert len(own_goal) == 1
-        # Own goal by opponent should add to maccabi's score
-        assert own_goal[0]['maccabi_score'] > 0
+        # After own goal at 60': opp 10'(0-1), opp 20'(0-2), maccabi 50'(1-2), own 60'(2-2)
+        assert own_goal[0]['maccabi_score'] == 2
+        assert own_goal[0]['not_maccabi_score'] == 2
 
     def test_goals__own_goal_by_opponent_counts_for_maccabi(self, maccabi_games):
         # Game 7: opponent אייל גולסה scores own goal at 45'

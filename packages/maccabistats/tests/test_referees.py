@@ -4,30 +4,29 @@
 class TestRefereesStats:
     def test_most_judged_referee(self, maccabi_games):
         judged = dict(maccabi_games.referees.most_judged_referee)
-        # 4 referees, top one refereed 4 games
-        assert len(judged) == 4
-        top_ref = max(judged, key=judged.get)
-        assert judged[top_ref] == 4
+        assert judged["יורם דוידוביץ"] == 4
+        assert judged["אלי חקמון"] == 3
+        assert judged["רועי ריינשרייבר"] == 2
+        assert judged["גל לייבוביץ"] == 1
 
     def test_best_referee(self, maccabi_games):
-        # best_referee counts wins per referee
         best = dict(maccabi_games.referees.best_referee)
-        assert len(best) > 0
+        # יורם דוידוביץ: games 1(W),3(T),7(W),10(W) = 3 wins
+        assert best["יורם דוידוביץ"] == 3
 
     def test_worst_referee(self, maccabi_games):
-        # worst_referee counts losses per referee
         worst = dict(maccabi_games.referees.worst_referee)
-        assert len(worst) > 0
+        # אלי חקמון: games 2(L),5(W),8(L) = 2 losses
+        assert worst["אלי חקמון"] == 2
 
     def test_best_referee_by_percentage(self, maccabi_games):
-        result = maccabi_games.referees.best_referee_by_percentage
-        assert len(result) > 0
-        # Each entry is (referee_name - judged_count, percentage)
-        for name_key, pct in result:
-            assert 0 <= pct <= 100
+        result = dict(maccabi_games.referees.best_referee_by_percentage)
+        # גל לייבוביץ: 1 game, 1 win = 100%
+        assert result["גל לייבוביץ - 1"] == 100.0
+        # יורם דוידוביץ: 4 games, 3 wins = 75%
+        assert result["יורם דוידוביץ - 4"] == 75.0
 
     def test_worst_referee_by_percentage(self, maccabi_games):
-        result = maccabi_games.referees.worst_referee_by_percentage
-        assert len(result) > 0
-        for name_key, pct in result:
-            assert 0 <= pct <= 100
+        result = dict(maccabi_games.referees.worst_referee_by_percentage)
+        # אלי חקמון: 3 games, 2 losses = 66.67%
+        assert result["אלי חקמון - 3"] == 66.67

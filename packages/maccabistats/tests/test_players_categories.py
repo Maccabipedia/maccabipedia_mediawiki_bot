@@ -2,9 +2,10 @@
 
 This module depends on MaccabiPediaPlayers which crawls the live API.
 We mock it to define which players are "home players" for testing.
+We declare אבי נמני and אלי דריקס as "home players".
 """
 from sys import maxsize
-from unittest.mock import patch, PropertyMock
+from unittest.mock import patch
 
 import pytest
 
@@ -12,61 +13,44 @@ from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
 from game_fixtures import GAMES
 
+HOME_PLAYER_NAMES = {"אבי נמני", "אלי דריקס"}
+
 
 @pytest.fixture
 def games_with_home_players():
-    """Fresh MaccabiGamesStats with mocked home players data.
-
-    We declare the first two players in the fixture as "home players"
-    and the rest as foreign, so we can test the ratio calculations.
-    """
-    # Read actual player names from the fixture to stay in sync
-    first_game = GAMES[0]
-    all_player_names = {p.name for g in GAMES for p in g.maccabi_team.players}
-    maccabi_players = list(first_game.maccabi_team.players)
-    home_player_names = {maccabi_players[0].name, maccabi_players[1].name}
-
-    mock_players_data = type('MockPlayersData', (), {
-        'home_players': home_player_names,
-    })()
+    """Fresh MaccabiGamesStats with mocked home players data."""
+    mock_data = type('MockPlayersData', (), {'home_players': HOME_PLAYER_NAMES})()
 
     with patch('maccabistats.stats.players_categories.MaccabiPediaPlayers') as mock_cls:
-        mock_cls.get_players_data.return_value = mock_players_data
+        mock_cls.get_players_data.return_value = mock_data
         stats = MaccabiGamesStats(GAMES)
-        yield stats, home_player_names
+        yield stats
 
 
 class TestPlayersCategoriesStats:
     def test_home_players_goals_count(self, games_with_home_players):
-        stats, home_names = games_with_home_players
-        count = stats.players_categories.home_players_goals_count()
-        assert isinstance(count, int)
-        assert count >= 0
+        # אבי נמני: 8 goals, אלי דריקס: 2 goals = 10 home player goals
+        assert games_with_home_players.players_categories.home_players_goals_count() == 10
 
     def test_home_players_goals_ratio(self, games_with_home_players):
-        stats, home_names = games_with_home_players
-        ratio = stats.players_categories.home_players_goals_ratio()
-        assert 0 <= ratio <= 1
+        # 10 home / (10 home + 2 non-home) = 0.833
+        assert games_with_home_players.players_categories.home_players_goals_ratio() == 0.833
 
     def test_home_players_assists_count(self, games_with_home_players):
-        stats, home_names = games_with_home_players
-        count = stats.players_categories.home_players_assists_count()
-        assert isinstance(count, int)
+        # Neither אבי נמני nor אלי דריקס have assists; חיים רביבו (non-home) has all 8
+        assert games_with_home_players.players_categories.home_players_assists_count() == 0
 
     def test_home_players_assists_ratio(self, games_with_home_players):
-        stats, home_names = games_with_home_players
-        ratio = stats.players_categories.home_players_assists_ratio()
-        assert 0 <= ratio <= 1
+        # 0 home / (0 + 8) = 0.0
+        assert games_with_home_players.players_categories.home_players_assists_ratio() == 0.0
 
     def test_home_players_goals_involved_count(self, games_with_home_players):
-        stats, home_names = games_with_home_players
-        count = stats.players_categories.home_players_goals_involved_count()
-        assert isinstance(count, int)
+        # Goals involved = goals + assists: home = 10 + 0 = 10
+        assert games_with_home_players.players_categories.home_players_goals_involved_count() == 10
 
     def test_home_players_goals_involved_ratio(self, games_with_home_players):
-        stats, home_names = games_with_home_players
-        ratio = stats.players_categories.home_players_goals_involved_ratio()
-        assert 0 <= ratio <= 1
+        # 10 home / (10 home + 10 non-home) = 0.5
+        assert games_with_home_players.players_categories.home_players_goals_involved_ratio() == 0.5
 
 
 class TestPlayersCategoriesEdgeCases:

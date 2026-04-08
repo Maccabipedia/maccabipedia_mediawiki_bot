@@ -32,7 +32,7 @@ Player events covered (each >=2 occurrences):
   - LINE_UP, SUBSTITUTION_IN, SUBSTITUTION_OUT
   - GOAL_SCORE, GOAL_ASSIST
   - YELLOW_CARD, RED_CARD, SECOND_YELLOW_CARD
-  - CAPTAIN, PENALTY_MISSED, BENCHED
+  - CAPTAIN, PENALTY_MISSED, PENALTY_STOPPED, BENCHED
 
 Goal types covered (each >=2):
   - NORMAL_KICK, HEADER, PENALTY, FREE_KICK, OWN_GOAL
@@ -106,6 +106,10 @@ def _benched() -> GameEvent:
 
 def _penalty_missed(minute: int) -> GameEvent:
     return GameEvent(GameEventTypes.PENALTY_MISSED, timedelta(minutes=minute))
+
+
+def _penalty_stopped(minute: int) -> GameEvent:
+    return GameEvent(GameEventTypes.PENALTY_STOPPED, timedelta(minutes=minute))
 
 
 def _game(
@@ -222,7 +226,7 @@ GAMES.append(_game(
 
 # ---- Game 4: Cup, home, WIN 2-0 (clean sheet), season 2019/20 ----
 # אבי נמני scores free kick, אלי דריקס scores header
-# חיים רביבו assists twice (corner)
+# חיים רביבו assists twice (corner), בונדארנקו stops a penalty
 GAMES.append(_game(
     competition="גביע המדינה", fixture="שמינית גמר", season="2019/20",
     date=datetime.datetime(2019, 11, 12),
@@ -232,7 +236,7 @@ GAMES.append(_game(
         _player("אלי דריקס", 7, [_lineup(), _goal(50, GoalTypes.HEADER)]),
         _player("חיים רביבו", 8, [_lineup(), _assist(25, AssistTypes.CORNER_ASSIST), _assist(50)]),
         _player("טל בן חיים", 3, [_lineup()]),
-        _player("בונדארנקו", 1, [_lineup()]),
+        _player("בונדארנקו", 1, [_lineup(), _penalty_stopped(35)]),
         _player("דודו אוואט", 5, [_lineup()]),
         _player("אריק בנאדו", 6, [_lineup()]),
         _player("עמוס מנסדורף", 11, [_lineup()]),
@@ -358,7 +362,7 @@ GAMES.append(_game(
         _player("אלי דריקס", 7, [_lineup()]),
         _player("חיים רביבו", 8, [_lineup()]),
         _player("טל בן חיים", 3, [_lineup()]),
-        _player("בונדארנקו", 1, [_lineup()]),
+        _player("בונדארנקו", 1, [_lineup(), _penalty_stopped(70)]),
         _player("דודו אוואט", 5, [_lineup()]),
         _player("אריק בנאדו", 6, [_lineup()]),
         _player("עמוס מנסדורף", 11, [_lineup()]),

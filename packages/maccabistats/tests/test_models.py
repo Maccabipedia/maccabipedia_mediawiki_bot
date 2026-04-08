@@ -78,6 +78,23 @@ class TestGameData:
         # After the own goal, maccabi should have 2 goals (regular at 30' + own goal at 45')
         assert own_goals[0]['maccabi_score'] == 2
 
+    def test_maccabi_goals__includes_opponent_own_goals(self, maccabi_games):
+        # Game 5: Maccabi scores 3 + opponent own goal at 60' = 4 maccabi goals
+        game = maccabi_games.games[4]
+        maccabi_goals = game.maccabi_goals()
+        # Should include the own goal by opponent
+        own_goals = [g for g in maccabi_goals if g.get('goal_type') == 'OwnGoal']
+        assert len(own_goals) == 1
+        assert len(maccabi_goals) == 4  # 3 regular + 1 own goal
+
+    def test_maccabi_goals__excludes_opponent_regular_goals(self, maccabi_games):
+        # Game 5: opponent scores 2 regular goals, they should NOT be in maccabi_goals
+        game = maccabi_games.games[4]
+        maccabi_goals = game.maccabi_goals()
+        opponent_regular = [g for g in maccabi_goals
+                           if g['team'] != 'מכבי תל אביב' and g.get('goal_type') != 'OwnGoal']
+        assert len(opponent_regular) == 0
+
     def test_league_fixture__parses_number(self, maccabi_games):
         assert maccabi_games.games[0].league_fixture == 1
 

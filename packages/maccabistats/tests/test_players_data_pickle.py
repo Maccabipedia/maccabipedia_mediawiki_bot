@@ -1,6 +1,7 @@
 """Test that MaccabiGamesStats includes players data in pickle for offline loading."""
 
 import pickle
+from collections import defaultdict
 from datetime import datetime
 
 import pytest
@@ -40,8 +41,14 @@ def _make_game(date: datetime) -> GameData:
 
 
 def _make_players_instance():
-    """Create a MaccabiPediaPlayers instance with test data."""
-    return MaccabiPediaPlayers.load_from_cache(_TEST_PLAYERS_DATA)
+    """Create a MaccabiPediaPlayers instance with test data (without network)."""
+    instance = object.__new__(MaccabiPediaPlayers)
+    instance._players_data = _TEST_PLAYERS_DATA
+    instance.players_dates = defaultdict(MaccabiPediaPlayers.default_birth_day_value,
+                                         {name: p.birth_date for name, p in _TEST_PLAYERS_DATA.items()})
+    instance.home_players = {p.name for p in _TEST_PLAYERS_DATA.values() if p.is_home_player}
+    MaccabiPediaPlayers._instance = instance
+    return instance
 
 
 # --- Core feature tests ---
@@ -215,14 +222,3 @@ def test_crawl_failure_degrades_gracefully(monkeypatch):
     # Player stats should degrade to empty
     assert stats.players_categories.maccabi_home_players_names == set()
     assert stats.maccabipedia_players is None
-
-
-# --- load_from_cache ---
-
-
-def test_load_from_cache_returns_instance():
-    """load_from_cache should return the created instance."""
-    instance = MaccabiPediaPlayers.load_from_cache(_TEST_PLAYERS_DATA)
-    assert instance is not None
-    assert instance is MaccabiPediaPlayers._instance
-    assert instance.home_players == {"שחקן א"}

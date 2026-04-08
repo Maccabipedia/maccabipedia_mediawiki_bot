@@ -61,19 +61,3 @@ class MaccabiPediaPlayers(object):
 
         return cls._instance
 
-    @classmethod
-    def load_from_cache(cls, players_data: Dict[str, MaccabiPediaPlayerData]):
-        """Initialize the singleton from cached data without crawling from the internet."""
-        instance = object.__new__(cls)
-        instance._players_data = players_data
-        instance.players_dates = defaultdict(MaccabiPediaPlayers.default_birth_day_value,
-                                             {player_name: player_data.birth_date for player_name, player_data in
-                                              players_data.items()})
-        instance.home_players = {player_data.name for player_data in players_data.values() if
-                                 player_data.is_home_player}
-        cls._instance = instance
-        return instance
-
-    @property
-    def raw_players_data(self) -> Dict[str, MaccabiPediaPlayerData]:
-        return self._players_data

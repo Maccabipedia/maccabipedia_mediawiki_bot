@@ -63,7 +63,7 @@ class TestGameData:
         game = maccabi_games.games[4]
         goals = game.goals()
         # Find the own goal event (by opponent at minute 60)
-        own_goal = [g for g in goals if g.get('goal_type') == 'OwnGoal']
+        own_goal = [g for g in goals if g.get('goal_type') == GoalTypes.OWN_GOAL.value]
         assert len(own_goal) == 1
         # After own goal at 60': opp 10'(0-1), opp 20'(0-2), maccabi 50'(1-2), own 60'(2-2)
         assert own_goal[0]['maccabi_score'] == 2
@@ -73,7 +73,7 @@ class TestGameData:
         # Game 7: opponent פרי נויפלד scores own goal at 45'
         game = maccabi_games.games[6]
         goals = game.goals()
-        own_goals = [g for g in goals if g.get('goal_type') == 'OwnGoal']
+        own_goals = [g for g in goals if g.get('goal_type') == GoalTypes.OWN_GOAL.value]
         assert len(own_goals) == 1
         # After the own goal, maccabi should have 2 goals (regular at 30' + own goal at 45')
         assert own_goals[0]['maccabi_score'] == 2
@@ -83,7 +83,7 @@ class TestGameData:
         game = maccabi_games.games[4]
         maccabi_goals = game.maccabi_goals()
         # Should include the own goal by opponent
-        own_goals = [g for g in maccabi_goals if g.get('goal_type') == 'OwnGoal']
+        own_goals = [g for g in maccabi_goals if g.get('goal_type') == GoalTypes.OWN_GOAL.value]
         assert len(own_goals) == 1
         assert len(maccabi_goals) == 4  # 3 regular + 1 own goal
 
@@ -92,7 +92,7 @@ class TestGameData:
         game = maccabi_games.games[4]
         maccabi_goals = game.maccabi_goals()
         opponent_regular = [g for g in maccabi_goals
-                           if g['team'] != 'מכבי תל אביב' and g.get('goal_type') != 'OwnGoal']
+                           if g['team'] != 'מכבי תל אביב' and g.get('goal_type') != GoalTypes.OWN_GOAL.value]
         assert len(opponent_regular) == 0
 
     def test_league_fixture__parses_number(self, maccabi_games):

@@ -57,7 +57,12 @@ class MaccabiGamesStats:
             self.maccabipedia_players = maccabipedia_players
         elif self.games:
             logger.info("No cached players data provided, crawling from MaccabiPedia (requires internet)")
-            self.maccabipedia_players = MaccabiPediaPlayers.get_players_data()
+            try:
+                self.maccabipedia_players = MaccabiPediaPlayers.get_players_data()
+            except Exception:
+                logger.warning("Failed to crawl players data — player-related stats will be unavailable",
+                               exc_info=True)
+                self.maccabipedia_players = None
         else:
             self.maccabipedia_players = None
 

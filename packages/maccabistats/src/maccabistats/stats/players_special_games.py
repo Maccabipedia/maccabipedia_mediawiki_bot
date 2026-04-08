@@ -41,6 +41,8 @@ class MaccabiGamesPlayersSpecialGamesStats(object):
         self.maccabi_games_stats = maccabi_games_stats
         self.games = maccabi_games_stats.games
         players = maccabi_games_stats.maccabipedia_players
+        if players is None and maccabi_games_stats.games:
+            logger.warning("Players data is missing — player special games stats will return empty results")
         self.players_birth_dates = players.players_dates if players else {}
 
     def _players_by_game_condition_ordered_by_age(self,

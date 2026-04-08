@@ -11,6 +11,11 @@ from maccabistats.models.player_in_game import PlayerInGame
 from maccabistats.models.team_in_game import TeamInGame
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
+_TEST_PLAYERS_DATA = {
+    "שחקן א": MaccabiPediaPlayerData(name="שחקן א", birth_date=datetime(2000, 1, 1), is_home_player=True),
+    "שחקן ב": MaccabiPediaPlayerData(name="שחקן ב", birth_date=datetime(1995, 6, 15), is_home_player=False),
+}
+
 
 @pytest.fixture(autouse=True)
 def reset_players_singleton():
@@ -36,11 +41,10 @@ def _make_game(date: datetime) -> GameData:
 
 def _make_players_instance():
     """Create a MaccabiPediaPlayers instance with test data."""
-    players_data = {
-        "שחקן א": MaccabiPediaPlayerData(name="שחקן א", birth_date=datetime(2000, 1, 1), is_home_player=True),
-        "שחקן ב": MaccabiPediaPlayerData(name="שחקן ב", birth_date=datetime(1995, 6, 15), is_home_player=False),
-    }
-    return MaccabiPediaPlayers.load_from_cache(players_data)
+    return MaccabiPediaPlayers.load_from_cache(_TEST_PLAYERS_DATA)
+
+
+# --- Core feature tests ---
 
 
 def test_players_data_stored_as_attribute():
@@ -116,8 +120,11 @@ def test_empty_games_does_not_crawl(monkeypatch):
     assert stats.maccabipedia_players is None
 
 
-def test_old_pickle_without_players_data_falls_back_to_crawl():
-    """Old pickles without maccabipedia_players should fall back to crawling (backward compat)."""
+# --- Backward compatibility ---
+
+
+def test_old_pickle_without_players_data_falls_back_to_crawl(monkeypatch):
+    """Old pickles without maccabipedia_players should fall back to crawling."""
     players = _make_players_instance()
     games = [_make_game(datetime(2024, 9, 1))]
     stats = MaccabiGamesStats(games, maccabipedia_players=players)
@@ -127,30 +134,95 @@ def test_old_pickle_without_players_data_falls_back_to_crawl():
     pickled = pickle.dumps(stats)
     MaccabiPediaPlayers._instance = None
 
-    # Loading through get_maccabi_stats_as_newest_wrapper-style path:
-    # getattr(loaded, 'maccabipedia_players', None) returns None → __init__ falls back to crawl
+    # Verify the old pickle has no maccabipedia_players
     restored = pickle.loads(pickled)
     assert not hasattr(restored, 'maccabipedia_players')
 
-    # When wrapping in a new MaccabiGamesStats, the fallback triggers crawl
-    # (here we set up the singleton so it "crawls" from cache)
-    MaccabiPediaPlayers.load_from_cache({
-        "שחקן א": MaccabiPediaPlayerData(name="שחקן א", birth_date=datetime(2000, 1, 1), is_home_player=True),
-    })
+    # Monkeypatch _crawl_players_data to return known data (simulates a real crawl)
+    crawl_called = False
+
+    def fake_crawl():
+        nonlocal crawl_called
+        crawl_called = True
+        return _TEST_PLAYERS_DATA
+
+    monkeypatch.setattr(MaccabiPediaPlayers, '_crawl_players_data', staticmethod(fake_crawl))
+
+    # Simulate get_maccabi_stats_as_newest_wrapper path:
+    # getattr returns None → __init__ falls back to crawl
     wrapper = MaccabiGamesStats(
         restored.games,
         maccabipedia_players=getattr(restored, 'maccabipedia_players', None),
     )
-    # Since getattr returns None and there are games, it falls back to singleton crawl
+    assert crawl_called, "Should have crawled from MaccabiPedia for old pickle"
     assert wrapper.maccabipedia_players is not None
+    assert wrapper.maccabipedia_players.home_players == {"שחקן א"}
+
+
+# --- players_special_games ---
+
+
+def test_players_special_games_uses_attribute():
+    """players_special_games should get birth dates from the maccabipedia_players attribute."""
+    players = _make_players_instance()
+    games = [_make_game(datetime(2024, 9, 1))]
+    stats = MaccabiGamesStats(games, maccabipedia_players=players)
+
+    assert stats.players_special_games.players_birth_dates["שחקן א"] == datetime(2000, 1, 1)
+    assert stats.players_special_games.players_birth_dates["שחקן ב"] == datetime(1995, 6, 15)
+
+
+# --- Filter chain ---
+
+
+def test_filter_chain_preserves_players_data(monkeypatch):
+    """Multi-level filter chains should preserve players data throughout."""
+    players = _make_players_instance()
+    games = [_make_game(datetime(2024, 9, 1)), _make_game(datetime(2024, 10, 1))]
+    stats = MaccabiGamesStats(games, maccabipedia_players=players)
+
+    monkeypatch.setattr(
+        MaccabiPediaPlayers, '_crawl_players_data',
+        staticmethod(lambda: (_ for _ in ()).throw(RuntimeError("Should not crawl!"))),
+    )
+    MaccabiPediaPlayers._instance = None
+
+    # Chain: home_games → maccabi_wins → players_categories
+    chained = stats.home_games.maccabi_wins
+    assert chained.maccabipedia_players is players
+    assert chained.players_categories.maccabi_home_players_names == {"שחקן א"}
+    assert chained.players_special_games.players_birth_dates["שחקן א"] == datetime(2000, 1, 1)
+
+
+# --- Graceful degradation ---
+
+
+def test_crawl_failure_degrades_gracefully(monkeypatch):
+    """If crawling fails, non-player stats should still work."""
+    monkeypatch.setattr(
+        MaccabiPediaPlayers, '_crawl_players_data',
+        staticmethod(lambda: (_ for _ in ()).throw(ConnectionError("No internet"))),
+    )
+    MaccabiPediaPlayers._instance = None
+
+    games = [_make_game(datetime(2024, 9, 1))]
+    stats = MaccabiGamesStats(games)
+
+    # Non-player stats should work
+    assert len(stats) == 1
+    assert stats.results.wins_count == 1
+
+    # Player stats should degrade to empty
+    assert stats.players_categories.maccabi_home_players_names == set()
+    assert stats.maccabipedia_players is None
+
+
+# --- load_from_cache ---
 
 
 def test_load_from_cache_returns_instance():
     """load_from_cache should return the created instance."""
-    players_data = {
-        "שחקן א": MaccabiPediaPlayerData(name="שחקן א", birth_date=datetime(2000, 1, 1), is_home_player=True),
-    }
-    instance = MaccabiPediaPlayers.load_from_cache(players_data)
+    instance = MaccabiPediaPlayers.load_from_cache(_TEST_PLAYERS_DATA)
     assert instance is not None
     assert instance is MaccabiPediaPlayers._instance
     assert instance.home_players == {"שחקן א"}

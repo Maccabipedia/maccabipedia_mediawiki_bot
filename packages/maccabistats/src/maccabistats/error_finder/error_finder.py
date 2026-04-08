@@ -31,7 +31,8 @@ class ErrorsFinder:
                                 if not game.technical_result
                                 if 11 != len(game.maccabi_team.lineup_players)]
 
-        return MaccabiGamesStats(missing_lineup_games)
+        return self.maccabi_games_stats._create_filtered(missing_lineup_games,
+                                                                'Games without 11 lineup players')
 
     def get_dates_with_more_than_one_game(self):
         """
@@ -62,7 +63,7 @@ class ErrorsFinder:
                  if (game.maccabi_team.score + game.not_maccabi_team.score != len(
                 game.goals())) and not game.technical_result]
 
-        return MaccabiGamesStats(games)
+        return self.maccabi_games_stats._create_filtered(games, 'Games with missing goals events')
 
     def get_games_with_wrong_goals_team_belonging(self):
         """ Maccabi score in the game should be equal to the maccabi score that written in the last goal event
@@ -87,7 +88,7 @@ class ErrorsFinder:
 
         games = list(filter(game_has_wrong_goals_belonging, self.maccabi_games_stats))
 
-        return MaccabiGamesStats(games)
+        return self.maccabi_games_stats._create_filtered(games, 'Games with wrong goals belonging')
 
     def get_players_with_event_but_without_lineup_or_substitution(self):
         """ Every player that has any event should has atleast lineup or substitution or bench in event """
@@ -164,7 +165,7 @@ class ErrorsFinder:
             for game in season:
                 fixtures_from_all_seasons[f"Season {season[0].season} Fixture {game.league_fixture}"].append(game)
 
-        double_fixtures = [(season_and_fixture, MaccabiGamesStats(games)) for season_and_fixture, games in
+        double_fixtures = [(season_and_fixture, self.maccabi_games_stats._create_filtered(games, f'Double fixture: {season_and_fixture}')) for season_and_fixture, games in
                            fixtures_from_all_seasons.items() if
                            len(games) > 1]
 

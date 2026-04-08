@@ -40,7 +40,8 @@ class MaccabiGamesPlayersSpecialGamesStats(object):
     def __init__(self, maccabi_games_stats: MaccabiGamesStats):
         self.maccabi_games_stats = maccabi_games_stats
         self.games = maccabi_games_stats.games
-        self.players_birth_dates = MaccabiPediaPlayers.get_players_data().players_dates
+        players = maccabi_games_stats._maccabipedia_players
+        self.players_birth_dates = players.players_dates if players else {}
 
     def _players_by_game_condition_ordered_by_age(self,
                                                   player_game_condition: Callable[[GameData, str], bool],

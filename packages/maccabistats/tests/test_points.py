@@ -5,6 +5,40 @@ import pytest
 
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
+from game_fixtures import _game, _player, _lineup, TeamInGame
+
+
+@pytest.fixture
+def pre_1982_game():
+    """A single league game from before the 3-point rule (Sep 25, 1982)."""
+    return _game(
+        competition="ליגת העל", fixture="מחזור1", season="1981/82",
+        date=datetime.datetime(1982, 1, 1),
+        stadium="בלומפילד", referee="שופט",
+        home_team=TeamInGame("מכבי תל אביב", "מאמן", 2, [
+            _player("שחקן", 1, [_lineup()]),
+        ]),
+        away_team=TeamInGame("יריב", "מאמן_יריב", 0, [
+            _player("יריב", 1, [_lineup()]),
+        ]),
+    )
+
+
+@pytest.fixture
+def pre_1982_tie_game():
+    """A tied league game from before the 3-point rule."""
+    return _game(
+        competition="ליגת העל", fixture="מחזור2", season="1981/82",
+        date=datetime.datetime(1982, 2, 1),
+        stadium="בלומפילד", referee="שופט",
+        home_team=TeamInGame("מכבי תל אביב", "מאמן", 1, [
+            _player("שחקן", 1, [_lineup()]),
+        ]),
+        away_team=TeamInGame("יריב", "מאמן_יריב", 1, [
+            _player("יריב", 1, [_lineup()]),
+        ]),
+    )
+
 
 class TestPointsCalculation:
     def test_points_for_league_games(self, maccabi_games):
@@ -20,35 +54,26 @@ class TestPointsCalculation:
         assert league.success_rate == round(14 / 24, 3)
 
     def test_points_raises_for_non_league(self, maccabi_games):
-        # All games includes cup and friendly, points should raise
         with pytest.raises(TypeError, match="league games"):
             maccabi_games.points
 
 
 class TestPointsPrePost1982:
-    def test_pre_1982_gives_2_points_for_win(self):
-        """Before Sep 25 1982, wins gave 2 points instead of 3."""
-        from maccabistats.models.team_in_game import TeamInGame
-        from maccabistats.models.player_in_game import PlayerInGame
-        from maccabistats.models.player_game_events import GameEvent, GameEventTypes
-        from maccabistats.models.game_data import GameData
-
-        lineup = GameEvent(GameEventTypes.LINE_UP, datetime.timedelta(minutes=0))
-        maccabi = TeamInGame("מכבי תל אביב", "coach", 2, [
-            PlayerInGame("player", 1, [lineup]),
-        ])
-        opponent = TeamInGame("opponent", "coach_b", 0, [
-            PlayerInGame("opp", 1, [lineup]),
-        ])
-
-        old_game = GameData(
-            competition="ליגת העל", fixture="מחזור1",
-            date_as_hebrew_string="", stadium="s", crowd="0",
-            referee="ref", home_team=maccabi, away_team=opponent,
-            season_string="1981/82", half_parsed_events=[],
-            date=datetime.datetime(1982, 1, 1),
-        )
-
-        stats = MaccabiGamesStats([old_game])
-        # Pre-1982: win = 2 points
+    def test_pre_1982_win_gives_2_points(self, pre_1982_game):
+        stats = MaccabiGamesStats([pre_1982_game])
         assert stats.points == 2
+
+    def test_pre_1982_tie_gives_1_point(self, pre_1982_tie_game):
+        stats = MaccabiGamesStats([pre_1982_tie_game])
+        assert stats.points == 1
+
+    def test_pre_1982_possible_points_is_2_per_game(self, pre_1982_game, pre_1982_tie_game):
+        from maccabistats.stats_utilities.points_calculator import calculate_possible_points_for_games
+        stats = MaccabiGamesStats([pre_1982_game, pre_1982_tie_game])
+        assert calculate_possible_points_for_games(stats) == 4  # 2 games * 2 points each
+
+    def test_mixed_eras_points(self, maccabi_games, pre_1982_game):
+        league = maccabi_games.league_games
+        mixed = MaccabiGamesStats(league.games + [pre_1982_game])
+        # 14 (post-1982 league) + 2 (pre-1982 win) = 16
+        assert mixed.points == 16

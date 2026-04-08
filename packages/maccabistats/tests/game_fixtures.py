@@ -1,17 +1,32 @@
 """
-Synthetic game data for maccabistats tests.
+Game fixture data for maccabistats tests using real historical Maccabi Tel Aviv names.
 
 10 games designed to cover:
   - Game resolutions: 5 wins, 2 losses, 2 ties, 1 technical win (each >=2 occurrences)
   - Home (7) and away (3) games
   - Competitions: league (8), cup (1), friendly (1)
   - Two seasons: 2019/20 (6 games), 2020/21 (4 games)
-  - Two coaches: מאמן_א (6 games), מאמן_ב (4 games)
+  - Two coaches: אברם גרנט (6 games), פאולו סוזה (4 games)
   - A comeback game (0-2 down, win 4-2)
   - A tie comeback (0-1 down, tie 1-1)
   - Clean sheets (4 games)
   - Goals from bench (2 games)
   - Technical result (1 game)
+
+Maccabi players:
+  - אבי נמני (#10) — captain, striker, top scorer
+  - אלי דריקס (#7) — winger, header specialist
+  - חיים רביבו (#8) — playmaker, chief assister
+  - טל בן חיים (#3) — defender, picks up cards
+  - בונדארנקו (#1) — goalkeeper
+  - דודו אוואט (#5) — defender, straight red card
+  - אריק בנאדו (#6) — midfielder
+  - עמוס מנסדורף (#11) — winger
+  - אבי שטרית (#4) — midfielder
+  - אודי שוחט (#9) — forward
+  - מלאכי חלימי (#2) — fullback
+  - ערן זהבי (#14) — super sub, scores from bench
+  - פרדי דוד (#15) — benched player
 
 Player events covered (each >=2 occurrences):
   - LINE_UP, SUBSTITUTION_IN, SUBSTITUTION_OUT
@@ -127,106 +142,106 @@ def _game(
 GAMES: list[GameData] = []
 
 # ---- Game 1: League, home, WIN 3-1, season 2019/20 ----
-# Maccabi: שחקן_א scores 2 (normal), שחקן_ב scores 1 (header)
-# שחקן_ג assists twice (normal + corner), שחקן_א is captain
-# שחקן_יג is benched
+# Maccabi: אבי נמני scores 2 (normal), אלי דריקס scores 1 (header)
+# חיים רביבו assists twice (normal + corner), אבי נמני is captain
+# פרדי דוד is benched
 GAMES.append(_game(
     competition="ליגת העל", fixture="מחזור1", season="2019/20",
     date=datetime.datetime(2019, 9, 14),
-    stadium="בלומפילד", referee="שופט_א",
-    home_team=TeamInGame("מכבי תל אביב", "מאמן_א", 3, [
-        _player("שחקן_א", 10, [_lineup(), _captain(), _goal(15), _goal(70)]),
-        _player("שחקן_ב", 7, [_lineup(), _goal(40, GoalTypes.HEADER)]),
-        _player("שחקן_ג", 8, [_lineup(), _assist(15), _assist(40, AssistTypes.CORNER_ASSIST)]),
-        _player("שחקן_ד", 3, [_lineup()]),
-        _player("שחקן_ה", 1, [_lineup()]),
-        _player("שחקן_ו", 5, [_lineup()]),
-        _player("שחקן_ז", 6, [_lineup()]),
-        _player("שחקן_ח", 11, [_lineup()]),
-        _player("שחקן_ט", 4, [_lineup()]),
-        _player("שחקן_י", 9, [_lineup()]),
-        _player("שחקן_יא", 2, [_lineup()]),
-        _player("שחקן_יג", 15, [_benched()]),
+    stadium="בלומפילד", referee="יורם דוידוביץ",
+    home_team=TeamInGame("מכבי תל אביב", "אברם גרנט", 3, [
+        _player("אבי נמני", 10, [_lineup(), _captain(), _goal(15), _goal(70)]),
+        _player("אלי דריקס", 7, [_lineup(), _goal(40, GoalTypes.HEADER)]),
+        _player("חיים רביבו", 8, [_lineup(), _assist(15), _assist(40, AssistTypes.CORNER_ASSIST)]),
+        _player("טל בן חיים", 3, [_lineup()]),
+        _player("בונדארנקו", 1, [_lineup()]),
+        _player("דודו אוואט", 5, [_lineup()]),
+        _player("אריק בנאדו", 6, [_lineup()]),
+        _player("עמוס מנסדורף", 11, [_lineup()]),
+        _player("אבי שטרית", 4, [_lineup()]),
+        _player("אודי שוחט", 9, [_lineup()]),
+        _player("מלאכי חלימי", 2, [_lineup()]),
+        _player("פרדי דוד", 15, [_benched()]),
     ]),
-    away_team=TeamInGame("הפועל באר שבע", "מאמן_יריב_א", 1, [
-        _player("יריב_א", 9, [_lineup(), _goal(55)]),
+    away_team=TeamInGame("הפועל באר שבע", "אלישע לוי", 1, [
+        _player("ערן לוי", 9, [_lineup(), _goal(55)]),
     ]),
 ))
 
 # ---- Game 2: League, away, LOSS 0-2, season 2019/20 ----
-# שחקן_א gets yellow, שחקן_ו gets straight red card
-# שחקן_יב subs in, שחקן_יג benched
+# אבי נמני gets yellow, דודו אוואט gets straight red card
+# ערן זהבי subs in, פרדי דוד benched
 GAMES.append(_game(
     competition="ליגת העל", fixture="מחזור2", season="2019/20",
     date=datetime.datetime(2019, 9, 21),
-    stadium="טדי", referee="שופט_ב",
-    home_team=TeamInGame("בית\"ר ירושלים", "מאמן_יריב_ב", 2, [
-        _player("יריב_ב", 10, [_lineup(), _goal(30), _goal(60)]),
+    stadium="טדי", referee="אלי חקמון",
+    home_team=TeamInGame("בית\"ר ירושלים", "גיא לוי", 2, [
+        _player("יוסי בניון", 10, [_lineup(), _goal(30), _goal(60)]),
     ]),
-    away_team=TeamInGame("מכבי תל אביב", "מאמן_א", 0, [
-        _player("שחקן_א", 10, [_lineup(), _captain(), _yellow(50)]),
-        _player("שחקן_ב", 7, [_lineup()]),
-        _player("שחקן_ג", 8, [_lineup(), _sub_out(60)]),
-        _player("שחקן_ד", 3, [_lineup()]),
-        _player("שחקן_ה", 1, [_lineup()]),
-        _player("שחקן_ו", 5, [_lineup(), _red(55)]),
-        _player("שחקן_ז", 6, [_lineup()]),
-        _player("שחקן_ח", 11, [_lineup()]),
-        _player("שחקן_ט", 4, [_lineup()]),
-        _player("שחקן_י", 9, [_lineup()]),
-        _player("שחקן_יא", 2, [_lineup()]),
-        _player("שחקן_יב", 14, [_sub_in(60)]),
-        _player("שחקן_יג", 15, [_benched()]),
+    away_team=TeamInGame("מכבי תל אביב", "אברם גרנט", 0, [
+        _player("אבי נמני", 10, [_lineup(), _captain(), _yellow(50)]),
+        _player("אלי דריקס", 7, [_lineup()]),
+        _player("חיים רביבו", 8, [_lineup(), _sub_out(60)]),
+        _player("טל בן חיים", 3, [_lineup()]),
+        _player("בונדארנקו", 1, [_lineup()]),
+        _player("דודו אוואט", 5, [_lineup(), _red(55)]),
+        _player("אריק בנאדו", 6, [_lineup()]),
+        _player("עמוס מנסדורף", 11, [_lineup()]),
+        _player("אבי שטרית", 4, [_lineup()]),
+        _player("אודי שוחט", 9, [_lineup()]),
+        _player("מלאכי חלימי", 2, [_lineup()]),
+        _player("ערן זהבי", 14, [_sub_in(60)]),
+        _player("פרדי דוד", 15, [_benched()]),
     ]),
 ))
 
 # ---- Game 3: League, home, TIE 1-1, season 2019/20 ----
 # Tie comeback: opponent scores at 20', Maccabi equalizes at 80' (penalty)
-# שחקן_א misses a penalty at 60'
+# אבי נמני misses a penalty at 60'
 GAMES.append(_game(
     competition="ליגת העל", fixture="מחזור3", season="2019/20",
     date=datetime.datetime(2019, 10, 5),
-    stadium="בלומפילד", referee="שופט_א",
-    home_team=TeamInGame("מכבי תל אביב", "מאמן_א", 1, [
-        _player("שחקן_א", 10, [_lineup(), _captain(), _penalty_missed(60), _goal(80, GoalTypes.PENALTY)]),
-        _player("שחקן_ב", 7, [_lineup()]),
-        _player("שחקן_ג", 8, [_lineup()]),
-        _player("שחקן_ד", 3, [_lineup()]),
-        _player("שחקן_ה", 1, [_lineup()]),
-        _player("שחקן_ו", 5, [_lineup()]),
-        _player("שחקן_ז", 6, [_lineup()]),
-        _player("שחקן_ח", 11, [_lineup()]),
-        _player("שחקן_ט", 4, [_lineup()]),
-        _player("שחקן_י", 9, [_lineup()]),
-        _player("שחקן_יא", 2, [_lineup()]),
+    stadium="בלומפילד", referee="יורם דוידוביץ",
+    home_team=TeamInGame("מכבי תל אביב", "אברם גרנט", 1, [
+        _player("אבי נמני", 10, [_lineup(), _captain(), _penalty_missed(60), _goal(80, GoalTypes.PENALTY)]),
+        _player("אלי דריקס", 7, [_lineup()]),
+        _player("חיים רביבו", 8, [_lineup()]),
+        _player("טל בן חיים", 3, [_lineup()]),
+        _player("בונדארנקו", 1, [_lineup()]),
+        _player("דודו אוואט", 5, [_lineup()]),
+        _player("אריק בנאדו", 6, [_lineup()]),
+        _player("עמוס מנסדורף", 11, [_lineup()]),
+        _player("אבי שטרית", 4, [_lineup()]),
+        _player("אודי שוחט", 9, [_lineup()]),
+        _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
-    away_team=TeamInGame("מכבי חיפה", "מאמן_יריב_ג", 1, [
-        _player("יריב_ג", 7, [_lineup(), _goal(20)]),
+    away_team=TeamInGame("מכבי חיפה", "ברק בכר", 1, [
+        _player("אייל גולסה", 7, [_lineup(), _goal(20)]),
     ]),
 ))
 
 # ---- Game 4: Cup, home, WIN 2-0 (clean sheet), season 2019/20 ----
-# שחקן_א scores free kick, שחקן_ב scores header
-# שחקן_ג assists twice (corner)
+# אבי נמני scores free kick, אלי דריקס scores header
+# חיים רביבו assists twice (corner)
 GAMES.append(_game(
     competition="גביע המדינה", fixture="שמינית גמר", season="2019/20",
     date=datetime.datetime(2019, 11, 12),
-    stadium="בלומפילד", referee="שופט_ג",
-    home_team=TeamInGame("מכבי תל אביב", "מאמן_א", 2, [
-        _player("שחקן_א", 10, [_lineup(), _captain(), _goal(25, GoalTypes.FREE_KICK)]),
-        _player("שחקן_ב", 7, [_lineup(), _goal(50, GoalTypes.HEADER)]),
-        _player("שחקן_ג", 8, [_lineup(), _assist(25, AssistTypes.CORNER_ASSIST), _assist(50)]),
-        _player("שחקן_ד", 3, [_lineup()]),
-        _player("שחקן_ה", 1, [_lineup()]),
-        _player("שחקן_ו", 5, [_lineup()]),
-        _player("שחקן_ז", 6, [_lineup()]),
-        _player("שחקן_ח", 11, [_lineup()]),
-        _player("שחקן_ט", 4, [_lineup()]),
-        _player("שחקן_י", 9, [_lineup()]),
-        _player("שחקן_יא", 2, [_lineup()]),
+    stadium="בלומפילד", referee="רועי ריינשרייבר",
+    home_team=TeamInGame("מכבי תל אביב", "אברם גרנט", 2, [
+        _player("אבי נמני", 10, [_lineup(), _captain(), _goal(25, GoalTypes.FREE_KICK)]),
+        _player("אלי דריקס", 7, [_lineup(), _goal(50, GoalTypes.HEADER)]),
+        _player("חיים רביבו", 8, [_lineup(), _assist(25, AssistTypes.CORNER_ASSIST), _assist(50)]),
+        _player("טל בן חיים", 3, [_lineup()]),
+        _player("בונדארנקו", 1, [_lineup()]),
+        _player("דודו אוואט", 5, [_lineup()]),
+        _player("אריק בנאדו", 6, [_lineup()]),
+        _player("עמוס מנסדורף", 11, [_lineup()]),
+        _player("אבי שטרית", 4, [_lineup()]),
+        _player("אודי שוחט", 9, [_lineup()]),
+        _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
-    away_team=TeamInGame("הפועל תל אביב", "מאמן_יריב_ד", 0, [
-        _player("יריב_ד", 1, [_lineup()]),
+    away_team=TeamInGame("הפועל תל אביב", "ניר קלינגר", 0, [
+        _player("מפלייטיקאל", 1, [_lineup()]),
     ]),
 ))
 
@@ -236,51 +251,51 @@ GAMES.append(_game(
 GAMES.append(_game(
     competition="ליגת העל", fixture="מחזור4", season="2019/20",
     date=datetime.datetime(2019, 12, 7),
-    stadium="בלומפילד", referee="שופט_ב",
-    home_team=TeamInGame("מכבי תל אביב", "מאמן_א", 4, [
-        _player("שחקן_א", 10, [_lineup(), _captain(), _goal(50), _goal(70)]),
-        _player("שחקן_ב", 7, [_lineup()]),
-        _player("שחקן_ג", 8, [_lineup(), _assist(50), _assist(70)]),
-        _player("שחקן_ד", 3, [_lineup()]),
-        _player("שחקן_ה", 1, [_lineup()]),
-        _player("שחקן_ו", 5, [_lineup(), _yellow(30)]),
-        _player("שחקן_ז", 6, [_lineup()]),
-        _player("שחקן_ח", 11, [_lineup(), _sub_out(55)]),
-        _player("שחקן_ט", 4, [_lineup()]),
-        _player("שחקן_י", 9, [_lineup()]),
-        _player("שחקן_יא", 2, [_lineup()]),
-        _player("שחקן_יב", 14, [_sub_in(55), _goal(80)]),
+    stadium="בלומפילד", referee="אלי חקמון",
+    home_team=TeamInGame("מכבי תל אביב", "אברם גרנט", 4, [
+        _player("אבי נמני", 10, [_lineup(), _captain(), _goal(50), _goal(70)]),
+        _player("אלי דריקס", 7, [_lineup()]),
+        _player("חיים רביבו", 8, [_lineup(), _assist(50), _assist(70)]),
+        _player("טל בן חיים", 3, [_lineup()]),
+        _player("בונדארנקו", 1, [_lineup()]),
+        _player("דודו אוואט", 5, [_lineup(), _yellow(30)]),
+        _player("אריק בנאדו", 6, [_lineup()]),
+        _player("עמוס מנסדורף", 11, [_lineup(), _sub_out(55)]),
+        _player("אבי שטרית", 4, [_lineup()]),
+        _player("אודי שוחט", 9, [_lineup()]),
+        _player("מלאכי חלימי", 2, [_lineup()]),
+        _player("ערן זהבי", 14, [_sub_in(55), _goal(80)]),
     ]),
-    away_team=TeamInGame("הפועל באר שבע", "מאמן_יריב_א", 2, [
-        _player("יריב_א", 9, [_lineup(), _goal(10), _goal(20)]),
-        _player("יריב_ו", 4, [_lineup(), _goal(60, GoalTypes.OWN_GOAL)]),
+    away_team=TeamInGame("הפועל באר שבע", "אלישע לוי", 2, [
+        _player("ערן לוי", 9, [_lineup(), _goal(10), _goal(20)]),
+        _player("עמית בן שושן", 4, [_lineup(), _goal(60, GoalTypes.OWN_GOAL)]),
     ]),
 ))
 
 # ---- Game 6: Friendly, away, WIN 1-0, season 2019/20 ----
-# Goal from bench: שחקן_יב subs in at 70, scores at 85
-# שחקן_א misses penalty at 40
+# Goal from bench: ערן זהבי subs in at 70, scores at 85
+# אבי נמני misses penalty at 40
 GAMES.append(_game(
     competition="ידידות", fixture="ידידות", season="2019/20",
     date=datetime.datetime(2020, 1, 15),
-    stadium="אחר", referee="שופט_ד",
-    home_team=TeamInGame("קבוצה זרה", "מאמן_יריב_ה", 0, [
-        _player("יריב_ה", 1, [_lineup()]),
+    stadium="אחר", referee="גל לייבוביץ",
+    home_team=TeamInGame("קבוצה זרה", "מאמן זר", 0, [
+        _player("שוער זר", 1, [_lineup()]),
     ]),
-    away_team=TeamInGame("מכבי תל אביב", "מאמן_א", 1, [
-        _player("שחקן_א", 10, [_lineup(), _captain(), _penalty_missed(40)]),
-        _player("שחקן_ב", 7, [_lineup(), _sub_out(70)]),
-        _player("שחקן_ג", 8, [_lineup()]),
-        _player("שחקן_ד", 3, [_lineup()]),
-        _player("שחקן_ה", 1, [_lineup()]),
-        _player("שחקן_ו", 5, [_lineup()]),
-        _player("שחקן_ז", 6, [_lineup()]),
-        _player("שחקן_ח", 11, [_lineup()]),
-        _player("שחקן_ט", 4, [_lineup()]),
-        _player("שחקן_י", 9, [_lineup()]),
-        _player("שחקן_יא", 2, [_lineup()]),
+    away_team=TeamInGame("מכבי תל אביב", "אברם גרנט", 1, [
+        _player("אבי נמני", 10, [_lineup(), _captain(), _penalty_missed(40)]),
+        _player("אלי דריקס", 7, [_lineup(), _sub_out(70)]),
+        _player("חיים רביבו", 8, [_lineup()]),
+        _player("טל בן חיים", 3, [_lineup()]),
+        _player("בונדארנקו", 1, [_lineup()]),
+        _player("דודו אוואט", 5, [_lineup()]),
+        _player("אריק בנאדו", 6, [_lineup()]),
+        _player("עמוס מנסדורף", 11, [_lineup()]),
+        _player("אבי שטרית", 4, [_lineup()]),
+        _player("אודי שוחט", 9, [_lineup()]),
+        _player("מלאכי חלימי", 2, [_lineup()]),
         # Goal from bench: sub in at 70, score at 85
-        _player("שחקן_יב", 14, [_sub_in(70), _goal(85)]),
+        _player("ערן זהבי", 14, [_sub_in(70), _goal(85)]),
     ]),
 ))
 
@@ -289,47 +304,47 @@ GAMES.append(_game(
 GAMES.append(_game(
     competition="ליגת העל", fixture="מחזור1", season="2020/21",
     date=datetime.datetime(2020, 9, 12),
-    stadium="בלומפילד", referee="שופט_א",
-    home_team=TeamInGame("מכבי תל אביב", "מאמן_ב", 2, [
-        _player("שחקן_א", 10, [_lineup(), _captain(), _goal(30)]),
-        _player("שחקן_ב", 7, [_lineup()]),
-        _player("שחקן_ג", 8, [_lineup(), _assist(30)]),
-        _player("שחקן_ד", 3, [_lineup()]),
-        _player("שחקן_ה", 1, [_lineup()]),
-        _player("שחקן_ו", 5, [_lineup()]),
-        _player("שחקן_ז", 6, [_lineup()]),
-        _player("שחקן_ח", 11, [_lineup()]),
-        _player("שחקן_ט", 4, [_lineup()]),
-        _player("שחקן_י", 9, [_lineup()]),
-        _player("שחקן_יא", 2, [_lineup()]),
+    stadium="בלומפילד", referee="יורם דוידוביץ",
+    home_team=TeamInGame("מכבי תל אביב", "פאולו סוזה", 2, [
+        _player("אבי נמני", 10, [_lineup(), _captain(), _goal(30)]),
+        _player("אלי דריקס", 7, [_lineup()]),
+        _player("חיים רביבו", 8, [_lineup(), _assist(30)]),
+        _player("טל בן חיים", 3, [_lineup()]),
+        _player("בונדארנקו", 1, [_lineup()]),
+        _player("דודו אוואט", 5, [_lineup()]),
+        _player("אריק בנאדו", 6, [_lineup()]),
+        _player("עמוס מנסדורף", 11, [_lineup()]),
+        _player("אבי שטרית", 4, [_lineup()]),
+        _player("אודי שוחט", 9, [_lineup()]),
+        _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
-    away_team=TeamInGame("מכבי חיפה", "מאמן_יריב_ג", 1, [
-        _player("יריב_ג", 7, [_lineup(), _goal(45, GoalTypes.OWN_GOAL)]),
-        _player("יריב_ז", 11, [_lineup(), _goal(88)]),
+    away_team=TeamInGame("מכבי חיפה", "ברק בכר", 1, [
+        _player("אייל גולסה", 7, [_lineup(), _goal(45, GoalTypes.OWN_GOAL)]),
+        _player("עומר אצילי", 11, [_lineup(), _goal(88)]),
     ]),
 ))
 
 # ---- Game 8: League, away, LOSS 1-3, season 2020/21 ----
-# שחקן_ד gets yellow then second yellow (=red)
+# טל בן חיים gets yellow then second yellow (=red)
 GAMES.append(_game(
     competition="ליגת העל", fixture="מחזור2", season="2020/21",
     date=datetime.datetime(2020, 9, 26),
-    stadium="סמי עופר", referee="שופט_ב",
-    home_team=TeamInGame("מכבי חיפה", "מאמן_יריב_ג", 3, [
-        _player("יריב_ג", 7, [_lineup(), _goal(20), _goal(45), _goal(70)]),
+    stadium="סמי עופר", referee="אלי חקמון",
+    home_team=TeamInGame("מכבי חיפה", "ברק בכר", 3, [
+        _player("אייל גולסה", 7, [_lineup(), _goal(20), _goal(45), _goal(70)]),
     ]),
-    away_team=TeamInGame("מכבי תל אביב", "מאמן_ב", 1, [
-        _player("שחקן_א", 10, [_lineup(), _captain(), _goal(35)]),
-        _player("שחקן_ב", 7, [_lineup()]),
-        _player("שחקן_ג", 8, [_lineup(), _assist(35)]),
-        _player("שחקן_ד", 3, [_lineup(), _yellow(40), _second_yellow(65)]),
-        _player("שחקן_ה", 1, [_lineup()]),
-        _player("שחקן_ו", 5, [_lineup()]),
-        _player("שחקן_ז", 6, [_lineup()]),
-        _player("שחקן_ח", 11, [_lineup()]),
-        _player("שחקן_ט", 4, [_lineup()]),
-        _player("שחקן_י", 9, [_lineup()]),
-        _player("שחקן_יא", 2, [_lineup()]),
+    away_team=TeamInGame("מכבי תל אביב", "פאולו סוזה", 1, [
+        _player("אבי נמני", 10, [_lineup(), _captain(), _goal(35)]),
+        _player("אלי דריקס", 7, [_lineup()]),
+        _player("חיים רביבו", 8, [_lineup(), _assist(35)]),
+        _player("טל בן חיים", 3, [_lineup(), _yellow(40), _second_yellow(65)]),
+        _player("בונדארנקו", 1, [_lineup()]),
+        _player("דודו אוואט", 5, [_lineup()]),
+        _player("אריק בנאדו", 6, [_lineup()]),
+        _player("עמוס מנסדורף", 11, [_lineup()]),
+        _player("אבי שטרית", 4, [_lineup()]),
+        _player("אודי שוחט", 9, [_lineup()]),
+        _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
 ))
 
@@ -337,22 +352,22 @@ GAMES.append(_game(
 GAMES.append(_game(
     competition="ליגת העל", fixture="מחזור3", season="2020/21",
     date=datetime.datetime(2020, 10, 10),
-    stadium="בלומפילד", referee="שופט_ג",
-    home_team=TeamInGame("מכבי תל אביב", "מאמן_ב", 0, [
-        _player("שחקן_א", 10, [_lineup(), _captain()]),
-        _player("שחקן_ב", 7, [_lineup()]),
-        _player("שחקן_ג", 8, [_lineup()]),
-        _player("שחקן_ד", 3, [_lineup()]),
-        _player("שחקן_ה", 1, [_lineup()]),
-        _player("שחקן_ו", 5, [_lineup()]),
-        _player("שחקן_ז", 6, [_lineup()]),
-        _player("שחקן_ח", 11, [_lineup()]),
-        _player("שחקן_ט", 4, [_lineup()]),
-        _player("שחקן_י", 9, [_lineup()]),
-        _player("שחקן_יא", 2, [_lineup()]),
+    stadium="בלומפילד", referee="רועי ריינשרייבר",
+    home_team=TeamInGame("מכבי תל אביב", "פאולו סוזה", 0, [
+        _player("אבי נמני", 10, [_lineup(), _captain()]),
+        _player("אלי דריקס", 7, [_lineup()]),
+        _player("חיים רביבו", 8, [_lineup()]),
+        _player("טל בן חיים", 3, [_lineup()]),
+        _player("בונדארנקו", 1, [_lineup()]),
+        _player("דודו אוואט", 5, [_lineup()]),
+        _player("אריק בנאדו", 6, [_lineup()]),
+        _player("עמוס מנסדורף", 11, [_lineup()]),
+        _player("אבי שטרית", 4, [_lineup()]),
+        _player("אודי שוחט", 9, [_lineup()]),
+        _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
-    away_team=TeamInGame("הפועל תל אביב", "מאמן_יריב_ד", 0, [
-        _player("יריב_ד", 1, [_lineup()]),
+    away_team=TeamInGame("הפועל תל אביב", "ניר קלינגר", 0, [
+        _player("מפלייטיקאל", 1, [_lineup()]),
     ]),
 ))
 
@@ -360,22 +375,22 @@ GAMES.append(_game(
 GAMES.append(_game(
     competition="ליגת העל", fixture="מחזור4", season="2020/21",
     date=datetime.datetime(2020, 11, 7),
-    stadium="בלומפילד", referee="שופט_א",
-    home_team=TeamInGame("מכבי תל אביב", "מאמן_ב", 3, [
-        _player("שחקן_א", 10, [_lineup(), _captain()]),
-        _player("שחקן_ב", 7, [_lineup()]),
-        _player("שחקן_ג", 8, [_lineup()]),
-        _player("שחקן_ד", 3, [_lineup()]),
-        _player("שחקן_ה", 1, [_lineup()]),
-        _player("שחקן_ו", 5, [_lineup()]),
-        _player("שחקן_ז", 6, [_lineup()]),
-        _player("שחקן_ח", 11, [_lineup()]),
-        _player("שחקן_ט", 4, [_lineup()]),
-        _player("שחקן_י", 9, [_lineup()]),
-        _player("שחקן_יא", 2, [_lineup()]),
+    stadium="בלומפילד", referee="יורם דוידוביץ",
+    home_team=TeamInGame("מכבי תל אביב", "פאולו סוזה", 3, [
+        _player("אבי נמני", 10, [_lineup(), _captain()]),
+        _player("אלי דריקס", 7, [_lineup()]),
+        _player("חיים רביבו", 8, [_lineup()]),
+        _player("טל בן חיים", 3, [_lineup()]),
+        _player("בונדארנקו", 1, [_lineup()]),
+        _player("דודו אוואט", 5, [_lineup()]),
+        _player("אריק בנאדו", 6, [_lineup()]),
+        _player("עמוס מנסדורף", 11, [_lineup()]),
+        _player("אבי שטרית", 4, [_lineup()]),
+        _player("אודי שוחט", 9, [_lineup()]),
+        _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
-    away_team=TeamInGame("בית\"ר ירושלים", "מאמן_יריב_ב", 0, [
-        _player("יריב_ב", 10, [_lineup()]),
+    away_team=TeamInGame("בית\"ר ירושלים", "גיא לוי", 0, [
+        _player("יוסי בניון", 10, [_lineup()]),
     ]),
     technical_result=True,
 ))

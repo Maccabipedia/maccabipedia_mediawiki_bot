@@ -87,11 +87,11 @@ class TestDateFilters:
 
 class TestPlayerCoachSeasonFilters:
     def test_get_games_by_coach(self, maccabi_games):
-        coach_a = maccabi_games.get_games_by_coach("מאמן_א")
+        coach_a = maccabi_games.get_games_by_coach("אברם גרנט")
         assert len(coach_a) == 6
 
     def test_get_games_by_referee(self, maccabi_games):
-        ref_a = maccabi_games.get_games_by_referee("שופט_א")
+        ref_a = maccabi_games.get_games_by_referee("יורם דוידוביץ")
         assert len(ref_a) == 4
 
     def test_get_games_by_season(self, maccabi_games):
@@ -99,13 +99,13 @@ class TestPlayerCoachSeasonFilters:
         assert len(s1) == 6
 
     def test_get_games_by_player_name(self, maccabi_games):
-        # שחקן_א plays in all 10 games
-        games = maccabi_games.get_games_by_player_name("שחקן_א")
+        # אבי נמני plays in all 10 games
+        games = maccabi_games.get_games_by_player_name("אבי נמני")
         assert len(games) == 10
 
     def test_get_games_by_played_player_name(self, maccabi_games):
-        # שחקן_יב plays (sub in) in games 2, 5, 6
-        games = maccabi_games.get_games_by_played_player_name("שחקן_יב")
+        # ערן זהבי plays (sub in) in games 2, 5, 6
+        games = maccabi_games.get_games_by_played_player_name("ערן זהבי")
         assert len(games) == 3
 
     def test_get_games_by_stadium(self, maccabi_games):
@@ -130,13 +130,13 @@ class TestAvailableProperties:
 
     def test_available_players_names(self, maccabi_games):
         names = maccabi_games.available_players_names
-        assert "שחקן_א" in names
+        assert "אבי נמני" in names
 
     def test_available_referees(self, maccabi_games):
         assert len(maccabi_games.available_referees) == 4
 
     def test_available_coaches(self, maccabi_games):
-        assert set(maccabi_games.available_coaches) == {"מאמן_א", "מאמן_ב"}
+        assert set(maccabi_games.available_coaches) == {"אברם גרנט", "פאולו סוזה"}
 
     def test_available_seasons(self, maccabi_games):
         assert maccabi_games.available_seasons == ["2019/20", "2020/21"]
@@ -165,7 +165,7 @@ class TestMaccabiGamesStatsBasics:
 
     def test_played_games_by_player_name(self, maccabi_games):
         by_player = maccabi_games.played_games_by_player_name()
-        assert len(by_player["שחקן_א"]) == 10
-        assert len(by_player["שחקן_יב"]) == 3
+        assert len(by_player["אבי נמני"]) == 10
+        assert len(by_player["ערן זהבי"]) == 3
         # Unknown player returns empty
         assert len(by_player["unknown"]) == 0

@@ -69,7 +69,7 @@ class TestGameData:
         assert own_goal[0]['maccabi_score'] > 0
 
     def test_goals__own_goal_by_opponent_counts_for_maccabi(self, maccabi_games):
-        # Game 7: opponent יריב_ג scores own goal at 45'
+        # Game 7: opponent אייל גולסה scores own goal at 45'
         game = maccabi_games.games[6]
         goals = game.goals()
         own_goals = [g for g in goals if g.get('goal_type') == 'OwnGoal']
@@ -105,18 +105,18 @@ class TestTeamInGame:
         team = maccabi_games.games[4].maccabi_team  # Game 5: has a sub
         played = team.played_players
         played_names = {p.name for p in played}
-        assert "שחקן_יב" in played_names  # sub in player
+        assert "ערן זהבי" in played_names  # sub in player
 
     def test_players_from_bench(self, maccabi_games):
         team = maccabi_games.games[4].maccabi_team
         bench = team.players_from_bench
         assert len(bench) == 1
-        assert bench[0].name == "שחקן_יב"
+        assert bench[0].name == "ערן זהבי"
 
     def test_scored_players(self, maccabi_games):
-        team = maccabi_games.games[0].maccabi_team  # Game 1: שחקן_א and שחקן_ב score
+        team = maccabi_games.games[0].maccabi_team  # Game 1: אבי נמני and אלי דריקס score
         scorers = {p.name for p in team.scored_players}
-        assert scorers == {"שחקן_א", "שחקן_ב"}
+        assert scorers == {"אבי נמני", "אלי דריקס"}
 
     def test_lineup_count_with_benched_player(self, maccabi_games):
         team = maccabi_games.games[0].maccabi_team  # Game 1 has 11 lineup + 1 benched
@@ -126,34 +126,34 @@ class TestTeamInGame:
     def test_assist_players(self, maccabi_games):
         team = maccabi_games.games[0].maccabi_team
         assisters = {p.name for p in team.assist_players}
-        assert assisters == {"שחקן_ג"}
+        assert assisters == {"חיים רביבו"}
 
     def test_yellow_carded_players(self, maccabi_games):
-        team = maccabi_games.games[1].maccabi_team  # Game 2: שחקן_א gets yellow
+        team = maccabi_games.games[1].maccabi_team  # Game 2: אבי נמני gets yellow
         assert len(team.yellow_carded_players) == 1
-        assert team.yellow_carded_players[0].name == "שחקן_א"
+        assert team.yellow_carded_players[0].name == "אבי נמני"
 
     def test_red_carded_players__straight_red(self, maccabi_games):
-        team = maccabi_games.games[1].maccabi_team  # Game 2: שחקן_ו gets straight red
+        team = maccabi_games.games[1].maccabi_team  # Game 2: דודו אוואט gets straight red
         red = team.red_carded_players
         assert len(red) == 1
-        assert red[0].name == "שחקן_ו"
+        assert red[0].name == "דודו אוואט"
 
     def test_red_carded_players__second_yellow(self, maccabi_games):
-        team = maccabi_games.games[7].maccabi_team  # Game 8: שחקן_ד gets 2nd yellow
+        team = maccabi_games.games[7].maccabi_team  # Game 8: טל בן חיים gets 2nd yellow
         red = team.red_carded_players
         assert len(red) == 1
-        assert red[0].name == "שחקן_ד"
+        assert red[0].name == "טל בן חיים"
 
     def test_not_played_players__benched(self, maccabi_games):
-        team = maccabi_games.games[0].maccabi_team  # Game 1: שחקן_יג is benched
+        team = maccabi_games.games[0].maccabi_team  # Game 1: פרדי דוד is benched
         not_played = team.not_played_players
         benched_names = {p.name for p in not_played}
-        assert "שחקן_יג" in benched_names
+        assert "פרדי דוד" in benched_names
 
     def test_captain(self, maccabi_games):
         team = maccabi_games.games[0].maccabi_team
-        assert team.captain.name == "שחקן_א"
+        assert team.captain.name == "אבי נמני"
 
     def test_has_goal_from_bench(self, maccabi_games):
         assert maccabi_games.games[5].maccabi_team.has_goal_from_bench is True  # Game 6
@@ -166,19 +166,19 @@ class TestPlayerInGame:
         assert player.played_in_game is True
 
     def test_played_in_game__sub_in(self, maccabi_games):
-        # Game 2: שחקן_יב comes on as sub
+        # Game 2: ערן זהבי comes on as sub
         team = maccabi_games.games[1].maccabi_team
-        sub_player = [p for p in team.players if p.name == "שחקן_יב"][0]
+        sub_player = [p for p in team.players if p.name == "ערן זהבי"][0]
         assert sub_player.played_in_game is True
 
     def test_scored(self, maccabi_games):
-        player = maccabi_games.games[0].maccabi_team.players[0]  # שחקן_א scored
+        player = maccabi_games.games[0].maccabi_team.players[0]  # אבי נמני scored
         assert player.scored is True
 
     def test_scored_after_sub_in(self, maccabi_games):
-        # Game 6: שחקן_יב subs in at 70, scores at 85
+        # Game 6: ערן זהבי subs in at 70, scores at 85
         team = maccabi_games.games[5].maccabi_team
-        sub_player = [p for p in team.players if p.name == "שחקן_יב"][0]
+        sub_player = [p for p in team.players if p.name == "ערן זהבי"][0]
         assert sub_player.scored_after_sub_in is True
 
     def test_event_count_by_type(self, maccabi_games):

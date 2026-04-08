@@ -353,7 +353,6 @@ GAMES.append(_game(
 ))
 
 # ---- Game 9: League, home, TIE 0-0 (clean sheet), season 2020/21 ----
-# בני טבק scores an own goal (used to test own-goal exclusion in best_scorers_in_one_game)
 GAMES.append(_game(
     competition="ליגת העל", fixture="מחזור3", season="2020/21",
     date=datetime.datetime(2020, 10, 10),
@@ -365,7 +364,7 @@ GAMES.append(_game(
         _player("טל בן חיים", 3, [_lineup()]),
         _player("אלכסנדר אובארוב", 1, [_lineup(), _penalty_stopped(70)]),
         _player("שייע גלזר", 5, [_lineup()]),
-        _player("בני טבק", 6, [_lineup(), _goal(55, GoalTypes.OWN_GOAL)]),
+        _player("בני טבק", 6, [_lineup()]),
         _player("גיורא שפיגל", 11, [_lineup()]),
         _player("יוסף מרימוביץ'", 4, [_lineup()]),
         _player("ויקי פרץ", 9, [_lineup()]),

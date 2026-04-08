@@ -159,10 +159,27 @@ class TestBestScorersInOneGame:
         assert result["אבי נמני"] == 6
         assert result["אלי דריקס"] == 2
 
-    def test_best_scorers_in_one_game_excludes_own_goals(self, maccabi_games):
-        # בני טבק scores 1 own goal in game 9 — should not qualify for score_at_least=1
-        result = dict(maccabi_games.players.best_scorers_in_one_game(score_at_least=1))
-        assert "בני טבק" not in result
+    def test_best_scorers_in_one_game_excludes_own_goals(self):
+        # Build a minimal game where שייע גלזר scores only an own goal — should not qualify
+        import datetime
+        from maccabistats.models.player_game_events import GoalTypes
+        from maccabistats.models.team_in_game import TeamInGame
+        from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
+        from game_fixtures import _player, _lineup, _goal, _game
+        from players_data_fixtures import create_stub_players_data
+
+        game = _game(
+            competition="ליגת העל", fixture="מחזור1", season="2020/21",
+            date=datetime.datetime(2020, 1, 1),
+            stadium="בלומפילד", referee="ref",
+            home_team=TeamInGame("מכבי תל אביב", "מאמן", 0, [
+                _player("שייע גלזר", 5, [_lineup(), _goal(30, GoalTypes.OWN_GOAL)]),
+            ]),
+            away_team=TeamInGame("יריב", "מאמן", 1, [_player("שוער", 1, [_lineup()])]),
+        )
+        games = MaccabiGamesStats([game], players_data=create_stub_players_data())
+        result = dict(games.players.best_scorers_in_one_game(score_at_least=1))
+        assert "שייע גלזר" not in result
 
     def test_best_scorers_in_one_game_is_sorted(self, maccabi_games):
         # Result must be sorted descending by count (most_common contract)

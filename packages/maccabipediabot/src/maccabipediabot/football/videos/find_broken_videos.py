@@ -13,7 +13,12 @@ CARGO_BASE = (
     "?title=Special:CargoExport&format=json"
     "&limit=5000&offset=0"
 )
-OEMBED_URL = "https://www.youtube.com/oembed?url={url}&format=json"
+OEMBED_ENDPOINTS = {
+    "youtube.com": "https://www.youtube.com/oembed?url={url}&format=json",
+    "youtu.be": "https://www.youtube.com/oembed?url={url}&format=json",
+    "vimeo.com": "https://vimeo.com/api/oembed.json?url={url}",
+    "dailymotion.com": "https://www.dailymotion.com/services/oembed?url={url}&format=json",
+}
 MAX_CONCURRENT = 20
 
 _FOOTBALL_FIELDS = {
@@ -80,25 +85,28 @@ def fetch_game_videos() -> list[tuple[str, str, str]]:
     return all_videos
 
 
-def _is_youtube_url(url: str) -> bool:
-    return "youtube.com" in url or "youtu.be" in url
+def _oembed_endpoint(url: str) -> str | None:
+    for domain, endpoint in OEMBED_ENDPOINTS.items():
+        if domain in url:
+            return endpoint.format(url=url)
+    return None
 
 
 async def is_video_broken(session: aiohttp.ClientSession, url: str) -> bool:
-    if _is_youtube_url(url):
-        oembed = OEMBED_URL.format(url=url)
+    oembed = _oembed_endpoint(url)
+    if oembed:
         try:
             async with session.get(oembed) as resp:
                 return resp.status != 200
         except Exception:
-            logger.exception("Error checking YouTube URL %s — skipping", url)
+            logger.exception("Error checking %s — skipping", url)
             return False
     else:
         try:
             async with session.head(url, allow_redirects=True) as resp:
                 return resp.status >= 400
         except Exception:
-            logger.exception("Error checking URL %s — skipping", url)
+            logger.exception("Error checking %s — skipping", url)
             return False
 
 

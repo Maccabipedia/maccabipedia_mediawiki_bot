@@ -1,11 +1,17 @@
+import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
+
 
 def get_maccabistats_data_dir() -> Path:
     env_val = os.environ.get("MACCABISTATS_DATA_DIR")
-    return Path(env_val) if env_val else Path.home() / "maccabistats"
+    if env_val:
+        logger.info(f"Using custom data directory from MACCABISTATS_DATA_DIR: {env_val}")
+        return Path(env_val)
+    return Path.home() / "maccabistats"
 
 
 @dataclass

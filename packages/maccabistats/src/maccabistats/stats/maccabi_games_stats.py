@@ -9,6 +9,7 @@ from typing import List, Union, Dict, Any, DefaultDict
 
 from dateutil.parser import parse as datetime_parser
 
+from maccabistats.maccabipedia.players import MaccabiPediaPlayers
 from maccabistats.models.game_data import GameData
 from maccabistats.models.player import Player
 from maccabistats.stats.averages import MaccabiGamesAverageStats
@@ -74,6 +75,22 @@ class MaccabiGamesStats:
         self._team_names_convertor = TeamNamesConvertor(self)
 
         self.version = maccabistats_version
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Include players data in the pickle so loading doesn't require internet
+        players_instance = MaccabiPediaPlayers._instance
+        if players_instance is not None:
+            state['_players_data_cache'] = players_instance.raw_players_data
+        return state
+
+    def __setstate__(self, state):
+        # Restore players data singleton before reconstructing stats objects
+        players_data_cache = state.pop('_players_data_cache', None)
+        if players_data_cache is not None and MaccabiPediaPlayers._instance is None:
+            MaccabiPediaPlayers.load_from_cache(players_data_cache)
+
+        self.__dict__.update(state)
 
     # region home_away
 

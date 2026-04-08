@@ -7,11 +7,10 @@ from progressbar import ProgressBar
 from typing import Dict, Set
 
 from maccabistats import load_from_maccabipedia_source
+from maccabistats.config.maccabisite_config import get_maccabistats_data_dir
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
 _DESCRIPTION_WHICH_MEANS_MACCABI_WON_TITLE = ['מקום 1', 'זכיה']
-
-BASE_FOLDER = Path(r"C:\maccabipedia\infographics\titles")
 
 
 # To check titles with coaches - uncomment line 42
@@ -71,8 +70,10 @@ if __name__ == '__main__':
 
     top_players = find_top_players_by_achievements(games, all_titles)
 
-    # (BASE_FOLDER / "top_players_achievements.json").write_text(json.dumps(top_players))
-    (BASE_FOLDER / "top_players_and_coaches_achievements.json").write_text(json.dumps(top_players))
+    output_folder = get_maccabistats_data_dir() / "infographics" / "titles"
+    output_folder.mkdir(parents=True, exist_ok=True)
+    # (output_folder / "top_players_achievements.json").write_text(json.dumps(top_players, ensure_ascii=False), encoding='utf-8-sig')
+    (output_folder / "top_players_and_coaches_achievements.json").write_text(json.dumps(top_players, ensure_ascii=False), encoding='utf-8-sig')
 
     print(f'\n\nPlayers sorted by titles amount: {pformat(top_players.most_common(50))}')
     a = 6

@@ -1,3 +1,7 @@
+## Version 2.61 ##
+
+    Replace hardcoded Windows paths with configurable MACCABISTATS_DATA_DIR env var (defaults to ~/maccabistats/)
+
 ## Version 2.53 ##
 
     Add 3 new ErrorsFinder checks: sub-out without playing, same player on both teams, duplicate events

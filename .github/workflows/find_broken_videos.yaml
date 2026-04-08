@@ -1,0 +1,49 @@
+name: Find Broken Videos
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  find-broken-videos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          architecture: x64
+      - uses: astral-sh/setup-uv@v6
+      - name: Install dependencies
+        run: uv sync
+      - name: Find broken videos
+        run: uv run python -m maccabipediabot.football.videos.find_broken_videos > broken_videos_report.txt
+      - name: Read report into output
+        id: report
+        run: |
+          if [ -s broken_videos_report.txt ]; then
+            echo "has_broken=true" >> $GITHUB_OUTPUT
+            {
+              echo "content<<REPORT_EOF"
+              cat broken_videos_report.txt
+              echo "REPORT_EOF"
+            } >> $GITHUB_OUTPUT
+          else
+            echo "has_broken=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Send report to Telegram
+        if: steps.report.outputs.has_broken == 'true'
+        uses: appleboy/telegram-action@v2.25.0
+        with:
+          to: ${{ secrets.MACCABIPEDIA_ERRORS_TELEGRAM_TO }}
+          token: ${{ secrets.MACCABIPEDIA_ERRORS_TELEGRAM_TOKEN }}
+          message: ${{ steps.report.outputs.content }}
+
+  workflow-keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: liskin/gh-workflow-keepalive@v1

@@ -5,6 +5,7 @@ import pickle
 from datetime import datetime
 from pathlib import Path
 
+from maccabistats.maccabipedia.players import MaccabiPediaPlayers
 from maccabistats.parse.general_fixes import run_general_fixes
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
@@ -47,9 +48,8 @@ class MaccabiStatsSource(object):
 
         logger.info(f"Starting to parse maccabi games from: {self.name}")
         parsed_games = self._rerun_source()
-        from maccabistats.maccabipedia.players import MaccabiPediaPlayers
         self.maccabi_games_stats = MaccabiGamesStats(parsed_games, f'Source: {self.name}',
-                                                      maccabipedia_players=MaccabiPediaPlayers.get_players_data())
+                                                      players_data=MaccabiPediaPlayers.get_players_data())
 
     def _rerun_source(self):
         """

@@ -58,9 +58,9 @@ def test_players_data_stored_as_attribute():
     """Players data should be stored as a regular attribute on MaccabiGamesStats."""
     players = _make_players_instance()
     games = [_make_game(datetime(2024, 9, 1))]
-    stats = MaccabiGamesStats(games, maccabipedia_players=players)
+    stats = MaccabiGamesStats(games, players_data=players)
 
-    assert stats.maccabipedia_players is players
+    assert stats.players_data is players
     assert stats.players_categories.maccabi_home_players_names == {"שחקן א"}
 
 
@@ -68,22 +68,22 @@ def test_pickle_roundtrip_preserves_players_data():
     """Pickling and unpickling should preserve the players data without crawling."""
     players = _make_players_instance()
     games = [_make_game(datetime(2024, 9, 1))]
-    stats = MaccabiGamesStats(games, maccabipedia_players=players)
+    stats = MaccabiGamesStats(games, players_data=players)
 
     pickled = pickle.dumps(stats)
     MaccabiPediaPlayers._instance = None
 
     restored = pickle.loads(pickled)
-    assert restored.maccabipedia_players is not None
-    assert restored.maccabipedia_players.home_players == {"שחקן א"}
-    assert restored.maccabipedia_players.players_dates["שחקן ב"] == datetime(1995, 6, 15)
+    assert restored.players_data is not None
+    assert restored.players_data.home_players == {"שחקן א"}
+    assert restored.players_data.players_dates["שחקן ב"] == datetime(1995, 6, 15)
 
 
 def test_filtered_stats_inherit_players_data(monkeypatch):
     """Filter properties (e.g. home_games) should inherit players data without crawling."""
     players = _make_players_instance()
     games = [_make_game(datetime(2024, 9, 1)), _make_game(datetime(2024, 10, 1))]
-    stats = MaccabiGamesStats(games, maccabipedia_players=players)
+    stats = MaccabiGamesStats(games, players_data=players)
 
     monkeypatch.setattr(
         MaccabiPediaPlayers, '_crawl_players_data',
@@ -92,7 +92,7 @@ def test_filtered_stats_inherit_players_data(monkeypatch):
     MaccabiPediaPlayers._instance = None
 
     filtered = stats.maccabi_wins
-    assert filtered.maccabipedia_players is players
+    assert filtered.players_data is players
     assert filtered.players_categories.maccabi_home_players_names == {"שחקן א"}
 
 
@@ -100,7 +100,7 @@ def test_unpickle_then_filter_works_offline(monkeypatch):
     """After unpickling, creating filtered stats should work without internet."""
     players = _make_players_instance()
     games = [_make_game(datetime(2024, 9, 1)), _make_game(datetime(2024, 10, 1))]
-    stats = MaccabiGamesStats(games, maccabipedia_players=players)
+    stats = MaccabiGamesStats(games, players_data=players)
 
     pickled = pickle.dumps(stats)
     MaccabiPediaPlayers._instance = None
@@ -111,7 +111,7 @@ def test_unpickle_then_filter_works_offline(monkeypatch):
     )
 
     restored = pickle.loads(pickled)
-    filtered = MaccabiGamesStats(restored.games, maccabipedia_players=restored.maccabipedia_players)
+    filtered = MaccabiGamesStats(restored.games, players_data=restored.players_data)
     assert filtered.players_categories.maccabi_home_players_names == {"שחקן א"}
 
 
@@ -124,32 +124,32 @@ def test_empty_games_does_not_crawl(monkeypatch):
     MaccabiPediaPlayers._instance = None
 
     stats = MaccabiGamesStats([])
-    assert stats.maccabipedia_players is None
+    assert stats.players_data is None
 
 
 # --- Backward compatibility ---
 
 
 def test_old_pickle_without_players_data_has_none():
-    """Old pickles without maccabipedia_players result in None — no implicit crawl."""
+    """Old pickles without players_data result in None — no implicit crawl."""
     players = _make_players_instance()
     games = [_make_game(datetime(2024, 9, 1))]
-    stats = MaccabiGamesStats(games, maccabipedia_players=players)
+    stats = MaccabiGamesStats(games, players_data=players)
 
     # Simulate an old pickle by removing the attribute before pickling
-    del stats.__dict__['maccabipedia_players']
+    del stats.__dict__['players_data']
     pickled = pickle.dumps(stats)
     MaccabiPediaPlayers._instance = None
 
     restored = pickle.loads(pickled)
-    assert not hasattr(restored, 'maccabipedia_players')
+    assert not hasattr(restored, 'players_data')
 
     # Wrapping in new MaccabiGamesStats with getattr — gets None, stays None
     wrapper = MaccabiGamesStats(
         restored.games,
-        maccabipedia_players=getattr(restored, 'maccabipedia_players', None),
+        players_data=getattr(restored, 'players_data', None),
     )
-    assert wrapper.maccabipedia_players is None
+    assert wrapper.players_data is None
     # Non-player stats still work
     assert len(wrapper) == 1
 
@@ -158,10 +158,10 @@ def test_old_pickle_without_players_data_has_none():
 
 
 def test_players_special_games_uses_attribute():
-    """players_special_games should get birth dates from the maccabipedia_players attribute."""
+    """players_special_games should get birth dates from the players_data attribute."""
     players = _make_players_instance()
     games = [_make_game(datetime(2024, 9, 1))]
-    stats = MaccabiGamesStats(games, maccabipedia_players=players)
+    stats = MaccabiGamesStats(games, players_data=players)
 
     assert stats.players_special_games.players_birth_dates["שחקן א"] == datetime(2000, 1, 1)
     assert stats.players_special_games.players_birth_dates["שחקן ב"] == datetime(1995, 6, 15)
@@ -174,7 +174,7 @@ def test_filter_chain_preserves_players_data(monkeypatch):
     """Multi-level filter chains should preserve players data throughout."""
     players = _make_players_instance()
     games = [_make_game(datetime(2024, 9, 1)), _make_game(datetime(2024, 10, 1))]
-    stats = MaccabiGamesStats(games, maccabipedia_players=players)
+    stats = MaccabiGamesStats(games, players_data=players)
 
     monkeypatch.setattr(
         MaccabiPediaPlayers, '_crawl_players_data',
@@ -184,7 +184,7 @@ def test_filter_chain_preserves_players_data(monkeypatch):
 
     # Chain: home_games → maccabi_wins → players_categories
     chained = stats.home_games.maccabi_wins
-    assert chained.maccabipedia_players is players
+    assert chained.players_data is players
     assert chained.players_categories.maccabi_home_players_names == {"שחקן א"}
     assert chained.players_special_games.players_birth_dates["שחקן א"] == datetime(2000, 1, 1)
 
@@ -193,7 +193,7 @@ def test_filter_chain_preserves_players_data(monkeypatch):
 
 
 def test_no_implicit_crawl_when_players_not_provided():
-    """Creating MaccabiGamesStats without maccabipedia_players should NOT crawl."""
+    """Creating MaccabiGamesStats without players_data should NOT crawl."""
     games = [_make_game(datetime(2024, 9, 1))]
     stats = MaccabiGamesStats(games)
 
@@ -202,5 +202,5 @@ def test_no_implicit_crawl_when_players_not_provided():
     assert stats.results.wins_count == 1
 
     # Player stats degrade to empty — no implicit network call
-    assert stats.maccabipedia_players is None
+    assert stats.players_data is None
     assert stats.players_categories.maccabi_home_players_names == set()

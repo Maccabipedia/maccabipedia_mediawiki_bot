@@ -47,13 +47,13 @@ class MaccabiGamesStats:
     _DEFAULT_DESCRIPTION = 'All games'
 
     def __init__(self, games: List[GameData], description: str = None,
-                 maccabipedia_players: MaccabiPediaPlayers = None) -> None:
+                 players_data: MaccabiPediaPlayers = None) -> None:
         self.games: List[GameData] = sorted(games, key=lambda g: g.date)  # Sort the games by date
         self.description = description or self._DEFAULT_DESCRIPTION
 
         # Players data is stored so it's pickled with the games (no internet needed on load).
         # Callers that need players data should explicitly pass it.
-        self.maccabipedia_players = maccabipedia_players
+        self.players_data = players_data
 
         self.coaches = MaccabiGamesCoachesStats(self)
         self.players = MaccabiGamesPlayersStats(self)
@@ -83,7 +83,7 @@ class MaccabiGamesStats:
 
     def create_maccabi_games_stats_with_filtered_games(self, games: List[GameData], description: str) -> MaccabiGamesStats:
         """Create a filtered MaccabiGamesStats that inherits the players data."""
-        return MaccabiGamesStats(games, description, maccabipedia_players=self.maccabipedia_players)
+        return MaccabiGamesStats(games, description, players_data=self.players_data)
 
     # region home_away
 

@@ -40,7 +40,7 @@ class MaccabiGamesPlayersSpecialGamesStats(object):
     def __init__(self, maccabi_games_stats: MaccabiGamesStats):
         self.maccabi_games_stats = maccabi_games_stats
         self.games = maccabi_games_stats.games
-        players = maccabi_games_stats.maccabipedia_players
+        players = maccabi_games_stats.players_data
         if players is None and maccabi_games_stats.games:
             logger.warning("Players data is missing — player special games stats will return empty results")
         self.players_birth_dates = players.players_dates if players else {}

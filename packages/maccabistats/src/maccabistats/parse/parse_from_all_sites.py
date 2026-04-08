@@ -3,6 +3,7 @@ import logging
 import os
 
 from maccabistats.config import MaccabiStatsConfigSingleton
+from maccabistats.maccabipedia.players import MaccabiPediaPlayers
 from maccabistats.parse.general_fixes import run_general_fixes
 from maccabistats.parse.maccabi_tlv_site.maccabi_tlv_site_source import MaccabiTlvSiteSource
 from maccabistats.parse.maccabipedia.maccabipedia_source import MaccabiPediaSource
@@ -115,9 +116,8 @@ def merge_maccabi_games_from_all_input_serialized_sources():
                                                            maccabi_games_stats_from_all_sources[1])
     logger.info("Running general fixes on merged maccabi games stats object")
 
-    from maccabistats.maccabipedia.players import MaccabiPediaPlayers
     maccabistats_games = run_general_fixes(MaccabiGamesStats(merged_maccabistats_games,
-                                                              maccabipedia_players=MaccabiPediaPlayers.get_players_data()))
+                                                              players_data=MaccabiPediaPlayers.get_players_data()))
     return maccabistats_games
 
 
@@ -129,7 +129,7 @@ def _load_from_source(source):
 
     loaded = source.maccabi_games_stats
     return MaccabiGamesStats(loaded.games, description=f'Source: {source.name}',
-                             maccabipedia_players=getattr(loaded, 'maccabipedia_players', None))
+                             players_data=loaded.players_data)
 
 
 def load_from_maccabipedia_source():

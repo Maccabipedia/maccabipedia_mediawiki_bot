@@ -13,20 +13,20 @@ Game fixture data for maccabistats tests using real historical Maccabi Tel Aviv 
   - Goals from bench (2 games)
   - Technical result (1 game)
 
-Maccabi players:
-  - אבי נמני (#10) — captain, striker, top scorer
-  - אלי דריקס (#7) — winger, header specialist
+Maccabi players (all-time top scorers and legends):
+  - אבי נמני (#10) — captain, striker (all-time #1 scorer, 219 goals)
+  - ערן זהבי (#14) — super sub, bench goals (all-time #2, 207 goals)
+  - שייע גלזר (#5) — gets straight red (all-time #3, 197 goals)
+  - בני טבק (#6) — midfielder (all-time #4, 175 goals)
+  - אלי דריקס (#7) — header specialist (all-time #5, 159 goals)
+  - גיורא שפיגל (#11) — winger (all-time #6, 135 goals)
+  - יוסף מרימוביץ' (#4) — midfielder (all-time #7, 132 goals)
+  - ויקי פרץ (#9) — forward (all-time #9, 101 goals)
+  - אלירן עטר (#15) — benched (all-time #10, 96 goals)
   - חיים רביבו (#8) — playmaker, chief assister
   - טל בן חיים (#3) — defender, picks up cards
-  - בונדארנקו (#1) — goalkeeper
-  - דודו אוואט (#5) — defender, straight red card
-  - אריק בנאדו (#6) — midfielder
-  - עמוס מנסדורף (#11) — winger
-  - אבי שטרית (#4) — midfielder
-  - אודי שוחט (#9) — forward
+  - בונדארנקו (#1) — goalkeeper, stops penalties
   - מלאכי חלימי (#2) — fullback
-  - ערן זהבי (#14) — super sub, scores from bench
-  - פרדי דוד (#15) — benched player
 
 Player events covered (each >=2 occurrences):
   - LINE_UP, SUBSTITUTION_IN, SUBSTITUTION_OUT
@@ -148,7 +148,7 @@ GAMES: list[GameData] = []
 # ---- Game 1: League, home, WIN 3-1, season 2019/20 ----
 # Maccabi: אבי נמני scores 2 (normal), אלי דריקס scores 1 (header)
 # חיים רביבו assists twice (normal + corner), אבי נמני is captain
-# פרדי דוד is benched
+# אלירן עטר is benched
 GAMES.append(_game(
     competition="ליגת העל", fixture="מחזור1", season="2019/20",
     date=datetime.datetime(2019, 9, 14),
@@ -159,13 +159,13 @@ GAMES.append(_game(
         _player("חיים רביבו", 8, [_lineup(), _assist(15), _assist(40, AssistTypes.CORNER_ASSIST)]),
         _player("טל בן חיים", 3, [_lineup()]),
         _player("בונדארנקו", 1, [_lineup()]),
-        _player("דודו אוואט", 5, [_lineup()]),
-        _player("אריק בנאדו", 6, [_lineup()]),
-        _player("עמוס מנסדורף", 11, [_lineup()]),
-        _player("אבי שטרית", 4, [_lineup()]),
-        _player("אודי שוחט", 9, [_lineup()]),
+        _player("שייע גלזר", 5, [_lineup()]),
+        _player("בני טבק", 6, [_lineup()]),
+        _player("גיורא שפיגל", 11, [_lineup()]),
+        _player("יוסף מרימוביץ'", 4, [_lineup()]),
+        _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
-        _player("פרדי דוד", 15, [_benched()]),
+        _player("אלירן עטר", 15, [_benched()]),
     ]),
     away_team=TeamInGame("הפועל באר שבע", "אלישע לוי", 1, [
         _player("ערן לוי", 9, [_lineup(), _goal(55)]),
@@ -173,8 +173,8 @@ GAMES.append(_game(
 ))
 
 # ---- Game 2: League, away, LOSS 0-2, season 2019/20 ----
-# אבי נמני gets yellow, דודו אוואט gets straight red card
-# ערן זהבי subs in, פרדי דוד benched
+# אבי נמני gets yellow, שייע גלזר gets straight red card
+# ערן זהבי subs in, אלירן עטר benched
 GAMES.append(_game(
     competition="ליגת העל", fixture="מחזור2", season="2019/20",
     date=datetime.datetime(2019, 9, 21),
@@ -188,14 +188,14 @@ GAMES.append(_game(
         _player("חיים רביבו", 8, [_lineup(), _sub_out(60)]),
         _player("טל בן חיים", 3, [_lineup()]),
         _player("בונדארנקו", 1, [_lineup()]),
-        _player("דודו אוואט", 5, [_lineup(), _red(55)]),
-        _player("אריק בנאדו", 6, [_lineup()]),
-        _player("עמוס מנסדורף", 11, [_lineup()]),
-        _player("אבי שטרית", 4, [_lineup()]),
-        _player("אודי שוחט", 9, [_lineup()]),
+        _player("שייע גלזר", 5, [_lineup(), _red(55)]),
+        _player("בני טבק", 6, [_lineup()]),
+        _player("גיורא שפיגל", 11, [_lineup()]),
+        _player("יוסף מרימוביץ'", 4, [_lineup()]),
+        _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
         _player("ערן זהבי", 14, [_sub_in(60)]),
-        _player("פרדי דוד", 15, [_benched()]),
+        _player("אלירן עטר", 15, [_benched()]),
     ]),
 ))
 
@@ -212,11 +212,11 @@ GAMES.append(_game(
         _player("חיים רביבו", 8, [_lineup()]),
         _player("טל בן חיים", 3, [_lineup()]),
         _player("בונדארנקו", 1, [_lineup()]),
-        _player("דודו אוואט", 5, [_lineup()]),
-        _player("אריק בנאדו", 6, [_lineup()]),
-        _player("עמוס מנסדורף", 11, [_lineup()]),
-        _player("אבי שטרית", 4, [_lineup()]),
-        _player("אודי שוחט", 9, [_lineup()]),
+        _player("שייע גלזר", 5, [_lineup()]),
+        _player("בני טבק", 6, [_lineup()]),
+        _player("גיורא שפיגל", 11, [_lineup()]),
+        _player("יוסף מרימוביץ'", 4, [_lineup()]),
+        _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
     away_team=TeamInGame("מכבי חיפה", "ברק בכר", 1, [
@@ -237,11 +237,11 @@ GAMES.append(_game(
         _player("חיים רביבו", 8, [_lineup(), _assist(25, AssistTypes.CORNER_ASSIST), _assist(50)]),
         _player("טל בן חיים", 3, [_lineup()]),
         _player("בונדארנקו", 1, [_lineup(), _penalty_stopped(35)]),
-        _player("דודו אוואט", 5, [_lineup()]),
-        _player("אריק בנאדו", 6, [_lineup()]),
-        _player("עמוס מנסדורף", 11, [_lineup()]),
-        _player("אבי שטרית", 4, [_lineup()]),
-        _player("אודי שוחט", 9, [_lineup()]),
+        _player("שייע גלזר", 5, [_lineup()]),
+        _player("בני טבק", 6, [_lineup()]),
+        _player("גיורא שפיגל", 11, [_lineup()]),
+        _player("יוסף מרימוביץ'", 4, [_lineup()]),
+        _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
     away_team=TeamInGame("הפועל תל אביב", "ניר קלינגר", 0, [
@@ -262,11 +262,11 @@ GAMES.append(_game(
         _player("חיים רביבו", 8, [_lineup(), _assist(50), _assist(70)]),
         _player("טל בן חיים", 3, [_lineup()]),
         _player("בונדארנקו", 1, [_lineup()]),
-        _player("דודו אוואט", 5, [_lineup(), _yellow(30)]),
-        _player("אריק בנאדו", 6, [_lineup()]),
-        _player("עמוס מנסדורף", 11, [_lineup(), _sub_out(55)]),
-        _player("אבי שטרית", 4, [_lineup()]),
-        _player("אודי שוחט", 9, [_lineup()]),
+        _player("שייע גלזר", 5, [_lineup(), _yellow(30)]),
+        _player("בני טבק", 6, [_lineup()]),
+        _player("גיורא שפיגל", 11, [_lineup(), _sub_out(55)]),
+        _player("יוסף מרימוביץ'", 4, [_lineup()]),
+        _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
         _player("ערן זהבי", 14, [_sub_in(55), _goal(80)]),
     ]),
@@ -292,11 +292,11 @@ GAMES.append(_game(
         _player("חיים רביבו", 8, [_lineup()]),
         _player("טל בן חיים", 3, [_lineup()]),
         _player("בונדארנקו", 1, [_lineup()]),
-        _player("דודו אוואט", 5, [_lineup()]),
-        _player("אריק בנאדו", 6, [_lineup()]),
-        _player("עמוס מנסדורף", 11, [_lineup()]),
-        _player("אבי שטרית", 4, [_lineup()]),
-        _player("אודי שוחט", 9, [_lineup()]),
+        _player("שייע גלזר", 5, [_lineup()]),
+        _player("בני טבק", 6, [_lineup()]),
+        _player("גיורא שפיגל", 11, [_lineup()]),
+        _player("יוסף מרימוביץ'", 4, [_lineup()]),
+        _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
         # Goal from bench: sub in at 70, score at 85
         _player("ערן זהבי", 14, [_sub_in(70), _goal(85)]),
@@ -315,11 +315,11 @@ GAMES.append(_game(
         _player("חיים רביבו", 8, [_lineup(), _assist(30)]),
         _player("טל בן חיים", 3, [_lineup()]),
         _player("בונדארנקו", 1, [_lineup()]),
-        _player("דודו אוואט", 5, [_lineup()]),
-        _player("אריק בנאדו", 6, [_lineup()]),
-        _player("עמוס מנסדורף", 11, [_lineup()]),
-        _player("אבי שטרית", 4, [_lineup()]),
-        _player("אודי שוחט", 9, [_lineup()]),
+        _player("שייע גלזר", 5, [_lineup()]),
+        _player("בני טבק", 6, [_lineup()]),
+        _player("גיורא שפיגל", 11, [_lineup()]),
+        _player("יוסף מרימוביץ'", 4, [_lineup()]),
+        _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
     away_team=TeamInGame("מכבי חיפה", "ברק בכר", 1, [
@@ -343,11 +343,11 @@ GAMES.append(_game(
         _player("חיים רביבו", 8, [_lineup(), _assist(35)]),
         _player("טל בן חיים", 3, [_lineup(), _yellow(40), _second_yellow(65)]),
         _player("בונדארנקו", 1, [_lineup()]),
-        _player("דודו אוואט", 5, [_lineup()]),
-        _player("אריק בנאדו", 6, [_lineup()]),
-        _player("עמוס מנסדורף", 11, [_lineup()]),
-        _player("אבי שטרית", 4, [_lineup()]),
-        _player("אודי שוחט", 9, [_lineup()]),
+        _player("שייע גלזר", 5, [_lineup()]),
+        _player("בני טבק", 6, [_lineup()]),
+        _player("גיורא שפיגל", 11, [_lineup()]),
+        _player("יוסף מרימוביץ'", 4, [_lineup()]),
+        _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
 ))
@@ -363,11 +363,11 @@ GAMES.append(_game(
         _player("חיים רביבו", 8, [_lineup()]),
         _player("טל בן חיים", 3, [_lineup()]),
         _player("בונדארנקו", 1, [_lineup(), _penalty_stopped(70)]),
-        _player("דודו אוואט", 5, [_lineup()]),
-        _player("אריק בנאדו", 6, [_lineup()]),
-        _player("עמוס מנסדורף", 11, [_lineup()]),
-        _player("אבי שטרית", 4, [_lineup()]),
-        _player("אודי שוחט", 9, [_lineup()]),
+        _player("שייע גלזר", 5, [_lineup()]),
+        _player("בני טבק", 6, [_lineup()]),
+        _player("גיורא שפיגל", 11, [_lineup()]),
+        _player("יוסף מרימוביץ'", 4, [_lineup()]),
+        _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
     away_team=TeamInGame("הפועל תל אביב", "ניר קלינגר", 0, [
@@ -386,11 +386,11 @@ GAMES.append(_game(
         _player("חיים רביבו", 8, [_lineup()]),
         _player("טל בן חיים", 3, [_lineup()]),
         _player("בונדארנקו", 1, [_lineup()]),
-        _player("דודו אוואט", 5, [_lineup()]),
-        _player("אריק בנאדו", 6, [_lineup()]),
-        _player("עמוס מנסדורף", 11, [_lineup()]),
-        _player("אבי שטרית", 4, [_lineup()]),
-        _player("אודי שוחט", 9, [_lineup()]),
+        _player("שייע גלזר", 5, [_lineup()]),
+        _player("בני טבק", 6, [_lineup()]),
+        _player("גיורא שפיגל", 11, [_lineup()]),
+        _player("יוסף מרימוביץ'", 4, [_lineup()]),
+        _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
     away_team=TeamInGame("בית\"ר ירושלים", "גיא לוי", 0, [

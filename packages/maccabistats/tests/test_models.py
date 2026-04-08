@@ -135,10 +135,10 @@ class TestTeamInGame:
         assert team.yellow_carded_players[0].name == "אבי נמני"
 
     def test_red_carded_players__straight_red(self, maccabi_games):
-        team = maccabi_games.games[1].maccabi_team  # Game 2: דודו אוואט gets straight red
+        team = maccabi_games.games[1].maccabi_team  # Game 2: שייע גלזר gets straight red
         red = team.red_carded_players
         assert len(red) == 1
-        assert red[0].name == "דודו אוואט"
+        assert red[0].name == "שייע גלזר"
 
     def test_red_carded_players__second_yellow(self, maccabi_games):
         team = maccabi_games.games[7].maccabi_team  # Game 8: טל בן חיים gets 2nd yellow
@@ -147,10 +147,10 @@ class TestTeamInGame:
         assert red[0].name == "טל בן חיים"
 
     def test_not_played_players__benched(self, maccabi_games):
-        team = maccabi_games.games[0].maccabi_team  # Game 1: פרדי דוד is benched
+        team = maccabi_games.games[0].maccabi_team  # Game 1: אלירן עטר is benched
         not_played = team.not_played_players
         benched_names = {p.name for p in not_played}
-        assert "פרדי דוד" in benched_names
+        assert "אלירן עטר" in benched_names
 
     def test_captain(self, maccabi_games):
         team = maccabi_games.games[0].maccabi_team

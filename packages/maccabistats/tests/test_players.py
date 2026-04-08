@@ -90,16 +90,16 @@ class TestCards:
     def test_most_yellow_carded(self, maccabi_games):
         yellows = dict(maccabi_games.players.most_yellow_carded)
         # אבי נמני: 1 yellow (game 2)
-        # דודו אוואט: 1 yellow (game 5)
+        # שייע גלזר: 1 yellow (game 5)
         # טל בן חיים: 1 yellow (game 8)
         assert yellows.get("אבי נמני", 0) == 1
-        assert yellows.get("דודו אוואט", 0) == 1
+        assert yellows.get("שייע גלזר", 0) == 1
 
     def test_most_red_carded(self, maccabi_games):
         reds = dict(maccabi_games.players.most_red_carded)
-        # דודו אוואט: straight red in game 2
+        # שייע גלזר: straight red in game 2
         # טל בן חיים: second yellow in game 8 (counts as red)
-        assert reds.get("דודו אוואט", 0) == 1
+        assert reds.get("שייע גלזר", 0) == 1
         assert reds.get("טל בן חיים", 0) == 1
 
 
@@ -112,7 +112,7 @@ class TestSubstitutions:
     def test_most_substitute_off(self, maccabi_games):
         sub_offs = dict(maccabi_games.players.most_substitute_off)
         # חיים רביבו: 1 sub out (game 2)
-        # עמוס מנסדורף: 1 sub out (game 5)
+        # גיורא שפיגל: 1 sub out (game 5)
         # אלי דריקס: 1 sub out (game 6)
         assert sub_offs.get("חיים רביבו", 0) == 1
 

@@ -4,7 +4,8 @@ from pathlib import Path
 
 
 def get_maccabistats_data_dir() -> Path:
-    return Path(os.environ.get("MACCABISTATS_DATA_DIR", Path.home() / "maccabistats"))
+    env_val = os.environ.get("MACCABISTATS_DATA_DIR")
+    return Path(env_val) if env_val else Path.home() / "maccabistats"
 
 
 @dataclass

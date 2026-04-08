@@ -3,9 +3,6 @@ from dataclasses import dataclass
 from .maccabipedia_config import MaccabiPediaConfig
 from .maccabisite_config import MaccabiSiteConfig
 
-# Re-export for convenience
-from .maccabisite_config import get_maccabistats_data_dir  # noqa: F401
-
 
 @dataclass
 class MaccabiStatsConfig:

@@ -71,8 +71,9 @@ if __name__ == '__main__':
     top_players = find_top_players_by_achievements(games, all_titles)
 
     output_folder = get_maccabistats_data_dir() / "infographics" / "titles"
-    # (output_folder / "top_players_achievements.json").write_text(json.dumps(top_players))
-    (output_folder / "top_players_and_coaches_achievements.json").write_text(json.dumps(top_players))
+    output_folder.mkdir(parents=True, exist_ok=True)
+    # (output_folder / "top_players_achievements.json").write_text(json.dumps(top_players, ensure_ascii=False), encoding='utf-8-sig')
+    (output_folder / "top_players_and_coaches_achievements.json").write_text(json.dumps(top_players, ensure_ascii=False), encoding='utf-8-sig')
 
     print(f'\n\nPlayers sorted by titles amount: {pformat(top_players.most_common(50))}')
     a = 6

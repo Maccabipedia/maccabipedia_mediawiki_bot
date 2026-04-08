@@ -7,11 +7,12 @@ from progressbar import ProgressBar
 from typing import Dict, Set
 
 from maccabistats import load_from_maccabipedia_source
+from maccabistats.config.maccabisite_config import MACCABISTATS_DATA_DIR
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
 _DESCRIPTION_WHICH_MEANS_MACCABI_WON_TITLE = ['מקום 1', 'זכיה']
 
-BASE_FOLDER = Path(r"C:\maccabipedia\infographics\titles")
+BASE_FOLDER = MACCABISTATS_DATA_DIR / "infographics" / "titles"
 
 
 # To check titles with coaches - uncomment line 42

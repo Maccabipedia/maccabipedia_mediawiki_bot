@@ -74,7 +74,7 @@ class TestGetSummary:
 class TestEmptyGames:
     def test_empty_results(self):
         from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
-        from conftest import mock_players_data
-        empty = MaccabiGamesStats([], players_data=mock_players_data())
+        from players_data_fixtures import create_stub_players_data
+        empty = MaccabiGamesStats([], players_data=create_stub_players_data())
         assert empty.results.total_games_count == 0
         assert empty.results.wins_count == 0

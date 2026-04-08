@@ -3,8 +3,6 @@
 The players_data (home players list) is provided via the conftest fixture,
 which declares אבי נמני and אלי דריקס as "home players".
 """
-from collections import defaultdict
-from datetime import datetime
 from sys import maxsize
 
 import pytest
@@ -12,6 +10,7 @@ import pytest
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
 from game_fixtures import GAMES
+from players_data_fixtures import StubPlayersData
 
 
 class TestPlayersCategoriesStats:
@@ -58,9 +57,7 @@ class TestPlayersCategoriesEdgeCases:
             ]),
         )
 
-        mock_data = type('MockPlayersData', (), {
-            'home_players': {'home_player'},
-            'players_dates': defaultdict(lambda: datetime(1000, 1, 1)),
-        })()
-        stats = MaccabiGamesStats([game], players_data=mock_data)
+        stub = StubPlayersData()
+        stub.home_players = {'home_player'}
+        stats = MaccabiGamesStats([game], players_data=stub)
         assert stats.players_categories.home_players_goals_ratio() == maxsize

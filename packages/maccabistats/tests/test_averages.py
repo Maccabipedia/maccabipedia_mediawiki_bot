@@ -2,7 +2,7 @@
 from sys import maxsize
 
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
-from conftest import mock_players_data
+from players_data_fixtures import create_stub_players_data
 
 
 class TestAverages:
@@ -26,7 +26,7 @@ class TestAverages:
     def test_averages_empty_games_raises_zero_division(self):
         """averages.py has no zero-division guard — this documents the production behavior."""
         import pytest
-        empty = MaccabiGamesStats([], players_data=mock_players_data())
+        empty = MaccabiGamesStats([], players_data=create_stub_players_data())
         with pytest.raises(ZeroDivisionError):
             empty.averages.goals_for_maccabi
         with pytest.raises(ZeroDivisionError):
@@ -38,11 +38,11 @@ class TestAverages:
 class TestRatioEdgeCases:
     def test_goals_ratio_zero_against(self):
         """goals_ratio should return maxsize when no goals scored against."""
-        empty = MaccabiGamesStats([], players_data=mock_players_data())
+        empty = MaccabiGamesStats([], players_data=create_stub_players_data())
         assert empty.results.goals_ratio == maxsize
 
     def test_wins_percentage_no_games(self):
-        empty = MaccabiGamesStats([], players_data=mock_players_data())
+        empty = MaccabiGamesStats([], players_data=create_stub_players_data())
         assert empty.results.wins_percentage == maxsize
         assert empty.results.losses_percentage == maxsize
         assert empty.results.ties_percentage == maxsize
@@ -52,7 +52,7 @@ class TestRatioEdgeCases:
         """When filtering to games where opponent scored 0, ratio should be maxsize."""
         clean_only = MaccabiGamesStats(
             [g for g in maccabi_games if g.not_maccabi_team.score == 0],
-            players_data=mock_players_data())
+            players_data=create_stub_players_data())
         assert len(clean_only) > 0
         assert clean_only.results.goals_ratio == maxsize
 
@@ -71,5 +71,5 @@ class TestRatioEdgeCases:
             home_team=TeamInGame("מכבי תל אביב", "c", 0, [_player("p", 1, [_lineup()])]),
             away_team=TeamInGame("opp", "c2", 0, [_player("o", 1, [_lineup()])]),
         )
-        stats = MaccabiGamesStats([game], players_data=mock_players_data())
+        stats = MaccabiGamesStats([game], players_data=create_stub_players_data())
         assert stats.results.goals_ratio == maxsize

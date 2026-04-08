@@ -167,8 +167,8 @@ GAMES.append(_game(
         _player("מלאכי חלימי", 2, [_lineup()]),
         _player("אלירן עטר", 15, [_benched()]),
     ]),
-    away_team=TeamInGame("הפועל באר שבע", "אלישע לוי", 1, [
-        _player("ערן לוי", 9, [_lineup(), _goal(55)]),
+    away_team=TeamInGame("מכבי ת\"א שחר", "מאמן שחר", 1, [
+        _player("דרור בר נור", 9, [_lineup(), _goal(55)]),
     ]),
 ))
 
@@ -179,8 +179,8 @@ GAMES.append(_game(
     competition="ליגת העל", fixture="מחזור2", season="2019/20",
     date=datetime.datetime(2019, 9, 21),
     stadium="טדי", referee="אלי חקמון",
-    home_team=TeamInGame("בית\"ר ירושלים", "גיא לוי", 2, [
-        _player("יוסי בניון", 10, [_lineup(), _goal(30), _goal(60)]),
+    home_team=TeamInGame("מכבי ת\"א עודד", "מאמן עודד", 2, [
+        _player("איציק זוהר", 10, [_lineup(), _goal(30), _goal(60)]),
     ]),
     away_team=TeamInGame("מכבי תל אביב", "אברם גרנט", 0, [
         _player("אבי נמני", 10, [_lineup(), _captain(), _yellow(50)]),
@@ -219,8 +219,8 @@ GAMES.append(_game(
         _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
-    away_team=TeamInGame("מכבי חיפה", "ברק בכר", 1, [
-        _player("אייל גולסה", 7, [_lineup(), _goal(20)]),
+    away_team=TeamInGame("מכבי ת\"א אלי פוקס", "מאמן אלי פוקס", 1, [
+        _player("פרי נויפלד", 7, [_lineup(), _goal(20)]),
     ]),
 ))
 
@@ -244,8 +244,8 @@ GAMES.append(_game(
         _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
-    away_team=TeamInGame("הפועל תל אביב", "ניר קלינגר", 0, [
-        _player("מפלייטיקאל", 1, [_lineup()]),
+    away_team=TeamInGame("מכבי ת\"א אלדד", "מאמן אלדד", 0, [
+        _player("רחמים טלבי", 1, [_lineup()]),
     ]),
 ))
 
@@ -270,9 +270,9 @@ GAMES.append(_game(
         _player("מלאכי חלימי", 2, [_lineup()]),
         _player("ערן זהבי", 14, [_sub_in(55), _goal(80)]),
     ]),
-    away_team=TeamInGame("הפועל באר שבע", "אלישע לוי", 2, [
-        _player("ערן לוי", 9, [_lineup(), _goal(10), _goal(20)]),
-        _player("עמית בן שושן", 4, [_lineup(), _goal(60, GoalTypes.OWN_GOAL)]),
+    away_team=TeamInGame("מכבי ת\"א שחר", "מאמן שחר", 2, [
+        _player("דרור בר נור", 9, [_lineup(), _goal(10), _goal(20)]),
+        _player("רפי לוי", 4, [_lineup(), _goal(60, GoalTypes.OWN_GOAL)]),
     ]),
 ))
 
@@ -322,9 +322,9 @@ GAMES.append(_game(
         _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
-    away_team=TeamInGame("מכבי חיפה", "ברק בכר", 1, [
-        _player("אייל גולסה", 7, [_lineup(), _goal(45, GoalTypes.OWN_GOAL)]),
-        _player("עומר אצילי", 11, [_lineup(), _goal(88)]),
+    away_team=TeamInGame("מכבי ת\"א אלי פוקס", "מאמן אלי פוקס", 1, [
+        _player("פרי נויפלד", 7, [_lineup(), _goal(45, GoalTypes.OWN_GOAL)]),
+        _player("אהרון סידי", 11, [_lineup(), _goal(88)]),
     ]),
 ))
 
@@ -334,8 +334,8 @@ GAMES.append(_game(
     competition="ליגת העל", fixture="מחזור2", season="2020/21",
     date=datetime.datetime(2020, 9, 26),
     stadium="סמי עופר", referee="אלי חקמון",
-    home_team=TeamInGame("מכבי חיפה", "ברק בכר", 3, [
-        _player("אייל גולסה", 7, [_lineup(), _goal(20), _goal(45), _goal(70)]),
+    home_team=TeamInGame("מכבי ת\"א אלי פוקס", "מאמן אלי פוקס", 3, [
+        _player("פרי נויפלד", 7, [_lineup(), _goal(20), _goal(45), _goal(70)]),
     ]),
     away_team=TeamInGame("מכבי תל אביב", "פאולו סוזה", 1, [
         _player("אבי נמני", 10, [_lineup(), _captain(), _goal(35)]),
@@ -370,8 +370,8 @@ GAMES.append(_game(
         _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
-    away_team=TeamInGame("הפועל תל אביב", "ניר קלינגר", 0, [
-        _player("מפלייטיקאל", 1, [_lineup()]),
+    away_team=TeamInGame("מכבי ת\"א אלדד", "מאמן אלדד", 0, [
+        _player("רחמים טלבי", 1, [_lineup()]),
     ]),
 ))
 
@@ -393,8 +393,8 @@ GAMES.append(_game(
         _player("ויקי פרץ", 9, [_lineup()]),
         _player("מלאכי חלימי", 2, [_lineup()]),
     ]),
-    away_team=TeamInGame("בית\"ר ירושלים", "גיא לוי", 0, [
-        _player("יוסי בניון", 10, [_lineup()]),
+    away_team=TeamInGame("מכבי ת\"א עודד", "מאמן עודד", 0, [
+        _player("איציק זוהר", 10, [_lineup()]),
     ]),
     technical_result=True,
 ))

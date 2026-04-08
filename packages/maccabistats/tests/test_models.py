@@ -17,7 +17,7 @@ class TestGameData:
     def test_maccabi_team__returns_correct_team(self, maccabi_games):
         game = maccabi_games.games[1]  # away game
         assert game.maccabi_team.name == "מכבי תל אביב"
-        assert game.not_maccabi_team.name == 'בית"ר ירושלים'
+        assert game.not_maccabi_team.name == 'מכבי ת"א עודד'
 
     def test_maccabi_score(self, maccabi_games):
         assert maccabi_games.games[0].maccabi_score == 3
@@ -70,7 +70,7 @@ class TestGameData:
         assert own_goal[0]['not_maccabi_score'] == 2
 
     def test_goals__own_goal_by_opponent_counts_for_maccabi(self, maccabi_games):
-        # Game 7: opponent אייל גולסה scores own goal at 45'
+        # Game 7: opponent פרי נויפלד scores own goal at 45'
         game = maccabi_games.games[6]
         goals = game.goals()
         own_goals = [g for g in goals if g.get('goal_type') == 'OwnGoal']

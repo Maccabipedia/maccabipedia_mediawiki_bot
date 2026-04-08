@@ -140,9 +140,9 @@ class TestPenaltyMissed:
 class TestOwnGoals:
     def test_best_scorers_excludes_own_goals(self, maccabi_games):
         scorers = dict(maccabi_games.players.best_scorers)
-        # Own goals by opponents (עמית בן שושן in game 5, אייל גולסה in game 7) should not appear
-        assert "עמית בן שושן" not in scorers
-        assert "אייל גולסה" not in scorers
+        # Own goals by opponents (רפי לוי in game 5, פרי נויפלד in game 7) should not appear
+        assert "רפי לוי" not in scorers
+        assert "פרי נויפלד" not in scorers
 
     def test_best_scorers_by_own_goal(self, maccabi_games):
         own_goal_scorers = dict(maccabi_games.players.best_scorers_by_own_goal)

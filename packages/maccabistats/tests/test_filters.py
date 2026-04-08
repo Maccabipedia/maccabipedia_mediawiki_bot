@@ -57,11 +57,11 @@ class TestResultFilters:
 
 class TestTeamFilter:
     def test_get_games_against_team(self, maccabi_games):
-        vs_haifa = maccabi_games.get_games_against_team("מכבי חיפה")
+        vs_haifa = maccabi_games.get_games_against_team('מכבי ת"א אלי פוקס')
         assert len(vs_haifa) == 3
 
     def test_get_games_against_team__beer_sheva(self, maccabi_games):
-        vs_bs = maccabi_games.get_games_against_team("הפועל באר שבע")
+        vs_bs = maccabi_games.get_games_against_team('מכבי ת"א שחר')
         assert len(vs_bs) == 2
 
 

@@ -95,9 +95,14 @@ class TestTeamInGame:
         assert bench[0].name == "שחקן_יב"
 
     def test_scored_players(self, maccabi_games):
-        team = maccabi_games.games[0].maccabi_team
+        team = maccabi_games.games[0].maccabi_team  # Game 1: שחקן_א and שחקן_ב score
         scorers = {p.name for p in team.scored_players}
         assert scorers == {"שחקן_א", "שחקן_ב"}
+
+    def test_lineup_count_with_benched_player(self, maccabi_games):
+        team = maccabi_games.games[0].maccabi_team  # Game 1 has 11 lineup + 1 benched
+        assert len(team.lineup_players) == 11
+        assert len(team.players) == 12  # includes benched
 
     def test_assist_players(self, maccabi_games):
         team = maccabi_games.games[0].maccabi_team
@@ -109,11 +114,23 @@ class TestTeamInGame:
         assert len(team.yellow_carded_players) == 1
         assert team.yellow_carded_players[0].name == "שחקן_א"
 
+    def test_red_carded_players__straight_red(self, maccabi_games):
+        team = maccabi_games.games[1].maccabi_team  # Game 2: שחקן_ו gets straight red
+        red = team.red_carded_players
+        assert len(red) == 1
+        assert red[0].name == "שחקן_ו"
+
     def test_red_carded_players__second_yellow(self, maccabi_games):
         team = maccabi_games.games[7].maccabi_team  # Game 8: שחקן_ד gets 2nd yellow
         red = team.red_carded_players
         assert len(red) == 1
         assert red[0].name == "שחקן_ד"
+
+    def test_not_played_players__benched(self, maccabi_games):
+        team = maccabi_games.games[0].maccabi_team  # Game 1: שחקן_יג is benched
+        not_played = team.not_played_players
+        benched_names = {p.name for p in not_played}
+        assert "שחקן_יג" in benched_names
 
     def test_captain(self, maccabi_games):
         team = maccabi_games.games[0].maccabi_team

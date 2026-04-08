@@ -8,9 +8,9 @@ class TestBestScorers:
         assert scorers[0] == ("שחקן_א", 8)
 
     def test_best_scorers_second(self, maccabi_games):
-        scorers = maccabi_games.players.best_scorers
-        # שחקן_ב: 4 goals (1+0+0+1+1+0+1+0+0+0)
-        assert scorers[1] == ("שחקן_ב", 4)
+        scorers = dict(maccabi_games.players.best_scorers)
+        # שחקן_ב: 2 goals (1+0+0+1+0+0+0+0+0+0)
+        assert scorers["שחקן_ב"] == 2
 
     def test_best_scorers_sub_player(self, maccabi_games):
         scorers = dict(maccabi_games.players.best_scorers)
@@ -23,7 +23,8 @@ class TestBestScorers:
 
     def test_best_scorers_by_head(self, maccabi_games):
         header_scorers = dict(maccabi_games.players.best_scorers_by_head)
-        assert header_scorers.get("שחקן_ב", 0) == 1  # Game 1 header
+        # שחקן_ב: headers in game 1 and game 4
+        assert header_scorers.get("שחקן_ב", 0) == 2
 
     def test_best_scorers_by_freekick(self, maccabi_games):
         fk_scorers = dict(maccabi_games.players.best_scorers_by_freekick)
@@ -33,16 +34,23 @@ class TestBestScorers:
 class TestBestAssisters:
     def test_best_assisters(self, maccabi_games):
         assisters = maccabi_games.players.best_assisters
-        # שחקן_ג assists in games 1(2), 4(2), 5(2), 7(2), 8(1) = 9
+        # שחקן_ג assists in games 1(2), 4(2), 5(2), 7(1), 8(1) = 8
         assert assisters[0][0] == "שחקן_ג"
-        assert assisters[0][1] == 9
+        assert assisters[0][1] == 8
 
     def test_most_goals_involved(self, maccabi_games):
         involved = dict(maccabi_games.players.most_goals_involved)
         # שחקן_א: 8 goals + 0 assists = 8
-        # שחקן_ג: 0 goals + 9 assists = 9
-        assert involved["שחקן_ג"] == 9
+        # שחקן_ג: 0 goals + 8 assists = 8
+        assert involved["שחקן_ג"] == 8
         assert involved["שחקן_א"] == 8
+
+
+class TestAssistTypes:
+    def test_best_assisters_by_corner(self, maccabi_games):
+        corner_assists = dict(maccabi_games.players.best_assisters_by_corner)
+        # שחקן_ג: corner assists in game 1 and game 4
+        assert corner_assists.get("שחקן_ג", 0) == 2
 
 
 class TestMostPlayed:
@@ -89,7 +97,9 @@ class TestCards:
 
     def test_most_red_carded(self, maccabi_games):
         reds = dict(maccabi_games.players.most_red_carded)
-        # שחקן_ד has a second yellow in game 8 (counts as red)
+        # שחקן_ו: straight red in game 2
+        # שחקן_ד: second yellow in game 8 (counts as red)
+        assert reds.get("שחקן_ו", 0) == 1
         assert reds.get("שחקן_ד", 0) == 1
 
 
@@ -111,6 +121,26 @@ class TestCaptains:
     def test_most_captains(self, maccabi_games):
         captains = dict(maccabi_games.players.most_captains)
         assert captains["שחקן_א"] == 10
+
+
+class TestPenaltyMissed:
+    def test_most_penalty_missed(self, maccabi_games):
+        missed = dict(maccabi_games.players.most_penalty_missed)
+        # שחקן_א misses penalties in games 3 and 6
+        assert missed.get("שחקן_א", 0) == 2
+
+
+class TestOwnGoals:
+    def test_best_scorers_excludes_own_goals(self, maccabi_games):
+        scorers = dict(maccabi_games.players.best_scorers)
+        # Own goals by opponents (יריב_ו in game 5, יריב_ג in game 7) should not appear
+        assert "יריב_ו" not in scorers
+        assert "יריב_ג" not in scorers
+
+    def test_best_scorers_by_own_goal(self, maccabi_games):
+        own_goal_scorers = dict(maccabi_games.players.best_scorers_by_own_goal)
+        # שחקן_א scored 8 real goals, 0 own goals
+        assert own_goal_scorers.get("שחקן_א", 0) == 0
 
 
 class TestGoalsAfterSubIn:

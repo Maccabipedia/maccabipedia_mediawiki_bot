@@ -43,9 +43,9 @@ class TestComebacks:
         assert len(ties) == 0
 
 
-class TestNoComebacksInSubset:
-    def test_no_comebacks_in_home_wins_only(self, maccabi_games):
+class TestComebacksWithFilters:
+    def test_comeback_survives_home_wins_filter(self, maccabi_games):
         home_wins = maccabi_games.home_games.maccabi_wins
-        # Game 5 IS a home win and a comeback, so this should still find it
+        # Game 5 IS a home win and a comeback, so filtering should preserve it
         comebacks = home_wins.comebacks.won_from_any_goal_diff()
         assert len(comebacks) == 1

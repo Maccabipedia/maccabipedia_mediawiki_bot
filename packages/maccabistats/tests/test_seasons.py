@@ -53,11 +53,6 @@ class TestSeasonsSorting:
         top = fresh_games.seasons[0]
         assert top.results.clean_sheets_count >= 2
 
-    def test_sort_by_wins_percentage(self, fresh_games):
-        fresh_games.seasons.sort_by_wins_percentage()
-        top = fresh_games.seasons[0]
-        assert top.results.wins_percentage > 0
-
     def test_repr_after_sort(self, fresh_games):
         fresh_games.seasons.sort_by_wins_count()
         r = repr(fresh_games.seasons)

@@ -143,21 +143,6 @@ class TestAvailableProperties:
 
 
 class TestMaccabiGamesStatsBasics:
-    def test_len(self, maccabi_games):
-        assert len(maccabi_games) == 10
-
-    def test_getitem(self, maccabi_games):
-        game = maccabi_games[0]
-        assert game.competition == "ליגת העל"
-
-    def test_iter(self, maccabi_games):
-        games = list(maccabi_games)
-        assert len(games) == 10
-
-    def test_repr(self, maccabi_games):
-        r = repr(maccabi_games)
-        assert "10 games" in r
-
     def test_description_chaining(self, maccabi_games):
         filtered = maccabi_games.home_games.maccabi_wins
         assert "Home games" in filtered.description

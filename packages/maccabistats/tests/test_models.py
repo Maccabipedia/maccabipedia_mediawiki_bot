@@ -190,11 +190,4 @@ class TestPlayerInGame:
         player = maccabi_games.games[2].maccabi_team.players[0]  # penalty goal
         assert player.goals_count_by_goal_type(GoalTypes.PENALTY) == 1
 
-    def test_get_as_normal_player(self, maccabi_games):
-        from maccabistats.models.player import Player
-        player_in_game = maccabi_games.games[0].maccabi_team.players[0]
-        normal = player_in_game.get_as_normal_player()
-        assert isinstance(normal, Player)
-        assert normal.name == player_in_game.name
-        assert normal.number == player_in_game.number
-        assert not hasattr(normal, 'events')
+

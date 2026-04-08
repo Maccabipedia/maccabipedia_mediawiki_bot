@@ -145,6 +145,17 @@ def _game(
 
 GAMES: list[GameData] = []
 
+# A single game where a Maccabi player scores only an own goal — used to test own-goal exclusion.
+OWN_GOAL_GAME = _game(
+    competition="ליגת העל", fixture="מחזור1", season="2020/21",
+    date=datetime.datetime(2020, 1, 1),
+    stadium="בלומפילד", referee="ref",
+    home_team=TeamInGame("מכבי תל אביב", "מאמן", 0, [
+        _player("שייע גלזר", 5, [_lineup(), _goal(30, GoalTypes.OWN_GOAL)]),
+    ]),
+    away_team=TeamInGame("יריב", "מאמן", 1, [_player("שוער", 1, [_lineup()])]),
+)
+
 # ---- Game 1: League, home, WIN 3-1, season 2019/20 ----
 # Maccabi: אבי נמני scores 2 (normal), אלי דריקס scores 1 (header)
 # חיים רביבו assists twice (normal + corner), אבי נמני is captain

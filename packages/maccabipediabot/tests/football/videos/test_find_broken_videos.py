@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from maccabipediabot.football.videos.find_broken_videos import BrokenVideo, format_report, _fetch_from_table
+from maccabipediabot.football.videos.find_broken_videos import BrokenVideo, format_report, _fetch_from_table, _normalize_url
 
 
 def test_format_report_header_contains_count():
@@ -46,6 +46,20 @@ def test_format_report_groups_multiple_broken_under_same_page():
     assert "https://youtu.be/1" in report
     assert "https://youtu.be/2" in report
     assert "https://youtu.be/3" in report
+
+
+def test_normalize_url_fixes_html_encoded_ampersand():
+    assert _normalize_url("https://youtu.be/abc&amp;t=6s") == "https://youtu.be/abc&t=6s"
+
+
+def test_normalize_url_fixes_duplicate_question_mark():
+    assert _normalize_url("https://www.youtube.com/watch?v=KOGbFAPcYHY?t=2156") == \
+        "https://www.youtube.com/watch?v=KOGbFAPcYHY&t=2156"
+
+
+def test_normalize_url_leaves_valid_url_unchanged():
+    assert _normalize_url("https://www.youtube.com/watch?v=abc&t=60") == \
+        "https://www.youtube.com/watch?v=abc&t=60"
 
 
 def test_fetch_from_table_returns_video_entries():

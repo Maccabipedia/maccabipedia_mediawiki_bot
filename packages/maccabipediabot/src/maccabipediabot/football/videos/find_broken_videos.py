@@ -73,8 +73,18 @@ def _fetch_from_table(table: str, fields: dict[str, str]) -> list[tuple[str, str
         for field, label in fields.items():
             video_url = row.get(field)
             if video_url:
-                result.append((page_name, video_url, label))
+                result.append((page_name, _normalize_url(video_url), label))
     return result
+
+
+def _normalize_url(url: str) -> str:
+    """Fix common wiki URL encoding issues (e.g. &amp; → &, duplicate ? → &)."""
+    url = url.replace("&amp;", "&")
+    # Fix malformed URLs like ?v=ID?t=123 → ?v=ID&t=123
+    first_q = url.find("?")
+    if first_q != -1 and "?" in url[first_q + 1:]:
+        url = url[:first_q + 1] + url[first_q + 1:].replace("?", "&")
+    return url
 
 
 def fetch_game_videos() -> list[tuple[str, str, str]]:

@@ -17,23 +17,27 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - name: Install dependencies
         run: uv sync
-      - name: Find broken videos
+      - name: Find and remove broken videos
+        env:
+          PYWIKIBOT_DIR: ${{ github.workspace }}/packages/maccabipediabot/src/maccabipediabot/pywikibot_configs
+          MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
+          MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
         run: uv run python -m maccabipediabot.football.videos.find_broken_videos > broken_videos_report.txt
       - name: Read report into output
         id: report
         run: |
           if [ -s broken_videos_report.txt ]; then
-            echo "has_broken=true" >> $GITHUB_OUTPUT
+            echo "has_removed=true" >> $GITHUB_OUTPUT
             {
               echo "content<<REPORT_EOF"
               cat broken_videos_report.txt
               echo "REPORT_EOF"
             } >> $GITHUB_OUTPUT
           else
-            echo "has_broken=false" >> $GITHUB_OUTPUT
+            echo "has_removed=false" >> $GITHUB_OUTPUT
           fi
       - name: Send report to Telegram
-        if: steps.report.outputs.has_broken == 'true'
+        if: steps.report.outputs.has_removed == 'true'
         uses: appleboy/telegram-action@v2.25.0
         with:
           to: ${{ secrets.MACCABIPEDIA_ERRORS_TELEGRAM_TO }}

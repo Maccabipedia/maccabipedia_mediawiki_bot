@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from datetime import date
 
 import aiohttp
+import mwparserfromhell as mw
+import pywikibot as pw
 import requests
 
 logger = logging.getLogger(__name__)
@@ -13,6 +15,7 @@ CARGO_BASE = (
     "?title=Special:CargoExport&format=json"
     "&limit=5000&offset=0"
 )
+WIKI_BASE_URL = "https://www.maccabipedia.co.il"
 OEMBED_ENDPOINTS = {
     "youtube.com": "https://www.youtube.com/oembed?url={url}&format=json",
     "youtu.be": "https://www.youtube.com/oembed?url={url}&format=json",
@@ -40,6 +43,13 @@ VIDEO_TABLES: list[tuple[str, dict[str, str]]] = [
     ("Basketball_Games", _BALL_SPORTS_FIELDS),
 ]
 
+FOOTBALL_TEMPLATE = "קטלוג משחקים"
+TEMPLATE_FIELD_MAP = {
+    "משחק מלא": "משחק מלא",
+    "תקציר ראשי": "תקציר וידאו",
+    "תקציר משני": "תקציר וידאו2",
+}
+
 
 @dataclass
 class BrokenVideo:
@@ -59,6 +69,19 @@ def format_report(broken: list[BrokenVideo], report_date: date) -> str:
         lines.append(page_name)
         for v in videos:
             lines.append(f"  ❌ {v.video_type}: {v.url}")
+    return "\n".join(lines)
+
+
+def format_removal_report(removed: list[BrokenVideo], report_date: date) -> str:
+    by_page: dict[str, list[BrokenVideo]] = {}
+    for v in removed:
+        by_page.setdefault(v.page_name, []).append(v)
+
+    lines = [f"הוסרו {len(removed)} קישורי וידאו שבורים — {report_date}"]
+    for page_name, videos in sorted(by_page.items()):
+        page_url = f"{WIKI_BASE_URL}/{page_name.replace(' ', '_')}"
+        for v in videos:
+            lines.append(f"• {v.video_type} — {page_url}")
     return "\n".join(lines)
 
 
@@ -137,11 +160,63 @@ async def _find_broken_videos() -> list[BrokenVideo]:
     return broken
 
 
+def _remove_broken_link(site: pw.Site, video: BrokenVideo) -> bool:
+    """Remove the broken URL from the wiki page. Returns True if the page was saved."""
+    if not video.page_name.startswith("משחק:"):
+        logger.warning("Skipping non-football page: %s", video.page_name)
+        return False
+
+    field = TEMPLATE_FIELD_MAP.get(video.video_type)
+    if not field:
+        logger.warning("Unknown video type '%s' in: %s", video.video_type, video.page_name)
+        return False
+
+    page = pw.Page(site, video.page_name)
+    if not page.exists():
+        logger.warning("Page not found: %s", video.page_name)
+        return False
+
+    parsed = mw.parse(page.text)
+    templates = parsed.filter_templates(matches=lambda t: t.name.strip() == FOOTBALL_TEMPLATE)
+    if not templates:
+        logger.warning("Template not found in: %s", video.page_name)
+        return False
+
+    tmpl = templates[0]
+    if not tmpl.has(field) or not str(tmpl.get(field).value).strip():
+        return False
+
+    tmpl.get(field).value = ""
+    page.text = str(parsed)
+    page.save(summary="MaccabiBot - Remove broken video link", bot=True)
+    logger.info("Cleared '%s' in: %s", field, video.page_name)
+    return True
+
+
+def remove_broken_links(broken: list[BrokenVideo]) -> list[BrokenVideo]:
+    """Remove broken video links from wiki pages. Returns the videos that were successfully removed."""
+    if not broken:
+        return []
+
+    from maccabipediabot.common.wiki_login import get_site
+    pw.config.verbose_output = False
+    site = get_site()
+
+    removed = []
+    for video in broken:
+        if _remove_broken_link(site, video):
+            removed.append(video)
+    return removed
+
+
 def main() -> None:
     logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=logging.INFO)
     broken = asyncio.run(_find_broken_videos())
-    if broken:
-        print(format_report(broken, date.today()))
+    if not broken:
+        return
+    removed = remove_broken_links(broken)
+    if removed:
+        print(format_removal_report(removed, date.today()))
 
 
 if __name__ == "__main__":

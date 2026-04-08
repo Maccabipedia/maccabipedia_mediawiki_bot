@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from maccabipediabot.football.videos.find_broken_videos import BrokenVideo, format_report, _fetch_from_table, _normalize_url
+from maccabipediabot.football.videos.find_broken_videos import BrokenVideo, format_report, format_removal_report, _fetch_from_table, _normalize_url
 
 
 def test_format_report_header_contains_count():
@@ -113,3 +113,18 @@ def test_fetch_from_table_raises_on_http_error():
     ):
         with pytest.raises(requests.HTTPError):
             _fetch_from_table("Games_Videos", {"FullGame": "משחק מלא"})
+
+
+def test_format_removal_report_contains_count_and_wiki_url():
+    removed = [
+        BrokenVideo(
+            page_name="משחק:16-09-1999 מכבי תל אביב נגד לאנס - גביע אופא",
+            url="https://www.youtube.com/watch?v=JwUrFyR75sY",
+            video_type="משחק מלא",
+        )
+    ]
+    report = format_removal_report(removed, date(2026, 4, 9))
+    assert "הוסרו 1" in report
+    assert "2026-04-09" in report
+    assert "https://www.maccabipedia.co.il/משחק:16-09-1999_מכבי_תל_אביב_נגד_לאנס_-_גביע_אופא" in report
+    assert "משחק מלא" in report

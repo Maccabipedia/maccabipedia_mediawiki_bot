@@ -23,15 +23,18 @@ class TestComebacks:
         assert maccabi_games.comebacks.total_comebacks_count == 1
 
     def test_games_with_potential_comebacks(self, maccabi_games):
-        # Games where opponent had > 1 goal advantage at some point
+        # Games where opponent had > 1 goal advantage at some point:
+        # Game 2 (0-2 loss), game 5 (0-2 then comeback 4-2 win), game 8 (1-3 loss)
         potential = maccabi_games.comebacks.games_with_potential_comebacks()
-        assert len(potential) >= 1  # At least game 5
+        assert len(potential) == 3
 
     def test_games_with_potential_comebacks_that_maccabi_didnt_win(self, maccabi_games):
-        # Game 5 is a comeback (maccabi won), so it shouldn't be here
-        # Game 2: 0-2 loss, opponent had 2-goal advantage -> potential but maccabi didn't win
+        # Game 2 (0-2 loss) and game 8 (1-3 loss) — both had 2+ goal opponent advantage
+        # Game 5 is excluded because maccabi won the comeback
         didnt_win = maccabi_games.comebacks.games_with_potential_comebacks_that_maccabi_didnt_win()
-        assert len(didnt_win) >= 1
+        assert len(didnt_win) == 2
+        dates = sorted(g.date.month for g in didnt_win)
+        assert dates == [9, 9]  # Both in September (game 2: Sep 2019, game 8: Sep 2020)
 
     def test_tie_from_exactly_one_goal_diff(self, maccabi_games):
         # Game 3: 1-1 tie, opponent scored first (minute 20), maccabi equalized (minute 80)

@@ -58,6 +58,25 @@ class TestGameData:
         times = [g['time_occur'] for g in goals]
         assert times == sorted(times)
 
+    def test_goals__own_goal_inverts_running_score(self, maccabi_games):
+        # Game 5: opponent scores at 10',20', maccabi at 50',70', opponent own goal at 60', bench at 80'
+        game = maccabi_games.games[4]
+        goals = game.goals()
+        # Find the own goal event (by opponent at minute 60)
+        own_goal = [g for g in goals if g.get('goal_type') == 'OwnGoal']
+        assert len(own_goal) == 1
+        # Own goal by opponent should add to maccabi's score
+        assert own_goal[0]['maccabi_score'] > 0
+
+    def test_goals__own_goal_by_opponent_counts_for_maccabi(self, maccabi_games):
+        # Game 7: opponent יריב_ג scores own goal at 45'
+        game = maccabi_games.games[6]
+        goals = game.goals()
+        own_goals = [g for g in goals if g.get('goal_type') == 'OwnGoal']
+        assert len(own_goals) == 1
+        # After the own goal, maccabi should have 2 goals (regular at 30' + own goal at 45')
+        assert own_goals[0]['maccabi_score'] == 2
+
     def test_league_fixture__parses_number(self, maccabi_games):
         assert maccabi_games.games[0].league_fixture == 1
 

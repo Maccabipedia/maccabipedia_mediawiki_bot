@@ -1,3 +1,12 @@
+## Version 2.62 ##
+
+    Replace hardcoded Windows paths with configurable MACCABISTATS_DATA_DIR env var (defaults to ~/maccabistats/)
+
+## Version 2.60 ##
+
+    Include players data in MaccabiGamesStats pickle for offline loading
+    MaccabiPediaPlayers singleton is now cached in the pickle, so loading works without internet access
+
 ## Version 2.61 ##
 
     Replace hardcoded Windows paths with configurable MACCABISTATS_DATA_DIR env var (defaults to ~/maccabistats/)

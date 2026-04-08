@@ -71,9 +71,23 @@ class TestGetSummary:
         assert summary['goals_for_maccabi'] == 17
 
 
+class TestEdgeCases:
+    def test_goals_ratio__no_goals_against(self, maccabi_games):
+        from sys import maxsize
+        # Filter to only clean-sheet games
+        clean = maccabi_games.get_games_by_stadium("בלומפילד").maccabi_wins
+        clean_sheets_only = type(maccabi_games)(
+            [g for g in clean if g.not_maccabi_team.score == 0])
+        assert clean_sheets_only.results.goals_ratio == maxsize
+
+
 class TestEmptyGames:
     def test_empty_results(self):
+        from sys import maxsize
         from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
         empty = MaccabiGamesStats([])
         assert empty.results.total_games_count == 0
         assert empty.results.wins_count == 0
+        assert empty.results.wins_percentage == maxsize
+        assert empty.results.losses_percentage == maxsize
+        assert empty.results.ties_percentage == maxsize

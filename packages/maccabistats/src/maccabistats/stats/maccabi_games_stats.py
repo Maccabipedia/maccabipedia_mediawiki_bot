@@ -50,9 +50,6 @@ class MaccabiGamesStats:
                  players_data: MaccabiPediaPlayers = None) -> None:
         self.games: List[GameData] = sorted(games, key=lambda g: g.date)  # Sort the games by date
         self.description = description or self._DEFAULT_DESCRIPTION
-
-        # Players data is stored so it's pickled with the games (no internet needed on load).
-        # Callers that need players data should explicitly pass it.
         self.players_data = players_data
 
         self.coaches = MaccabiGamesCoachesStats(self)
@@ -298,7 +295,8 @@ class MaccabiGamesStats:
                            for player_name in players_games.keys()}
 
         # Allow to return an empty list for unknown players
-        return defaultdict(lambda: MaccabiGamesStats([]), games_by_player)
+        players_data = self.players_data
+        return defaultdict(lambda: MaccabiGamesStats([], players_data=players_data), games_by_player)
 
     def played_games_by_player_and_team(self) -> Dict[str, DefaultDict[str, MaccabiGamesStats]]:
         """
@@ -316,7 +314,8 @@ class MaccabiGamesStats:
                 # adds at [player][team].append(game)
                 players_to_teams_to_games_mapping[player.name][game.not_maccabi_team.current_name].append(game)
 
-        games_by_player_and_team = defaultdict(lambda: defaultdict(lambda: MaccabiGamesStats([])))
+        players_data = self.players_data
+        games_by_player_and_team = defaultdict(lambda: defaultdict(lambda: MaccabiGamesStats([], players_data=players_data)))
         for player_name, teams_mapping in players_to_teams_to_games_mapping.items():
             for team_name, specific_player_and_team_games in teams_mapping.items():
                 current_combination_games = self.create_maccabi_games_stats_with_filtered_games(specific_player_and_team_games,
@@ -324,7 +323,7 @@ class MaccabiGamesStats:
                 games_by_player_and_team[player_name][team_name] = current_combination_games
 
         # Allow to return an empty list for unknown players, same default dict as above but with MaccabiGamesStats
-        return defaultdict(lambda: defaultdict(lambda: MaccabiGamesStats([])), games_by_player_and_team)
+        return defaultdict(lambda: defaultdict(lambda: MaccabiGamesStats([], players_data=players_data)), games_by_player_and_team)
 
     def create_maccabi_stats_from_games(self, games: List[GameData]) -> MaccabiGamesStats:
         return self.create_maccabi_games_stats_with_filtered_games(games, self.description)

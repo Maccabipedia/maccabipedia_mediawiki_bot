@@ -115,23 +115,19 @@ def test_unpickle_then_filter_works_offline(monkeypatch):
     assert filtered.players_categories.maccabi_home_players_names == {"שחקן א"}
 
 
-def test_empty_games_does_not_crawl(monkeypatch):
-    """Creating MaccabiGamesStats with empty games should not trigger crawling."""
-    monkeypatch.setattr(
-        MaccabiPediaPlayers, '_crawl_players_data',
-        staticmethod(lambda: (_ for _ in ()).throw(RuntimeError("Should not crawl!"))),
-    )
-    MaccabiPediaPlayers._instance = None
-
-    stats = MaccabiGamesStats([])
-    assert stats.players_data is None
+def test_empty_games_works_with_players_data():
+    """Creating MaccabiGamesStats with empty games and players data should work."""
+    players = _make_players_instance()
+    stats = MaccabiGamesStats([], players_data=players)
+    assert len(stats) == 0
+    assert stats.players_data is players
 
 
 # --- Backward compatibility ---
 
 
-def test_old_pickle_without_players_data_has_none():
-    """Old pickles without players_data result in None — no implicit crawl."""
+def test_old_pickle_without_players_data_fails_loudly():
+    """Old pickles without players_data should fail with AttributeError."""
     players = _make_players_instance()
     games = [_make_game(datetime(2024, 9, 1))]
     stats = MaccabiGamesStats(games, players_data=players)
@@ -142,16 +138,8 @@ def test_old_pickle_without_players_data_has_none():
     MaccabiPediaPlayers._instance = None
 
     restored = pickle.loads(pickled)
-    assert not hasattr(restored, 'players_data')
-
-    # Wrapping in new MaccabiGamesStats with getattr — gets None, stays None
-    wrapper = MaccabiGamesStats(
-        restored.games,
-        players_data=getattr(restored, 'players_data', None),
-    )
-    assert wrapper.players_data is None
-    # Non-player stats still work
-    assert len(wrapper) == 1
+    with pytest.raises(AttributeError):
+        _ = restored.players_data
 
 
 # --- players_special_games ---
@@ -189,18 +177,11 @@ def test_filter_chain_preserves_players_data(monkeypatch):
     assert chained.players_special_games.players_birth_dates["שחקן א"] == datetime(2000, 1, 1)
 
 
-# --- No implicit crawl ---
+# --- players_data is always required ---
 
 
-def test_no_implicit_crawl_when_players_not_provided():
-    """Creating MaccabiGamesStats without players_data should NOT crawl."""
+def test_players_data_required_for_player_stats():
+    """Without players_data, accessing player stats should fail."""
     games = [_make_game(datetime(2024, 9, 1))]
-    stats = MaccabiGamesStats(games)
-
-    # Non-player stats should work
-    assert len(stats) == 1
-    assert stats.results.wins_count == 1
-
-    # Player stats degrade to empty — no implicit network call
-    assert stats.players_data is None
-    assert stats.players_categories.maccabi_home_players_names == set()
+    with pytest.raises((AttributeError, TypeError)):
+        MaccabiGamesStats(games)

@@ -22,10 +22,7 @@ class MaccabiGamesPlayersCategoriesStats(object):
     def __init__(self, maccabi_games_stats: MaccabiGamesStats):
         self.maccabi_games_stats = maccabi_games_stats
         self.games = maccabi_games_stats.games
-        players = maccabi_games_stats.players_data
-        if players is None and maccabi_games_stats.games:
-            logger.warning("Players data is missing — player categories stats will return empty results")
-        self.maccabi_home_players_names = players.home_players if players else set()
+        self.maccabi_home_players_names = maccabi_games_stats.players_data.home_players
 
     def _home_players_events(self, game_events_callable) -> Tuple[int, int]:
         """

@@ -60,3 +60,4 @@ class MaccabiPediaPlayers(object):
             cls._instance = cls()
 
         return cls._instance
+

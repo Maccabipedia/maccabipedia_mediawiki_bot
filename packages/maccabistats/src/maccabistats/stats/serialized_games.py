@@ -21,8 +21,9 @@ def get_maccabi_stats_as_newest_wrapper(file_name: Optional[str] = None) -> Macc
     """"
     Returns the serialized file_name cast to the latest MaccabiGamesStats object, which means that newer functions can be used.
     """
-
-    return MaccabiGamesStats(get_maccabi_stats(file_name).games)
+    loaded = get_maccabi_stats(file_name)
+    return MaccabiGamesStats(loaded.games,
+                             players_data=loaded.players_data)
 
 
 def get_maccabi_stats(file_name: Optional[str] = None) -> MaccabiGamesStats:

@@ -17,7 +17,8 @@ if __name__ == '__main__':
     players_to_show = []
 
     for player, games in players_games.items():
-        first_games = MaccabiGamesStats(games[:FIRST_GAMES_COUNT])
+        first_games = maccabi_games.create_maccabi_games_stats_with_filtered_games(
+            games[:FIRST_GAMES_COUNT], f'First {FIRST_GAMES_COUNT} games: {player}')
         player_goals = [goals for name, goals in first_games.players.best_scorers if name == player] or [0]
         player_goals = player_goals[0]
         if player_goals >= GOALS_TO_SHOW_FROM:

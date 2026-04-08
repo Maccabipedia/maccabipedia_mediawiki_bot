@@ -5,8 +5,6 @@ from collections import Counter
 from sys import maxsize
 from typing import Tuple, TYPE_CHECKING
 
-from maccabistats.maccabipedia.players import MaccabiPediaPlayers
-
 if TYPE_CHECKING:
     from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
@@ -24,7 +22,7 @@ class MaccabiGamesPlayersCategoriesStats(object):
     def __init__(self, maccabi_games_stats: MaccabiGamesStats):
         self.maccabi_games_stats = maccabi_games_stats
         self.games = maccabi_games_stats.games
-        self.maccabi_home_players_names = MaccabiPediaPlayers.get_players_data().home_players
+        self.maccabi_home_players_names = maccabi_games_stats.players_data.home_players
 
     def _home_players_events(self, game_events_callable) -> Tuple[int, int]:
         """

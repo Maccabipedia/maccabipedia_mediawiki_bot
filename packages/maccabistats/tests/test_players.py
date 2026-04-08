@@ -126,8 +126,8 @@ class TestCaptains:
 class TestPenaltyStopped:
     def test_most_penalty_stopped(self, maccabi_games):
         stopped = dict(maccabi_games.players.most_penalty_stopped)
-        # בונדארנקו stops penalties in games 4 and 9
-        assert stopped.get("בונדארנקו", 0) == 2
+        # אלכסנדר אובארוב stops penalties in games 4 and 9
+        assert stopped.get("אלכסנדר אובארוב", 0) == 2
 
 
 class TestPenaltyMissed:

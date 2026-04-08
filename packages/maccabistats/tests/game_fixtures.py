@@ -25,7 +25,7 @@ Maccabi players (all-time top scorers and legends):
   - אלירן עטר (#15) — benched (all-time #10, 96 goals)
   - חיים רביבו (#8) — playmaker, chief assister
   - טל בן חיים (#3) — defender, picks up cards
-  - בונדארנקו (#1) — goalkeeper, stops penalties
+  - אלכסנדר אובארוב (#1) — goalkeeper, stops penalties (all-time #1 GK, 363 apps)
   - מלאכי חלימי (#2) — fullback
 
 Player events covered (each >=2 occurrences):
@@ -158,7 +158,7 @@ GAMES.append(_game(
         _player("אלי דריקס", 7, [_lineup(), _goal(40, GoalTypes.HEADER)]),
         _player("חיים רביבו", 8, [_lineup(), _assist(15), _assist(40, AssistTypes.CORNER_ASSIST)]),
         _player("טל בן חיים", 3, [_lineup()]),
-        _player("בונדארנקו", 1, [_lineup()]),
+        _player("אלכסנדר אובארוב", 1, [_lineup()]),
         _player("שייע גלזר", 5, [_lineup()]),
         _player("בני טבק", 6, [_lineup()]),
         _player("גיורא שפיגל", 11, [_lineup()]),
@@ -187,7 +187,7 @@ GAMES.append(_game(
         _player("אלי דריקס", 7, [_lineup()]),
         _player("חיים רביבו", 8, [_lineup(), _sub_out(60)]),
         _player("טל בן חיים", 3, [_lineup()]),
-        _player("בונדארנקו", 1, [_lineup()]),
+        _player("אלכסנדר אובארוב", 1, [_lineup()]),
         _player("שייע גלזר", 5, [_lineup(), _red(55)]),
         _player("בני טבק", 6, [_lineup()]),
         _player("גיורא שפיגל", 11, [_lineup()]),
@@ -211,7 +211,7 @@ GAMES.append(_game(
         _player("אלי דריקס", 7, [_lineup()]),
         _player("חיים רביבו", 8, [_lineup()]),
         _player("טל בן חיים", 3, [_lineup()]),
-        _player("בונדארנקו", 1, [_lineup()]),
+        _player("אלכסנדר אובארוב", 1, [_lineup()]),
         _player("שייע גלזר", 5, [_lineup()]),
         _player("בני טבק", 6, [_lineup()]),
         _player("גיורא שפיגל", 11, [_lineup()]),
@@ -226,7 +226,7 @@ GAMES.append(_game(
 
 # ---- Game 4: Cup, home, WIN 2-0 (clean sheet), season 2019/20 ----
 # אבי נמני scores free kick, אלי דריקס scores header
-# חיים רביבו assists twice (corner), בונדארנקו stops a penalty
+# חיים רביבו assists twice (corner), אלכסנדר אובארוב stops a penalty
 GAMES.append(_game(
     competition="גביע המדינה", fixture="שמינית גמר", season="2019/20",
     date=datetime.datetime(2019, 11, 12),
@@ -236,7 +236,7 @@ GAMES.append(_game(
         _player("אלי דריקס", 7, [_lineup(), _goal(50, GoalTypes.HEADER)]),
         _player("חיים רביבו", 8, [_lineup(), _assist(25, AssistTypes.CORNER_ASSIST), _assist(50)]),
         _player("טל בן חיים", 3, [_lineup()]),
-        _player("בונדארנקו", 1, [_lineup(), _penalty_stopped(35)]),
+        _player("אלכסנדר אובארוב", 1, [_lineup(), _penalty_stopped(35)]),
         _player("שייע גלזר", 5, [_lineup()]),
         _player("בני טבק", 6, [_lineup()]),
         _player("גיורא שפיגל", 11, [_lineup()]),
@@ -261,7 +261,7 @@ GAMES.append(_game(
         _player("אלי דריקס", 7, [_lineup()]),
         _player("חיים רביבו", 8, [_lineup(), _assist(50), _assist(70)]),
         _player("טל בן חיים", 3, [_lineup()]),
-        _player("בונדארנקו", 1, [_lineup()]),
+        _player("אלכסנדר אובארוב", 1, [_lineup()]),
         _player("שייע גלזר", 5, [_lineup(), _yellow(30)]),
         _player("בני טבק", 6, [_lineup()]),
         _player("גיורא שפיגל", 11, [_lineup(), _sub_out(55)]),
@@ -291,7 +291,7 @@ GAMES.append(_game(
         _player("אלי דריקס", 7, [_lineup(), _sub_out(70)]),
         _player("חיים רביבו", 8, [_lineup()]),
         _player("טל בן חיים", 3, [_lineup()]),
-        _player("בונדארנקו", 1, [_lineup()]),
+        _player("אלכסנדר אובארוב", 1, [_lineup()]),
         _player("שייע גלזר", 5, [_lineup()]),
         _player("בני טבק", 6, [_lineup()]),
         _player("גיורא שפיגל", 11, [_lineup()]),
@@ -314,7 +314,7 @@ GAMES.append(_game(
         _player("אלי דריקס", 7, [_lineup()]),
         _player("חיים רביבו", 8, [_lineup(), _assist(30)]),
         _player("טל בן חיים", 3, [_lineup()]),
-        _player("בונדארנקו", 1, [_lineup()]),
+        _player("אלכסנדר אובארוב", 1, [_lineup()]),
         _player("שייע גלזר", 5, [_lineup()]),
         _player("בני טבק", 6, [_lineup()]),
         _player("גיורא שפיגל", 11, [_lineup()]),
@@ -342,7 +342,7 @@ GAMES.append(_game(
         _player("אלי דריקס", 7, [_lineup()]),
         _player("חיים רביבו", 8, [_lineup(), _assist(35)]),
         _player("טל בן חיים", 3, [_lineup(), _yellow(40), _second_yellow(65)]),
-        _player("בונדארנקו", 1, [_lineup()]),
+        _player("אלכסנדר אובארוב", 1, [_lineup()]),
         _player("שייע גלזר", 5, [_lineup()]),
         _player("בני טבק", 6, [_lineup()]),
         _player("גיורא שפיגל", 11, [_lineup()]),
@@ -362,7 +362,7 @@ GAMES.append(_game(
         _player("אלי דריקס", 7, [_lineup()]),
         _player("חיים רביבו", 8, [_lineup()]),
         _player("טל בן חיים", 3, [_lineup()]),
-        _player("בונדארנקו", 1, [_lineup(), _penalty_stopped(70)]),
+        _player("אלכסנדר אובארוב", 1, [_lineup(), _penalty_stopped(70)]),
         _player("שייע גלזר", 5, [_lineup()]),
         _player("בני טבק", 6, [_lineup()]),
         _player("גיורא שפיגל", 11, [_lineup()]),
@@ -385,7 +385,7 @@ GAMES.append(_game(
         _player("אלי דריקס", 7, [_lineup()]),
         _player("חיים רביבו", 8, [_lineup()]),
         _player("טל בן חיים", 3, [_lineup()]),
-        _player("בונדארנקו", 1, [_lineup()]),
+        _player("אלכסנדר אובארוב", 1, [_lineup()]),
         _player("שייע גלזר", 5, [_lineup()]),
         _player("בני טבק", 6, [_lineup()]),
         _player("גיורא שפיגל", 11, [_lineup()]),

@@ -23,7 +23,7 @@ def get_maccabi_stats_as_newest_wrapper(file_name: Optional[str] = None) -> Macc
     """
     loaded = get_maccabi_stats(file_name)
     return MaccabiGamesStats(loaded.games,
-                             _maccabipedia_players=getattr(loaded, '_maccabipedia_players', None))
+                             maccabipedia_players=getattr(loaded, 'maccabipedia_players', None))
 
 
 def get_maccabi_stats(file_name: Optional[str] = None) -> MaccabiGamesStats:

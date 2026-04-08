@@ -22,7 +22,7 @@ class MaccabiGamesPlayersCategoriesStats(object):
     def __init__(self, maccabi_games_stats: MaccabiGamesStats):
         self.maccabi_games_stats = maccabi_games_stats
         self.games = maccabi_games_stats.games
-        players = maccabi_games_stats._maccabipedia_players
+        players = maccabi_games_stats.maccabipedia_players
         self.maccabi_home_players_names = players.home_players if players else set()
 
     def _home_players_events(self, game_events_callable) -> Tuple[int, int]:

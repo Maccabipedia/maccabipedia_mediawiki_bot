@@ -47,18 +47,19 @@ class MaccabiGamesStats:
     _DEFAULT_DESCRIPTION = 'All games'
 
     def __init__(self, games: List[GameData], description: str = None,
-                 _maccabipedia_players: MaccabiPediaPlayers = None) -> None:
+                 maccabipedia_players: MaccabiPediaPlayers = None) -> None:
         self.games: List[GameData] = sorted(games, key=lambda g: g.date)  # Sort the games by date
         self.description = description or self._DEFAULT_DESCRIPTION
 
         # Store players data so it's pickled with the games (no internet needed on load).
         # Only crawl when not provided and there are games to process.
-        if _maccabipedia_players is not None:
-            self._maccabipedia_players = _maccabipedia_players
+        if maccabipedia_players is not None:
+            self.maccabipedia_players = maccabipedia_players
         elif self.games:
-            self._maccabipedia_players = MaccabiPediaPlayers.get_players_data()
+            logger.info("No cached players data provided, crawling from MaccabiPedia (requires internet)")
+            self.maccabipedia_players = MaccabiPediaPlayers.get_players_data()
         else:
-            self._maccabipedia_players = None
+            self.maccabipedia_players = None
 
         self.coaches = MaccabiGamesCoachesStats(self)
         self.players = MaccabiGamesPlayersStats(self)
@@ -88,7 +89,7 @@ class MaccabiGamesStats:
 
     def _create_filtered(self, games: List[GameData], description: str) -> MaccabiGamesStats:
         """Create a filtered MaccabiGamesStats that inherits the players data."""
-        return MaccabiGamesStats(games, description, _maccabipedia_players=self._maccabipedia_players)
+        return MaccabiGamesStats(games, description, maccabipedia_players=self.maccabipedia_players)
 
     # region home_away
 

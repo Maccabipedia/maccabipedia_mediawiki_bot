@@ -126,8 +126,8 @@ def _load_from_source(source):
     source.run_specific_fixes()
 
     loaded = source.maccabi_games_stats
-    return MaccabiGamesStats(loaded, description=f'Source: {source.name}',
-                             _maccabipedia_players=getattr(loaded, '_maccabipedia_players', None))
+    return MaccabiGamesStats(loaded.games, description=f'Source: {source.name}',
+                             maccabipedia_players=getattr(loaded, 'maccabipedia_players', None))
 
 
 def load_from_maccabipedia_source():

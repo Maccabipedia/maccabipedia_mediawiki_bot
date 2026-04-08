@@ -72,6 +72,7 @@ class MaccabiPediaPlayers(object):
         instance.home_players = {player_data.name for player_data in players_data.values() if
                                  player_data.is_home_player}
         cls._instance = instance
+        return instance
 
     @property
     def raw_players_data(self) -> Dict[str, MaccabiPediaPlayerData]:

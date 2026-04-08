@@ -67,6 +67,19 @@ These layers can disagree. For example, wikitext may store data in the correct o
 
 1. **Adding tasks**: Tell Claude to add a card — it goes to Inbox with auto-labels.
 2. **Triage**: Review Inbox periodically, move cards to Next Up or archive.
-3. **Pick up work**: Claude checks cards with `Claude` label in Next Up.
+3. **Pick up work**: User tells Claude which card to take.
 4. **Complete**: Claude moves card to Done with a comment (commit reference if applicable).
 5. **Cleanup**: Archive Done cards monthly.
+
+## Card Lifecycle (Claude)
+
+When told to take a card:
+1. Fetch the card, read its description and checklist
+2. Move card to **In Progress**
+3. Do the work
+4. **If blocked:** comment on the card describing the blocker; stay In Progress (do NOT move to Waiting)
+5. **If a significant decision changes direction mid-work:** add a comment immediately
+6. **When PR is created:** comment on the card with the PR link; stay In Progress
+7. **When PR is merged:** move card to **Done**, add a summary comment with PR/commit link and any key decisions not already commented
+
+**Commenting rule:** Minor decisions → summarize in the final Done comment. Major direction changes → comment immediately when they happen.

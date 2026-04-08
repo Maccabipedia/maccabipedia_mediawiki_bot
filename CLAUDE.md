@@ -29,7 +29,31 @@ Use `utf-8-sig` encoding when writing CSV/TXT/JSON files with Hebrew text that m
 ### Never use pywikibot's file_page.upload() — use requests directly
 Produces malformed HTTP (bad MIME headers, LF-only line endings) → Apache 400. Use `requests.post(..., files=...)` with pywikibot session cookies. Reference: `upload_basketball_tickets.py` → `_upload_file_via_requests()`.
 
-## 5. Reference Files
+## 5. Workflows
+
+### PR Workflow (all PRs)
+
+**Before creating any PR:**
+- No merge conflicts with `master`
+- `uv run pytest` passes
+- `uv run mypy` has no new type errors
+- PR description includes what changed and why
+
+**After PR is created:**
+- Monitor CI — if checks fail, fix and push before notifying the user
+- User reviews and merges
+
+### maccabistats Version Bump (maccabistats PRs only)
+
+Any PR touching `packages/maccabistats/` must also include, before the PR is created:
+
+1. **Version bump** — update `packages/maccabistats/src/maccabistats/version.py`:
+   - New feature or fix → increment minor version (`2.X` → `2.X+1`)
+   - Small patch → increment patch version (`2.X.Y` → `2.X.Y+1`)
+2. **Changelog entry** — prepend a new entry to `packages/maccabistats/CHANGELOG.md` with the new version and a short description
+3. **Commit both** on the feature branch (e.g. `bump: maccabistats 2.61`)
+
+## 6. Reference Files
 - `.claude/maccabipedia_structure_knowledge.md` — Game pages, player pages, templates, Cargo API
 - `.claude/maccabipedia_research_sources.md` — External data sources: rosters, match results, historical records, photos, video
 - `.claude/maccabistats_knowledge.md` — maccabistats Python package API reference

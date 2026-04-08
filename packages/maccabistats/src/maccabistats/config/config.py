@@ -4,7 +4,7 @@ from .maccabipedia_config import MaccabiPediaConfig
 from .maccabisite_config import MaccabiSiteConfig
 
 # Re-export for convenience
-from .maccabisite_config import MACCABISTATS_DATA_DIR  # noqa: F401
+from .maccabisite_config import get_maccabistats_data_dir  # noqa: F401
 
 
 @dataclass

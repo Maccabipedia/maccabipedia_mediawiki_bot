@@ -44,3 +44,9 @@ def format_report(broken: list[BrokenVideo], report_date: date) -> str:
         for v in videos:
             lines.append(f"  ❌ {v.video_type}: {v.url}")
     return "\n".join(lines)
+
+
+def fetch_game_videos() -> list[dict]:
+    response = requests.get(CARGO_URL)
+    response.raise_for_status()
+    return response.json()

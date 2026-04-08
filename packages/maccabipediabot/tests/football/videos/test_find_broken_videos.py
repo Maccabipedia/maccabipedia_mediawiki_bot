@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from maccabipediabot.football.videos.find_broken_videos import BrokenVideo, format_report
+from maccabipediabot.football.videos.find_broken_videos import BrokenVideo, format_report, fetch_game_videos
 
 
 def test_format_report_header_contains_count():
@@ -46,3 +46,36 @@ def test_format_report_groups_multiple_broken_under_same_page():
     assert "https://youtu.be/1" in report
     assert "https://youtu.be/2" in report
     assert "https://youtu.be/3" in report
+
+
+def test_fetch_game_videos_returns_rows():
+    mock_response = Mock()
+    mock_response.raise_for_status = Mock()
+    mock_response.json.return_value = [
+        {
+            "_pageName": "משחק:01-01-2001 מכבי תל אביב נגד בית\"ר ירושלים - ליגת העל",
+            "FullGame": "https://www.youtube.com/watch?v=abc",
+            "Highlights": None,
+            "Highlights2": None,
+        }
+    ]
+    with patch(
+        "maccabipediabot.football.videos.find_broken_videos.requests.get",
+        return_value=mock_response,
+    ):
+        rows = fetch_game_videos()
+
+    assert len(rows) == 1
+    assert rows[0]["_pageName"] == "משחק:01-01-2001 מכבי תל אביב נגד בית\"ר ירושלים - ליגת העל"
+    assert rows[0]["FullGame"] == "https://www.youtube.com/watch?v=abc"
+
+
+def test_fetch_game_videos_raises_on_http_error():
+    mock_response = Mock()
+    mock_response.raise_for_status.side_effect = requests.HTTPError("500")
+    with patch(
+        "maccabipediabot.football.videos.find_broken_videos.requests.get",
+        return_value=mock_response,
+    ):
+        with pytest.raises(requests.HTTPError):
+            fetch_game_videos()

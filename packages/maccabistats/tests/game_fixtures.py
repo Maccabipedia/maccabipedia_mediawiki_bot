@@ -26,7 +26,7 @@ Maccabi players (all-time top scorers and legends):
   - חיים רביבו (#8) — playmaker, chief assister
   - טל בן חיים (#3) — defender, picks up cards
   - אלכסנדר אובארוב (#1) — goalkeeper, stops penalties (all-time #1 GK, 363 apps)
-  - מלאכי חלימי (#2) — fullback
+  - שמעון שלטיאל (#2) — fullback
 
 Player events covered (each >=2 occurrences):
   - LINE_UP, SUBSTITUTION_IN, SUBSTITUTION_OUT
@@ -164,7 +164,7 @@ GAMES.append(_game(
         _player("גיורא שפיגל", 11, [_lineup()]),
         _player("יוסף מרימוביץ'", 4, [_lineup()]),
         _player("ויקי פרץ", 9, [_lineup()]),
-        _player("מלאכי חלימי", 2, [_lineup()]),
+        _player("שמעון שלטיאל", 2, [_lineup()]),
         _player("אלירן עטר", 15, [_benched()]),
     ]),
     away_team=TeamInGame("מכבי ת\"א שחר", "מאמן שחר", 1, [
@@ -193,7 +193,7 @@ GAMES.append(_game(
         _player("גיורא שפיגל", 11, [_lineup()]),
         _player("יוסף מרימוביץ'", 4, [_lineup()]),
         _player("ויקי פרץ", 9, [_lineup()]),
-        _player("מלאכי חלימי", 2, [_lineup()]),
+        _player("שמעון שלטיאל", 2, [_lineup()]),
         _player("ערן זהבי", 14, [_sub_in(60)]),
         _player("אלירן עטר", 15, [_benched()]),
     ]),
@@ -217,7 +217,7 @@ GAMES.append(_game(
         _player("גיורא שפיגל", 11, [_lineup()]),
         _player("יוסף מרימוביץ'", 4, [_lineup()]),
         _player("ויקי פרץ", 9, [_lineup()]),
-        _player("מלאכי חלימי", 2, [_lineup()]),
+        _player("שמעון שלטיאל", 2, [_lineup()]),
     ]),
     away_team=TeamInGame("מכבי ת\"א אלי פוקס", "מאמן אלי פוקס", 1, [
         _player("פרי נויפלד", 7, [_lineup(), _goal(20)]),
@@ -242,7 +242,7 @@ GAMES.append(_game(
         _player("גיורא שפיגל", 11, [_lineup()]),
         _player("יוסף מרימוביץ'", 4, [_lineup()]),
         _player("ויקי פרץ", 9, [_lineup()]),
-        _player("מלאכי חלימי", 2, [_lineup()]),
+        _player("שמעון שלטיאל", 2, [_lineup()]),
     ]),
     away_team=TeamInGame("מכבי ת\"א אלדד", "מאמן אלדד", 0, [
         _player("רחמים טלבי", 1, [_lineup()]),
@@ -267,7 +267,7 @@ GAMES.append(_game(
         _player("גיורא שפיגל", 11, [_lineup(), _sub_out(55)]),
         _player("יוסף מרימוביץ'", 4, [_lineup()]),
         _player("ויקי פרץ", 9, [_lineup()]),
-        _player("מלאכי חלימי", 2, [_lineup()]),
+        _player("שמעון שלטיאל", 2, [_lineup()]),
         _player("ערן זהבי", 14, [_sub_in(55), _goal(80)]),
     ]),
     away_team=TeamInGame("מכבי ת\"א שחר", "מאמן שחר", 2, [
@@ -297,7 +297,7 @@ GAMES.append(_game(
         _player("גיורא שפיגל", 11, [_lineup()]),
         _player("יוסף מרימוביץ'", 4, [_lineup()]),
         _player("ויקי פרץ", 9, [_lineup()]),
-        _player("מלאכי חלימי", 2, [_lineup()]),
+        _player("שמעון שלטיאל", 2, [_lineup()]),
         # Goal from bench: sub in at 70, score at 85
         _player("ערן זהבי", 14, [_sub_in(70), _goal(85)]),
     ]),
@@ -320,7 +320,7 @@ GAMES.append(_game(
         _player("גיורא שפיגל", 11, [_lineup()]),
         _player("יוסף מרימוביץ'", 4, [_lineup()]),
         _player("ויקי פרץ", 9, [_lineup()]),
-        _player("מלאכי חלימי", 2, [_lineup()]),
+        _player("שמעון שלטיאל", 2, [_lineup()]),
     ]),
     away_team=TeamInGame("מכבי ת\"א אלי פוקס", "מאמן אלי פוקס", 1, [
         _player("פרי נויפלד", 7, [_lineup(), _goal(45, GoalTypes.OWN_GOAL)]),
@@ -348,7 +348,7 @@ GAMES.append(_game(
         _player("גיורא שפיגל", 11, [_lineup()]),
         _player("יוסף מרימוביץ'", 4, [_lineup()]),
         _player("ויקי פרץ", 9, [_lineup()]),
-        _player("מלאכי חלימי", 2, [_lineup()]),
+        _player("שמעון שלטיאל", 2, [_lineup()]),
     ]),
 ))
 
@@ -368,7 +368,7 @@ GAMES.append(_game(
         _player("גיורא שפיגל", 11, [_lineup()]),
         _player("יוסף מרימוביץ'", 4, [_lineup()]),
         _player("ויקי פרץ", 9, [_lineup()]),
-        _player("מלאכי חלימי", 2, [_lineup()]),
+        _player("שמעון שלטיאל", 2, [_lineup()]),
     ]),
     away_team=TeamInGame("מכבי ת\"א אלדד", "מאמן אלדד", 0, [
         _player("רחמים טלבי", 1, [_lineup()]),
@@ -391,7 +391,7 @@ GAMES.append(_game(
         _player("גיורא שפיגל", 11, [_lineup()]),
         _player("יוסף מרימוביץ'", 4, [_lineup()]),
         _player("ויקי פרץ", 9, [_lineup()]),
-        _player("מלאכי חלימי", 2, [_lineup()]),
+        _player("שמעון שלטיאל", 2, [_lineup()]),
     ]),
     away_team=TeamInGame("מכבי ת\"א עודד", "מאמן עודד", 0, [
         _player("איציק זוהר", 10, [_lineup()]),

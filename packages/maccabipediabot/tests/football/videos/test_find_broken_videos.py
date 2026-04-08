@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from maccabipediabot.football.videos.find_broken_videos import BrokenVideo, format_report, fetch_game_videos
+from maccabipediabot.football.videos.find_broken_videos import BrokenVideo, format_report, _fetch_from_table
 
 
 def test_format_report_header_contains_count():
@@ -48,7 +48,7 @@ def test_format_report_groups_multiple_broken_under_same_page():
     assert "https://youtu.be/3" in report
 
 
-def test_fetch_game_videos_returns_rows():
+def test_fetch_from_table_returns_video_entries():
     mock_response = Mock()
     mock_response.raise_for_status = Mock()
     mock_response.json.return_value = [
@@ -59,18 +59,38 @@ def test_fetch_game_videos_returns_rows():
             "Highlights2": None,
         }
     ]
+    fields = {"FullGame": "משחק מלא", "Highlights": "תקציר ראשי", "Highlights2": "תקציר משני"}
     with patch(
         "maccabipediabot.football.videos.find_broken_videos.requests.get",
         return_value=mock_response,
     ):
-        rows = fetch_game_videos()
+        entries = _fetch_from_table("Games_Videos", fields)
 
-    assert len(rows) == 1
-    assert rows[0]["_pageName"] == "משחק:01-01-2001 מכבי תל אביב נגד בית\"ר ירושלים - ליגת העל"
-    assert rows[0]["FullGame"] == "https://www.youtube.com/watch?v=abc"
+    assert len(entries) == 1
+    assert entries[0] == (
+        "משחק:01-01-2001 מכבי תל אביב נגד בית\"ר ירושלים - ליגת העל",
+        "https://www.youtube.com/watch?v=abc",
+        "משחק מלא",
+    )
 
 
-def test_fetch_game_videos_raises_on_http_error():
+def test_fetch_from_table_skips_null_urls():
+    mock_response = Mock()
+    mock_response.raise_for_status = Mock()
+    mock_response.json.return_value = [
+        {"_pageName": "משחק:01-01-2001 א נגד ב - ליגה", "FullGame": None, "Highlights": None, "Highlights2": None}
+    ]
+    fields = {"FullGame": "משחק מלא", "Highlights": "תקציר ראשי", "Highlights2": "תקציר משני"}
+    with patch(
+        "maccabipediabot.football.videos.find_broken_videos.requests.get",
+        return_value=mock_response,
+    ):
+        entries = _fetch_from_table("Games_Videos", fields)
+
+    assert entries == []
+
+
+def test_fetch_from_table_raises_on_http_error():
     mock_response = Mock()
     mock_response.raise_for_status.side_effect = requests.HTTPError("500")
     with patch(
@@ -78,4 +98,4 @@ def test_fetch_game_videos_raises_on_http_error():
         return_value=mock_response,
     ):
         with pytest.raises(requests.HTTPError):
-            fetch_game_videos()
+            _fetch_from_table("Games_Videos", {"FullGame": "משחק מלא"})

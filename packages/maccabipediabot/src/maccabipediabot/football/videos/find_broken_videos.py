@@ -8,21 +8,32 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-CARGO_URL = (
+CARGO_BASE = (
     "https://www.maccabipedia.co.il/index.php"
     "?title=Special:CargoExport&format=json"
-    "&tables=Games_Videos"
-    "&fields=_pageName,FullGame,Highlights,Highlights2"
     "&limit=5000&offset=0"
 )
 OEMBED_URL = "https://www.youtube.com/oembed?url={url}&format=json"
 MAX_CONCURRENT = 20
 
-VIDEO_TYPE_LABELS = {
+_FOOTBALL_FIELDS = {
     "FullGame": "משחק מלא",
     "Highlights": "תקציר ראשי",
     "Highlights2": "תקציר משני",
 }
+_BALL_SPORTS_FIELDS = {
+    "FullGameVideo": "משחק מלא",
+    "FullGameVideo2": "משחק מלא 2",
+    "HighlightsVideo": "תקציר ראשי",
+    "HighlightsVideo2": "תקציר משני",
+    "FansVideo": "וידאו אוהדים",
+}
+
+VIDEO_TABLES: list[tuple[str, dict[str, str]]] = [
+    ("Games_Videos", _FOOTBALL_FIELDS),
+    ("Volleyball_Games", _BALL_SPORTS_FIELDS),
+    ("Basketball_Games", _BALL_SPORTS_FIELDS),
+]
 
 
 @dataclass
@@ -46,10 +57,27 @@ def format_report(broken: list[BrokenVideo], report_date: date) -> str:
     return "\n".join(lines)
 
 
-def fetch_game_videos() -> list[dict]:
-    response = requests.get(CARGO_URL)
+def _fetch_from_table(table: str, fields: dict[str, str]) -> list[tuple[str, str, str]]:
+    """Returns (page_name, url, label) for every non-null video URL in the given table."""
+    fields_str = "_pageName," + ",".join(fields.keys())
+    response = requests.get(f"{CARGO_BASE}&tables={table}&fields={fields_str}")
     response.raise_for_status()
-    return response.json()
+    result = []
+    for row in response.json():
+        page_name = row["_pageName"]
+        for field, label in fields.items():
+            video_url = row.get(field)
+            if video_url:
+                result.append((page_name, video_url, label))
+    return result
+
+
+def fetch_game_videos() -> list[tuple[str, str, str]]:
+    """Returns (page_name, url, label) for all non-null video URLs across all sports."""
+    all_videos: list[tuple[str, str, str]] = []
+    for table, fields in VIDEO_TABLES:
+        all_videos.extend(_fetch_from_table(table, fields))
+    return all_videos
 
 
 def _is_youtube_url(url: str) -> bool:
@@ -75,26 +103,17 @@ async def is_video_broken(session: aiohttp.ClientSession, url: str) -> bool:
 
 
 async def _find_broken_videos() -> list[BrokenVideo]:
-    rows = fetch_game_videos()
+    entries = fetch_game_videos()
     sem = asyncio.Semaphore(MAX_CONCURRENT)
     broken: list[BrokenVideo] = []
 
-    async def check(session: aiohttp.ClientSession, page_name: str, url: str, field: str) -> None:
+    async def check(session: aiohttp.ClientSession, page_name: str, url: str, label: str) -> None:
         async with sem:
             if await is_video_broken(session, url):
-                broken.append(BrokenVideo(
-                    page_name=page_name,
-                    url=url,
-                    video_type=VIDEO_TYPE_LABELS[field],
-                ))
+                broken.append(BrokenVideo(page_name=page_name, url=url, video_type=label))
 
     async with aiohttp.ClientSession() as session:
-        tasks = [
-            check(session, row["_pageName"], url, field)
-            for row in rows
-            for field in VIDEO_TYPE_LABELS
-            if (url := row.get(field))
-        ]
+        tasks = [check(session, page_name, url, label) for page_name, url, label in entries]
         await asyncio.gather(*tasks)
 
     return broken

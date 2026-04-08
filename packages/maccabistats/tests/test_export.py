@@ -1,0 +1,2 @@
+def test__export_all_formats__no_errors_should_be_thrown(tmp_path, maccabipedia_maccabistats):
+    maccabipedia_maccabistats.export.export_everything(folder_path=tmp_path)

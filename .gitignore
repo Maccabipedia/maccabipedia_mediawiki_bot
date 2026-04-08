@@ -115,6 +115,10 @@ apicache-py3/
 throttle.ctrl
 pywikibot.lwp
 
+# Maccabistats
+*.games
+.wheels/
+
 # AI Agents
 .agents-temp/*
 !.agents-temp/.gitkeep

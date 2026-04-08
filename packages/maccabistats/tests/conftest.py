@@ -1,8 +1,12 @@
 import pytest
-from maccabistats import load_from_maccabipedia_source
+
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
+
+from game_fixtures import GAMES
+from players_data_fixtures import create_stub_players_data
 
 
 @pytest.fixture(scope="session")
-def maccabipedia_maccabistats() -> MaccabiGamesStats:
-    return load_from_maccabipedia_source()
+def maccabi_games() -> MaccabiGamesStats:
+    """A deterministic set of 10 synthetic games for offline testing."""
+    return MaccabiGamesStats(GAMES, players_data=create_stub_players_data())

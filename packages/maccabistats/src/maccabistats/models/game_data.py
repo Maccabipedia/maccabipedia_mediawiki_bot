@@ -155,7 +155,7 @@ class GameData(object):
         Wrapper for self.goals, returns just maccabi goals (including own goals scored by the opponent)
         """
         return [goal for goal in self.goals() if
-                (goal['team'] != 'מכבי תל אביב' and goal['goal_type'] == 'Own goal') or
+                (goal['team'] != 'מכבי תל אביב' and goal['goal_type'] == GoalTypes.OWN_GOAL.value) or
                 goal['team'] == 'מכבי תל אביב']
 
     def json_dict(self) -> Dict:

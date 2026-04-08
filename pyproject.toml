@@ -10,3 +10,7 @@ testpaths = [
     "packages/maccabipedia-mcp/tests",
     "packages/maccabistats/tests",
 ]
+addopts = "-m 'not integration'"
+markers = [
+    "integration: tests that hit the live MaccabiPedia API (deselected by default)",
+]

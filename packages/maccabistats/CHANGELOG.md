@@ -1,3 +1,8 @@
+## Version 2.62 ##
+
+    Add best_scorers_in_one_game(score_at_least) and best_assisters_in_one_game(assist_at_least)
+    to rank players by how many games they scored/assisted at least N goals (e.g. hattrick kings)
+
 ## Version 2.61 ##
 
     Replace hardcoded Windows paths with configurable MACCABISTATS_DATA_DIR env var (defaults to ~/maccabistats/)

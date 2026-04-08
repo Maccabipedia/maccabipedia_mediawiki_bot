@@ -2,6 +2,11 @@
 
     Replace hardcoded Windows paths with configurable MACCABISTATS_DATA_DIR env var (defaults to ~/maccabistats/)
 
+## Version 2.60 ##
+
+    Include players data in MaccabiGamesStats pickle for offline loading
+    MaccabiPediaPlayers singleton is now cached in the pickle, so loading works without internet access
+
 ## Version 2.53 ##
 
     Add 3 new ErrorsFinder checks: sub-out without playing, same player on both teams, duplicate events
@@ -9,6 +14,10 @@
 ## Version 2.52 ##
 
     Ignore EventType=13 (display-only events) from MaccabiPedia parser
+
+## Version 2.51 ##
+
+    Support crawling season 2025/26, use higher timeout
 
 ## Version 2.50 ##
 

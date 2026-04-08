@@ -130,8 +130,8 @@ def test_empty_games_does_not_crawl(monkeypatch):
 # --- Backward compatibility ---
 
 
-def test_old_pickle_without_players_data_falls_back_to_crawl(monkeypatch):
-    """Old pickles without maccabipedia_players should fall back to crawling."""
+def test_old_pickle_without_players_data_has_none():
+    """Old pickles without maccabipedia_players result in None — no implicit crawl."""
     players = _make_players_instance()
     games = [_make_game(datetime(2024, 9, 1))]
     stats = MaccabiGamesStats(games, maccabipedia_players=players)
@@ -141,29 +141,17 @@ def test_old_pickle_without_players_data_falls_back_to_crawl(monkeypatch):
     pickled = pickle.dumps(stats)
     MaccabiPediaPlayers._instance = None
 
-    # Verify the old pickle has no maccabipedia_players
     restored = pickle.loads(pickled)
     assert not hasattr(restored, 'maccabipedia_players')
 
-    # Monkeypatch _crawl_players_data to return known data (simulates a real crawl)
-    crawl_called = False
-
-    def fake_crawl():
-        nonlocal crawl_called
-        crawl_called = True
-        return _TEST_PLAYERS_DATA
-
-    monkeypatch.setattr(MaccabiPediaPlayers, '_crawl_players_data', staticmethod(fake_crawl))
-
-    # Simulate get_maccabi_stats_as_newest_wrapper path:
-    # getattr returns None → __init__ falls back to crawl
+    # Wrapping in new MaccabiGamesStats with getattr — gets None, stays None
     wrapper = MaccabiGamesStats(
         restored.games,
         maccabipedia_players=getattr(restored, 'maccabipedia_players', None),
     )
-    assert crawl_called, "Should have crawled from MaccabiPedia for old pickle"
-    assert wrapper.maccabipedia_players is not None
-    assert wrapper.maccabipedia_players.home_players == {"שחקן א"}
+    assert wrapper.maccabipedia_players is None
+    # Non-player stats still work
+    assert len(wrapper) == 1
 
 
 # --- players_special_games ---
@@ -201,17 +189,11 @@ def test_filter_chain_preserves_players_data(monkeypatch):
     assert chained.players_special_games.players_birth_dates["שחקן א"] == datetime(2000, 1, 1)
 
 
-# --- Graceful degradation ---
+# --- No implicit crawl ---
 
 
-def test_crawl_failure_degrades_gracefully(monkeypatch):
-    """If crawling fails, non-player stats should still work."""
-    monkeypatch.setattr(
-        MaccabiPediaPlayers, '_crawl_players_data',
-        staticmethod(lambda: (_ for _ in ()).throw(ConnectionError("No internet"))),
-    )
-    MaccabiPediaPlayers._instance = None
-
+def test_no_implicit_crawl_when_players_not_provided():
+    """Creating MaccabiGamesStats without maccabipedia_players should NOT crawl."""
     games = [_make_game(datetime(2024, 9, 1))]
     stats = MaccabiGamesStats(games)
 
@@ -219,6 +201,6 @@ def test_crawl_failure_degrades_gracefully(monkeypatch):
     assert len(stats) == 1
     assert stats.results.wins_count == 1
 
-    # Player stats should degrade to empty
-    assert stats.players_categories.maccabi_home_players_names == set()
+    # Player stats degrade to empty — no implicit network call
     assert stats.maccabipedia_players is None
+    assert stats.players_categories.maccabi_home_players_names == set()

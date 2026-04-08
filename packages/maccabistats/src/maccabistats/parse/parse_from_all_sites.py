@@ -115,7 +115,9 @@ def merge_maccabi_games_from_all_input_serialized_sources():
                                                            maccabi_games_stats_from_all_sources[1])
     logger.info("Running general fixes on merged maccabi games stats object")
 
-    maccabistats_games = run_general_fixes(MaccabiGamesStats(merged_maccabistats_games))
+    from maccabistats.maccabipedia.players import MaccabiPediaPlayers
+    maccabistats_games = run_general_fixes(MaccabiGamesStats(merged_maccabistats_games,
+                                                              maccabipedia_players=MaccabiPediaPlayers.get_players_data()))
     return maccabistats_games
 
 

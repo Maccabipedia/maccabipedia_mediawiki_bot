@@ -47,7 +47,9 @@ class MaccabiStatsSource(object):
 
         logger.info(f"Starting to parse maccabi games from: {self.name}")
         parsed_games = self._rerun_source()
-        self.maccabi_games_stats = MaccabiGamesStats(parsed_games, f'Source: {self.name}')
+        from maccabistats.maccabipedia.players import MaccabiPediaPlayers
+        self.maccabi_games_stats = MaccabiGamesStats(parsed_games, f'Source: {self.name}',
+                                                      maccabipedia_players=MaccabiPediaPlayers.get_players_data())
 
     def _rerun_source(self):
         """

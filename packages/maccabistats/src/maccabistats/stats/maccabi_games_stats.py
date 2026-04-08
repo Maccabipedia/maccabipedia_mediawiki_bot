@@ -51,20 +51,9 @@ class MaccabiGamesStats:
         self.games: List[GameData] = sorted(games, key=lambda g: g.date)  # Sort the games by date
         self.description = description or self._DEFAULT_DESCRIPTION
 
-        # Store players data so it's pickled with the games (no internet needed on load).
-        # Only crawl when not provided and there are games to process.
-        if maccabipedia_players is not None:
-            self.maccabipedia_players = maccabipedia_players
-        elif self.games:
-            logger.info("No cached players data provided, crawling from MaccabiPedia (requires internet)")
-            try:
-                self.maccabipedia_players = MaccabiPediaPlayers.get_players_data()
-            except Exception:
-                logger.warning("Failed to crawl players data — player-related stats will be unavailable",
-                               exc_info=True)
-                self.maccabipedia_players = None
-        else:
-            self.maccabipedia_players = None
+        # Players data is stored so it's pickled with the games (no internet needed on load).
+        # Callers that need players data should explicitly pass it.
+        self.maccabipedia_players = maccabipedia_players
 
         self.coaches = MaccabiGamesCoachesStats(self)
         self.players = MaccabiGamesPlayersStats(self)

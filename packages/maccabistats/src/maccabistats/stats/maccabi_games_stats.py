@@ -78,6 +78,15 @@ class MaccabiGamesStats:
 
         self.version = maccabistats_version
 
+    def __setstate__(self, state):
+        if 'players_data' not in state:
+            old_version = state.get('version', 'unknown')
+            raise RuntimeError(
+                f"This pickled MaccabiGamesStats (version {old_version}) does not contain players_data. "
+                f"Please re-run run_maccabipedia_source() with maccabistats >= 2.54 to create a new pickle."
+            )
+        self.__dict__.update(state)
+
     def create_maccabi_games_stats_with_filtered_games(self, games: List[GameData], description: str) -> MaccabiGamesStats:
         """Create a filtered MaccabiGamesStats that inherits the players data."""
         return MaccabiGamesStats(games, description, players_data=self.players_data)

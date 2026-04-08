@@ -126,8 +126,8 @@ def test_empty_games_works_with_players_data():
 # --- Backward compatibility ---
 
 
-def test_old_pickle_without_players_data_fails_loudly():
-    """Old pickles without players_data should fail with AttributeError."""
+def test_old_pickle_without_players_data_fails_with_clear_error():
+    """Old pickles without players_data should fail with a clear RuntimeError."""
     players = _make_players_instance()
     games = [_make_game(datetime(2024, 9, 1))]
     stats = MaccabiGamesStats(games, players_data=players)
@@ -137,9 +137,8 @@ def test_old_pickle_without_players_data_fails_loudly():
     pickled = pickle.dumps(stats)
     MaccabiPediaPlayers._instance = None
 
-    restored = pickle.loads(pickled)
-    with pytest.raises(AttributeError):
-        _ = restored.players_data
+    with pytest.raises(RuntimeError, match="does not contain players_data"):
+        pickle.loads(pickled)
 
 
 # --- players_special_games ---

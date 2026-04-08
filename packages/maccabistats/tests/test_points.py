@@ -5,6 +5,7 @@ import pytest
 
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
+from conftest import mock_players_data
 from game_fixtures import _game, _player, _lineup, TeamInGame
 
 
@@ -60,20 +61,20 @@ class TestPointsCalculation:
 
 class TestPointsPrePost1982:
     def test_pre_1982_win_gives_2_points(self, pre_1982_game):
-        stats = MaccabiGamesStats([pre_1982_game])
+        stats = MaccabiGamesStats([pre_1982_game], players_data=mock_players_data())
         assert stats.points == 2
 
     def test_pre_1982_tie_gives_1_point(self, pre_1982_tie_game):
-        stats = MaccabiGamesStats([pre_1982_tie_game])
+        stats = MaccabiGamesStats([pre_1982_tie_game], players_data=mock_players_data())
         assert stats.points == 1
 
     def test_pre_1982_possible_points_is_2_per_game(self, pre_1982_game, pre_1982_tie_game):
         from maccabistats.stats_utilities.points_calculator import calculate_possible_points_for_games
-        stats = MaccabiGamesStats([pre_1982_game, pre_1982_tie_game])
+        stats = MaccabiGamesStats([pre_1982_game, pre_1982_tie_game], players_data=mock_players_data())
         assert calculate_possible_points_for_games(stats) == 4  # 2 games * 2 points each
 
     def test_mixed_eras_points(self, maccabi_games, pre_1982_game):
         league = maccabi_games.league_games
-        mixed = MaccabiGamesStats(league.games + [pre_1982_game])
+        mixed = MaccabiGamesStats(league.games + [pre_1982_game], players_data=mock_players_data())
         # 14 (post-1982 league) + 2 (pre-1982 win) = 16
         assert mixed.points == 16

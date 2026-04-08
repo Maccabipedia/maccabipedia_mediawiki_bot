@@ -3,13 +3,14 @@ import pytest
 
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
+from conftest import mock_players_data
 from game_fixtures import GAMES
 
 
 @pytest.fixture
 def fresh_games() -> MaccabiGamesStats:
     """A fresh instance per test so sort mutations don't leak between tests."""
-    return MaccabiGamesStats(GAMES)
+    return MaccabiGamesStats(GAMES, players_data=mock_players_data())
 
 
 class TestSeasonsBasics:

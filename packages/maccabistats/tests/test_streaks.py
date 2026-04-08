@@ -114,6 +114,7 @@ class TestScoreDiffStreaks:
 class TestEmptyStreaks:
     def test_empty_games_streak(self):
         from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
-        empty = MaccabiGamesStats([])
+        from conftest import mock_players_data
+        empty = MaccabiGamesStats([], players_data=mock_players_data())
         streak = empty.streaks.get_longest_wins_streak_games()
         assert len(streak) == 0

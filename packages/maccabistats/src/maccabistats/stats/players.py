@@ -138,6 +138,15 @@ class MaccabiGamesPlayersStats(object):
             lambda p: p.event_count_by_type(GameEventTypes.GOAL_ASSIST) + p.event_count_by_type(
                 GameEventTypes.GOAL_SCORE) - p.goals_count_by_goal_type(GoalTypes.OWN_GOAL))
 
+    def best_scorers_in_one_game(self, score_at_least: int) -> List[PlayerStats]:
+        return self.__get_players_from_all_games_with_most_of_this_condition(
+            lambda p: 1 if p.event_count_by_type(GameEventTypes.GOAL_SCORE) - p.goals_count_by_goal_type(
+                GoalTypes.OWN_GOAL) >= score_at_least else 0)
+
+    def best_assisters_in_one_game(self, assist_at_least: int) -> List[PlayerStats]:
+        return self.__get_players_from_all_games_with_most_of_this_condition(
+            lambda p: 1 if p.event_count_by_type(GameEventTypes.GOAL_ASSIST) >= assist_at_least else 0)
+
     # endregion
 
     # region Top players by other game events sorting

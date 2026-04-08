@@ -137,6 +137,35 @@ class TestPenaltyMissed:
         assert missed.get("אבי נמני", 0) == 2
 
 
+class TestBestScorersInOneGame:
+    def test_best_scorers_in_one_game_with_two_goals(self, maccabi_games):
+        # score_at_least=2: אבי נמני scored 2 in game 1 (min 15, 70) and game 5 (min 50, 70)
+        result = dict(maccabi_games.players.best_scorers_in_one_game(score_at_least=2))
+        assert result["אבי נמני"] == 2
+
+    def test_best_scorers_in_one_game_excludes_below_threshold(self, maccabi_games):
+        # score_at_least=2: אלי דריקס scored 1 per game max, should not appear
+        result = dict(maccabi_games.players.best_scorers_in_one_game(score_at_least=2))
+        assert "אלי דריקס" not in result
+
+    def test_best_scorers_in_one_game_no_results_for_high_threshold(self, maccabi_games):
+        # No player scores 5+ in any fixture game
+        result = maccabi_games.players.best_scorers_in_one_game(score_at_least=5)
+        assert len(result) == 0
+
+
+class TestBestAssistersInOneGame:
+    def test_best_assisters_in_one_game_with_two_assists(self, maccabi_games):
+        # assist_at_least=2: חיים רביבו assisted 2 in games 1, 4, and 5
+        result = dict(maccabi_games.players.best_assisters_in_one_game(assist_at_least=2))
+        assert result["חיים רביבו"] == 3
+
+    def test_best_assisters_in_one_game_excludes_below_threshold(self, maccabi_games):
+        # assist_at_least=2: no other player has 2+ assists in one game
+        result = dict(maccabi_games.players.best_assisters_in_one_game(assist_at_least=2))
+        assert len(result) == 1  # Only חיים רביבו
+
+
 class TestOwnGoals:
     def test_best_scorers_excludes_own_goals(self, maccabi_games):
         scorers = dict(maccabi_games.players.best_scorers)

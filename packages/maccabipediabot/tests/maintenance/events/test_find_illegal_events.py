@@ -5,7 +5,7 @@ from maccabipediabot.maintenance.events.find_illegal_events import (
     AutoFixedPage,
     NeedsManualReviewPage,
     ROW_SEPARATOR,
-    TRACKING_CATEGORY,
+    TRACKING_CATEGORIES,
     _page_url,
 )
 
@@ -13,7 +13,9 @@ from maccabipediabot.maintenance.events.find_illegal_events import (
 # ── Task 1: Module skeleton ──────────────────────────────────────────────────
 
 def test_module_imports_cleanly():
-    assert TRACKING_CATEGORY == "משחקים המכילים אירוע לא תקין"
+    assert "משחקים המכילים אירוע לא תקין" in TRACKING_CATEGORIES
+    assert "שחקנים עם תיוג שער לא חוקי" in TRACKING_CATEGORIES
+    assert "שחקנים עם תיוג בישול לא חוקי" in TRACKING_CATEGORIES
     assert ROW_SEPARATOR == ","
 
 

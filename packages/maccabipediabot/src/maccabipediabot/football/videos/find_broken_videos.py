@@ -133,8 +133,8 @@ async def is_video_broken(session: aiohttp.ClientSession, url: str) -> bool:
     try:
         async with session.get(oembed) as resp:
             return resp.status != 200
-    except Exception:
-        logger.exception("Error checking %s — skipping", url)
+    except aiohttp.ClientError:
+        logger.warning("Network error checking %s — skipping", url)
         return False
 
 

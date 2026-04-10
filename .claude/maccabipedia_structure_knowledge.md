@@ -140,7 +140,7 @@ Each event is one pipe-separated entry in the `|אירועי שחקנים=` para
 **The single-colon trap:**  
 A single `:` before the minute (e.g. `גול-נגיחה:67`) instead of `::` (e.g. `גול-נגיחה::67`) causes the template to tag the page as having illegal events, even though the type name is valid. Always use `::` between every field.
 
-**Tracking category:** Pages with bad events are added to the "אירועי שחקנים לא חוקיים" tracking category.
+**Tracking category:** Pages with bad events are added to the `משחקים המכילים אירוע לא תקין` tracking category (populated by the `הזנת אירועי משחק` template's `#ברירת מחדל` branch for unknown main event types).
 
 ## 10. Basketball Player Stats (`|שחקנים מכבי=` / `|שחקנים יריבה=`)
 

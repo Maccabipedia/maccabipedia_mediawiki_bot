@@ -189,6 +189,11 @@ def _make_mock_session(status: int) -> Mock:
     return mock_session
 
 
+def test_is_video_broken_returns_true_on_400():
+    result = asyncio.run(is_video_broken(_make_mock_session(400), "https://www.youtube.com/watch?v=broken"))
+    assert result is True
+
+
 def test_is_video_broken_returns_true_on_404():
     result = asyncio.run(is_video_broken(_make_mock_session(404), "https://www.youtube.com/watch?v=broken"))
     assert result is True

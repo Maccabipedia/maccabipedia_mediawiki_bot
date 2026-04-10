@@ -1,8 +1,6 @@
 import pytest
 from unittest.mock import Mock, patch
 
-import requests
-
 from maccabipediabot.maintenance.events.find_illegal_events import (
     AutoFixedPage,
     NeedsManualReviewPage,
@@ -40,85 +38,38 @@ def test_needs_manual_review_is_dataclass():
 
 # ── Task 2: fetch_category_pages ─────────────────────────────────────────────
 
-def _mock_response(json_data: dict) -> Mock:
-    resp = Mock()
-    resp.raise_for_status = Mock()
-    resp.headers = {"Content-Type": "application/json"}
-    resp.json.return_value = json_data
-    return resp
-
-
-def test_fetch_category_pages_returns_titles_from_single_batch():
+def test_fetch_category_pages_returns_pages_from_category():
     from maccabipediabot.maintenance.events.find_illegal_events import fetch_category_pages
 
-    response_json = {
-        "query": {
-            "categorymembers": [
-                {"title": "משחק:01-01-2001 א נגד ב - ליגה"},
-                {"title": "משחק:02-02-2002 ג נגד ד - ליגה"},
-            ]
-        }
-    }
-    with patch(
-        "maccabipediabot.maintenance.events.find_illegal_events.requests.get",
-        return_value=_mock_response(response_json),
-    ):
-        pages = fetch_category_pages("אירועי שחקנים לא חוקיים")
+    mock_page1 = Mock()
+    mock_page1.title.return_value = "משחק:01-01-2001 א נגד ב - ליגה"
+    mock_page2 = Mock()
+    mock_page2.title.return_value = "משחק:02-02-2002 ג נגד ד - ליגה"
 
-    assert pages == [
+    with patch("maccabipediabot.maintenance.events.find_illegal_events.pw.Category"), \
+         patch(
+             "maccabipediabot.maintenance.events.find_illegal_events.pagegenerators.CategorizedPageGenerator",
+             return_value=[mock_page1, mock_page2],
+         ):
+        pages = fetch_category_pages(Mock(), "אירועי שחקנים לא חוקיים")
+
+    assert [p.title() for p in pages] == [
         "משחק:01-01-2001 א נגד ב - ליגה",
         "משחק:02-02-2002 ג נגד ד - ליגה",
     ]
 
 
-def test_fetch_category_pages_follows_continue():
-    from maccabipediabot.maintenance.events.find_illegal_events import fetch_category_pages
-
-    first = {
-        "query": {"categorymembers": [{"title": "משחק:page1"}]},
-        "continue": {"cmcontinue": "TOKEN"},
-    }
-    second = {
-        "query": {"categorymembers": [{"title": "משחק:page2"}]},
-    }
-    mock_get = Mock(side_effect=[_mock_response(first), _mock_response(second)])
-
-    with patch(
-        "maccabipediabot.maintenance.events.find_illegal_events.requests.get",
-        mock_get,
-    ):
-        pages = fetch_category_pages("אירועי שחקנים לא חוקיים")
-
-    assert pages == ["משחק:page1", "משחק:page2"]
-    assert mock_get.call_count == 2
-    # Second call must include the continue token
-    second_call_params = mock_get.call_args_list[1].kwargs["params"]
-    assert second_call_params["cmcontinue"] == "TOKEN"
-
-
 def test_fetch_category_pages_returns_empty_when_category_is_empty():
     from maccabipediabot.maintenance.events.find_illegal_events import fetch_category_pages
 
-    with patch(
-        "maccabipediabot.maintenance.events.find_illegal_events.requests.get",
-        return_value=_mock_response({"query": {"categorymembers": []}}),
-    ):
-        pages = fetch_category_pages("אירועי שחקנים לא חוקיים")
+    with patch("maccabipediabot.maintenance.events.find_illegal_events.pw.Category"), \
+         patch(
+             "maccabipediabot.maintenance.events.find_illegal_events.pagegenerators.CategorizedPageGenerator",
+             return_value=[],
+         ):
+        pages = fetch_category_pages(Mock(), "אירועי שחקנים לא חוקיים")
 
     assert pages == []
-
-
-def test_fetch_category_pages_raises_on_http_error():
-    from maccabipediabot.maintenance.events.find_illegal_events import fetch_category_pages
-
-    bad = Mock()
-    bad.raise_for_status.side_effect = requests.HTTPError("500")
-    with patch(
-        "maccabipediabot.maintenance.events.find_illegal_events.requests.get",
-        return_value=bad,
-    ):
-        with pytest.raises(requests.HTTPError):
-            fetch_category_pages("אירועי שחקנים לא חוקיים")
 
 
 # ── Task 3: fix_single_colon_trap ────────────────────────────────────────────

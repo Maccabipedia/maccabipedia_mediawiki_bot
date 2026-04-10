@@ -21,14 +21,13 @@ from urllib.parse import quote
 
 import mwparserfromhell as mw
 import pywikibot as pw
-import requests
+from pywikibot import pagegenerators
 
 from maccabipediabot.common.maccabistats_player_event import PlayerEvent
 
 logger = logging.getLogger(__name__)
 
 WIKI_BASE_URL = "https://www.maccabipedia.co.il"
-API_URL = "https://www.maccabipedia.co.il/api.php"
 TRACKING_CATEGORY = "אירועי שחקנים לא חוקיים"
 FOOTBALL_TEMPLATE = "קטלוג משחקים"
 EVENTS_PARAM = "אירועי שחקנים"
@@ -69,37 +68,10 @@ def _page_url(page_name: str) -> str:
     return f"{WIKI_BASE_URL}/{quote(page_name.replace(' ', '_'), safe='/:')}"
 
 
-def fetch_category_pages(category: str) -> list[str]:
-    """Return all page titles currently in the given MediaWiki category.
-
-    Handles paging via the `continue` block. The category name should be
-    passed without the "קטגוריה:" prefix — we add it here.
-    """
-    titles: list[str] = []
-    cmcontinue: str | None = None
-
-    while True:
-        params: dict[str, str | int] = {
-            "action": "query",
-            "list": "categorymembers",
-            "cmtitle": f"קטגוריה:{category}",
-            "cmlimit": 500,
-            "format": "json",
-            "formatversion": "2",
-        }
-        if cmcontinue is not None:
-            params["cmcontinue"] = cmcontinue
-
-        response = requests.get(API_URL, params=params)
-        response.raise_for_status()
-        data = response.json()
-
-        titles.extend(m["title"] for m in data["query"]["categorymembers"])
-
-        cont = data.get("continue", {}).get("cmcontinue")
-        if cont is None:
-            return titles
-        cmcontinue = cont
+def fetch_category_pages(site: pw.Site, category: str) -> list[pw.Page]:
+    """Return all pages currently in the given MediaWiki category."""
+    cat = pw.Category(site, category)
+    return list(pagegenerators.CategorizedPageGenerator(cat))
 
 
 def fix_single_colon_trap(text: str) -> tuple[str, int]:
@@ -248,30 +220,21 @@ def main() -> None:
         level=logging.INFO,
     )
 
-    page_titles = fetch_category_pages(TRACKING_CATEGORY)
-    logger.info("Found %d pages in tracking category", len(page_titles))
-
-    if not page_titles:
-        return
-
     from maccabipediabot.common.wiki_login import get_site
     pw.config.verbose_output = False
     site = get_site()
 
+    pages = fetch_category_pages(site, TRACKING_CATEGORY)
+    logger.info("Found %d pages in tracking category", len(pages))
+
+    if not pages:
+        return
+
     fixed: list[AutoFixedPage] = []
     needs_review: list[NeedsManualReviewPage] = []
 
-    for title in page_titles:
-        try:
-            page = pw.Page(site, title)
-            if not page.exists():
-                logger.warning("Page not found: %s", title)
-                continue
-            result = process_page(page, page_name=title)
-        except Exception:
-            logger.exception("Failed to process %s", title)
-            continue
-
+    for page in pages:
+        result = process_page(page, page_name=page.title())
         if isinstance(result, AutoFixedPage):
             fixed.append(result)
         else:

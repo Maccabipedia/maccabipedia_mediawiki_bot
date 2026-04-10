@@ -88,7 +88,7 @@ def format_removal_report(removed: list[BrokenVideo], report_date: date) -> str:
         url = _page_url(page_name)
         lines.append(f'\n<a href="{url}">{page_name}</a>')
         for v in videos:
-            lines.append(f"  • {v.video_type}: {v.url}")
+            lines.append(f'  • <a href="{v.url}">{v.video_type}</a>')
     return "\n".join(lines)
 
 

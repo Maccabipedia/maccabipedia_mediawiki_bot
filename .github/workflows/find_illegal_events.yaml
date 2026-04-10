@@ -1,0 +1,54 @@
+name: Find Illegal Player Events
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  find-illegal-events:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          architecture: x64
+      - uses: astral-sh/setup-uv@v6
+      - name: Install dependencies
+        run: uv sync
+      - name: Find and fix illegal player events
+        env:
+          PYWIKIBOT_DIR: ${{ github.workspace }}/packages/maccabipediabot/src/maccabipediabot/pywikibot_configs
+          MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
+          MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
+        run: uv run python -m maccabipediabot.maintenance.events.find_illegal_events > illegal_events_report.txt
+      - name: Read report into output
+        id: report
+        run: |
+          if [ -s illegal_events_report.txt ]; then
+            echo "has_content=true" >> $GITHUB_OUTPUT
+            {
+              echo "content<<REPORT_EOF"
+              cat illegal_events_report.txt
+              echo "REPORT_EOF"
+            } >> $GITHUB_OUTPUT
+          else
+            echo "has_content=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Send report to Telegram
+        if: steps.report.outputs.has_content == 'true'
+        uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.MACCABIPEDIA_ERRORS_TELEGRAM_TO }}
+          token: ${{ secrets.MACCABIPEDIA_ERRORS_TELEGRAM_TOKEN }}
+          format: HTML
+          message: ${{ steps.report.outputs.content }}
+
+  workflow-keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: liskin/gh-workflow-keepalive@v1

@@ -153,7 +153,7 @@ def test_search_pages_namespace_none_searches_all(client):
 @responses.activate
 def test_search_pages_uses_srwhat_text(client):
     responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
-    client.search_pages("אלי דרייגור")
+    client.search_pages("מוטל'ה שפיגלר")
     params = responses.calls[0].request.params
     assert params["srwhat"] == "text"
 

@@ -82,14 +82,14 @@ def search_pages(query: str, namespace: int | None = 0, limit: int = 500) -> dic
     On API error, returns {"error": True, "code": ..., "message": ...}.
 
     Examples:
-        search_pages("אלי דרייגור")
-        → {"total_hits": 73, "results": [
-               {"pageid": 1523, "title": "אלי דרייגור", "snippet": "..."},
-               {"pageid": 8891, "title": "גמר גביע 1958/59", "snippet": "..."},
+        search_pages("אבי כהן")
+        → {"total_hits": 312, "results": [
+               {"pageid": 1523, "title": "אבי כהן", "snippet": "..."},
+               {"pageid": 8891, "title": "גמר גביע 1976/77", "snippet": "..."},
                ...
            ]}
 
-        search_pages("מכבי תל אביב", namespace=None, limit=50)
+        search_pages("ערן זהבי", namespace=None, limit=50)
         → search every namespace (catches file descriptions, categories,
           song pages, etc.) for the phrase, cap at 50 hits.
     """

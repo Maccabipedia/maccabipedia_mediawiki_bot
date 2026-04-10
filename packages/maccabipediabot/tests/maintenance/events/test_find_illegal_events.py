@@ -13,7 +13,7 @@ from maccabipediabot.maintenance.events.find_illegal_events import (
 # ── Task 1: Module skeleton ──────────────────────────────────────────────────
 
 def test_module_imports_cleanly():
-    assert TRACKING_CATEGORY == "אירועי שחקנים לא חוקיים"
+    assert TRACKING_CATEGORY == "משחקים המכילים אירוע לא תקין"
     assert ROW_SEPARATOR == ","
 
 

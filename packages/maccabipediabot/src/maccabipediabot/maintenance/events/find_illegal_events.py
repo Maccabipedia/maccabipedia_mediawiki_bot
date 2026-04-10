@@ -28,7 +28,7 @@ from maccabipediabot.common.maccabistats_player_event import PlayerEvent
 logger = logging.getLogger(__name__)
 
 WIKI_BASE_URL = "https://www.maccabipedia.co.il"
-TRACKING_CATEGORY = "אירועי שחקנים לא חוקיים"
+TRACKING_CATEGORY = "משחקים המכילים אירוע לא תקין"
 FOOTBALL_TEMPLATE = "קטלוג משחקים"
 EVENTS_PARAM = "אירועי שחקנים"
 

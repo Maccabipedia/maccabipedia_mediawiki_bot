@@ -191,7 +191,7 @@ def _remove_broken_link(site: pw.Site, video: BrokenVideo) -> bool:
     if not tmpl.has(field) or not str(tmpl.get(field).value).strip():
         return False
 
-    tmpl.get(field).value = ""
+    tmpl.get(field).value = "\n"
     page.text = str(parsed)
     try:
         page.save(summary="MaccabiBot - Remove broken video link", bot=True)

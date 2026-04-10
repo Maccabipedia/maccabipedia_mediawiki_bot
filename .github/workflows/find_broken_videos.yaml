@@ -42,6 +42,7 @@ jobs:
         with:
           to: ${{ secrets.MACCABIPEDIA_BROKEN_VIDEOS_TELEGRAM_TO }}
           token: ${{ secrets.MACCABIPEDIA_ERRORS_TELEGRAM_TOKEN }}
+          format: HTML
           message: ${{ steps.report.outputs.content }}
 
   workflow-keepalive:

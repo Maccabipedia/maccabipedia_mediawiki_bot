@@ -263,25 +263,26 @@ class WikiClient:
     def search_pages(self, query: str, namespace: int = 0, limit: int = 500) -> dict:
         if limit <= 0:
             return {"total_hits": 0, "results": []}
-        # Strip any embedded quotes so the outer phrase wrapping stays balanced.
+        # Strip embedded quotes so the outer phrase wrapping stays balanced.
         phrase = query.replace('"', "")
-        per_page = min(limit, 500)
         params: dict[str, Any] = {
             "action": "query",
             "list": "search",
             "srsearch": f'"{phrase}"',
             "srnamespace": namespace,
-            "srlimit": per_page,
+            "srlimit": min(limit, 500),
             "srwhat": "text",
             "formatversion": 2,
         }
         results: list[dict] = []
         total_hits = 0
-        while True:
+
+        while len(results) < limit:
             resp = self._get(params)
-            err = self._check_json(resp)
-            if err:
-                return err
+            json_err = self._check_json(resp)
+            if json_err:
+                return json_err
+
             data = resp.json()
             if "error" in data:
                 return {
@@ -289,21 +290,26 @@ class WikiClient:
                     "code": data["error"]["code"],
                     "message": data["error"]["info"],
                 }
+
             query_data = data.get("query", {})
             total_hits = query_data.get("searchinfo", {}).get("totalhits", total_hits)
-            page = query_data.get("search", [])
-            if not page:
+            page_hits = query_data.get("search", [])
+            if not page_hits:
                 break
-            for r in page:
-                results.append({"pageid": r["pageid"], "title": r["title"], "snippet": r.get("snippet", "")})
-                if len(results) >= limit:
-                    break
-            if len(results) >= limit:
+
+            remaining = limit - len(results)
+            for hit in page_hits[:remaining]:
+                results.append({
+                    "pageid": hit["pageid"],
+                    "title": hit["title"],
+                    "snippet": hit.get("snippet", ""),
+                })
+
+            next_offset = data.get("continue", {}).get("sroffset")
+            if next_offset is None or next_offset == params.get("sroffset"):
                 break
-            new_offset = data.get("continue", {}).get("sroffset")
-            if new_offset is None or new_offset == params.get("sroffset"):
-                break
-            params["sroffset"] = new_offset
+            params["sroffset"] = next_offset
+
         return {"total_hits": total_hits, "results": results}
 
     def list_category_pages(self, category: str, limit: int = 50) -> list[str]:

@@ -73,6 +73,17 @@ def search_pages(query: str, namespace: int = 0, limit: int = 500) -> dict:
     - total_hits: full wiki-wide match count (may exceed limit)
     - results: list of {pageid, title, snippet}, capped at *limit*
     On API error, returns {"error": True, "code": ..., "message": ...}.
+
+    Examples:
+        search_pages("אלי דרייגור")
+        → {"total_hits": 73, "results": [
+               {"pageid": 1523, "title": "אלי דרייגור", "snippet": "..."},
+               {"pageid": 8891, "title": "גמר גביע 1958/59", "snippet": "..."},
+               ...
+           ]}
+
+        search_pages("גמר גביע המדינה", namespace=14, limit=50)
+        → search the Category namespace (14) for the phrase, cap at 50 hits.
     """
     return _client.search_pages(query, namespace=namespace, limit=limit)
 

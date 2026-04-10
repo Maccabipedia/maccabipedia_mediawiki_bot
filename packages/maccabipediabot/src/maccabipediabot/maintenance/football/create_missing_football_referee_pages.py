@@ -21,7 +21,6 @@ from collections.abc import Iterable
 
 import pywikibot as pw
 import requests
-from mwparserfromhell.nodes.template import Template
 
 from maccabipediabot.common.wiki_login import get_site
 
@@ -103,9 +102,7 @@ def collect_all_referee_names() -> list[str]:
 
 
 def build_referee_stub_wikitext(name: str) -> str:
-    template = Template(REFEREE_TEMPLATE_NAME)
-    template.add("שם להצגה", name)
-    return str(template)
+    return f"{{{{{REFEREE_TEMPLATE_NAME}\n|שם להצגה={name}\n}}}}"
 
 
 def create_referee_stub(site: pw.Site, name: str) -> str:

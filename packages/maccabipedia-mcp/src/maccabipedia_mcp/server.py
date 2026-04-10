@@ -63,12 +63,14 @@ def page_exists(title: str) -> dict:
 
 @mcp.tool
 def search_pages(query: str, namespace: int = 0, limit: int = 500) -> dict:
-    """Search for an exact phrase across wiki pages (namespace 0 by default).
+    """Search for an exact phrase across wiki page text (main namespace by default).
 
-    Wraps the query in quotes for exact-match search (srwhat=text).
-    Automatically pages through results up to *limit* total hits.
-    Returns total_hits (total matches on the wiki) and results (list of
-    matching pages with pageid, title, and snippet).
+    Wraps the query in quotes for exact-phrase match across full page text
+    (not just titles). Automatically pages through results until *limit*
+    entries are collected. Returns a dict with:
+    - total_hits: full wiki-wide match count (may exceed limit)
+    - results: list of {pageid, title, snippet}, capped at *limit*
+    On API error, returns {"error": True, "code": ..., "message": ...}.
     """
     return _client.search_pages(query, namespace=namespace, limit=limit)
 

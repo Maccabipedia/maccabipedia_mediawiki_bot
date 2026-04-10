@@ -261,11 +261,13 @@ class WikiClient:
         return {"exists": exists, "pageid": page.get("pageid"), "redirect": redirect}
 
     def search_pages(self, query: str, namespace: int = 0, limit: int = 500) -> dict:
+        # Strip any embedded quotes so the outer phrase wrapping stays balanced.
+        phrase = query.replace('"', "")
         per_page = min(limit, 500)
         params: dict[str, Any] = {
             "action": "query",
             "list": "search",
-            "srsearch": f'"{query}"',
+            "srsearch": f'"{phrase}"',
             "srnamespace": namespace,
             "srlimit": per_page,
             "srwhat": "text",
@@ -275,19 +277,31 @@ class WikiClient:
         total_hits = 0
         while True:
             resp = self._get(params)
+            err = self._check_json(resp)
+            if err:
+                return err
             data = resp.json()
+            if "error" in data:
+                return {
+                    "error": True,
+                    "code": data["error"]["code"],
+                    "message": data["error"]["info"],
+                }
             query_data = data.get("query", {})
             total_hits = query_data.get("searchinfo", {}).get("totalhits", total_hits)
-            for r in query_data.get("search", []):
+            page = query_data.get("search", [])
+            if not page:
+                break
+            for r in page:
                 results.append({"pageid": r["pageid"], "title": r["title"], "snippet": r.get("snippet", "")})
                 if len(results) >= limit:
                     break
             if len(results) >= limit:
                 break
-            sroffset = data.get("continue", {}).get("sroffset")
-            if sroffset is None:
+            new_offset = data.get("continue", {}).get("sroffset")
+            if new_offset is None or new_offset == params.get("sroffset"):
                 break
-            params["sroffset"] = sroffset
+            params["sroffset"] = new_offset
         return {"total_hits": total_hits, "results": results}
 
     def list_category_pages(self, category: str, limit: int = 50) -> list[str]:

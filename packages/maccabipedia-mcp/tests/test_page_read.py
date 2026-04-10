@@ -198,6 +198,96 @@ def test_search_pages_limit_caps_results(client):
 
 
 @responses.activate
+def test_search_pages_returns_error_on_api_error(client):
+    responses.get(
+        API_URL,
+        json={"error": {"code": "srsearch-invalid", "info": "Invalid search term"}},
+    )
+    result = client.search_pages("מכבי")
+    assert result["error"] is True
+    assert result["code"] == "srsearch-invalid"
+    assert result["message"] == "Invalid search term"
+
+
+@responses.activate
+def test_search_pages_returns_error_on_non_json(client):
+    responses.get(
+        API_URL,
+        body="<html>Internal Server Error</html>",
+        content_type="text/html",
+    )
+    result = client.search_pages("מכבי")
+    assert result["error"] is True
+    assert result["code"] == "non_json"
+    assert "non-JSON" in result["message"]
+
+
+@responses.activate
+def test_search_pages_strips_embedded_quotes(client):
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages('אבי כהן "קפטן"')
+    params = responses.calls[0].request.params
+    assert params["srsearch"] == '"אבי כהן קפטן"'
+
+
+@responses.activate
+def test_search_pages_breaks_on_stale_sroffset(client):
+    # Pathological case: API keeps echoing the same sroffset without advancing.
+    # The loop must break rather than spin forever.
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 999},
+                "search": [{"pageid": 1, "title": "מכבי תל אביב", "snippet": ""}],
+            },
+            "continue": {"sroffset": 5, "continue": "-||"},
+        },
+    )
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 999},
+                "search": [{"pageid": 2, "title": "מכבי חיפה", "snippet": ""}],
+            },
+            "continue": {"sroffset": 5, "continue": "-||"},
+        },
+    )
+    result = client.search_pages("מכבי", limit=500)
+    assert len(responses.calls) == 2
+    assert len(result["results"]) == 2
+
+
+@responses.activate
+def test_search_pages_breaks_on_empty_page(client):
+    # API returns a continue block but an empty search array — should break.
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 10},
+                "search": [{"pageid": 1, "title": "מכבי", "snippet": ""}],
+            },
+            "continue": {"sroffset": 1, "continue": "-||"},
+        },
+    )
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 10},
+                "search": [],
+            },
+            "continue": {"sroffset": 2, "continue": "-||"},
+        },
+    )
+    result = client.search_pages("מכבי", limit=500)
+    assert len(responses.calls) == 2
+    assert len(result["results"]) == 1
+
+
+@responses.activate
 def test_list_category_pages(client):
     responses.get(
         API_URL,

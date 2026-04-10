@@ -23,6 +23,8 @@ import mwparserfromhell as mw
 import pywikibot as pw
 import requests
 
+from maccabipediabot.common.maccabistats_player_event import PlayerEvent
+
 logger = logging.getLogger(__name__)
 
 WIKI_BASE_URL = "https://www.maccabipedia.co.il"
@@ -65,3 +67,220 @@ class NeedsManualReviewPage:
 
 def _page_url(page_name: str) -> str:
     return f"{WIKI_BASE_URL}/{quote(page_name.replace(' ', '_'), safe='/:')}"
+
+
+def fetch_category_pages(category: str) -> list[str]:
+    """Return all page titles currently in the given MediaWiki category.
+
+    Handles paging via the `continue` block. The category name should be
+    passed without the "קטגוריה:" prefix — we add it here.
+    """
+    titles: list[str] = []
+    cmcontinue: str | None = None
+
+    while True:
+        params: dict[str, str | int] = {
+            "action": "query",
+            "list": "categorymembers",
+            "cmtitle": f"קטגוריה:{category}",
+            "cmlimit": 500,
+            "format": "json",
+            "formatversion": "2",
+        }
+        if cmcontinue is not None:
+            params["cmcontinue"] = cmcontinue
+
+        response = requests.get(API_URL, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        titles.extend(m["title"] for m in data["query"]["categorymembers"])
+
+        cont = data.get("continue", {}).get("cmcontinue")
+        if cont is None:
+            return titles
+        cmcontinue = cont
+
+
+def fix_single_colon_trap(text: str) -> tuple[str, int]:
+    """Fix `::<type>:<minute>::` → `::<type>::<minute>::`.
+
+    Uses a purely structural regex: it matches any text fragment that
+    looks like `<something>:<digits>` sandwiched between `::` separators.
+    Does not need to know which event types are valid — the `::` sandwich
+    is specific enough that it only fires on real event rows.
+
+    Returns (new_text, number_of_replacements_made).
+    """
+    new_text, count = SINGLE_COLON_TRAP.subn(r"\1::\2", text)
+    return new_text, count
+
+
+def get_events_param_value(wikitext: str) -> str:
+    """Return the |אירועי שחקנים= parameter value from קטלוג משחקים, or ""."""
+    parsed = mw.parse(wikitext)
+    templates = parsed.filter_templates(
+        matches=lambda t: t.name.strip() == FOOTBALL_TEMPLATE
+    )
+    if not templates:
+        return ""
+
+    template = templates[0]
+    if not template.has(EVENTS_PARAM):
+        return ""
+
+    return str(template.get(EVENTS_PARAM).value)
+
+
+def find_malformed_rows(events_value: str) -> list[str]:
+    """Return event rows that PlayerEvent.from_maccabipedia_format can't parse.
+
+    Delegates validation to the existing parser — it raises TypeError for
+    wrong field count and ValueError for non-integer minute. Both conditions
+    mean the row is malformed.
+
+    Rows are separated by `,` (same as sort_players_events.py).
+    """
+    malformed: list[str] = []
+    for raw_row in events_value.split(ROW_SEPARATOR):
+        row = raw_row.strip()
+        if not row:
+            continue
+        try:
+            PlayerEvent.from_maccabipedia_format(row)
+        except (TypeError, ValueError):
+            malformed.append(row)
+
+    return malformed
+
+
+def format_report(
+    fixed: list[AutoFixedPage],
+    needs_review: list[NeedsManualReviewPage],
+    report_date: date,
+) -> str:
+    """Build the Telegram HTML report.
+
+    Returns empty string if both lists are empty — the workflow uses
+    this as the gate for "don't send a Telegram message at all".
+
+    RTL handling mirrors the broken videos report: \u200f at line start,
+    \u200b at line end. Documented in memory: feedback_telegram_html_rtl.md.
+    """
+    if not fixed and not needs_review:
+        return ""
+
+    lines: list[str] = []
+
+    if fixed:
+        lines.append(f"תוקנו אוטומטית {len(fixed)} עמודים — {report_date}")
+        for page in fixed:
+            page_url = _page_url(page.page_name)
+            lines.append(
+                f'\u200f<a href="{page_url}">{page.page_name}</a> '
+                f'({page.fixes_count} תיקונים)\u200b'
+            )
+
+    if needs_review:
+        if fixed:
+            lines.append("")
+        lines.append(f"⚠️ דורש בדיקה ידנית — {len(needs_review)} עמודים")
+        for page in needs_review:
+            page_url = _page_url(page.page_name)
+            lines.append(f'\u200f<a href="{page_url}">{page.page_name}</a>\u200b')
+            if page.malformed_rows:
+                for row in page.malformed_rows:
+                    lines.append(f"  {row}")
+            elif page.events_param_value:
+                # No malformed shape found — surface full events value
+                # so the human can scan for unknown event types.
+                lines.append(f"  {page.events_param_value}")
+
+    return "\n".join(lines)
+
+
+def process_page(
+    page: pw.Page,
+    *,
+    page_name: str,
+) -> AutoFixedPage | NeedsManualReviewPage:
+    """Auto-fix the single-colon trap on a page and classify the outcome.
+
+    Returns:
+      - AutoFixedPage if the auto-fix was applied and the page was saved
+      - NeedsManualReviewPage otherwise (with malformed rows if any, or
+        the full events param value as a fallback so a human can scan)
+
+    Precedence: auto-fix wins. If a page has BOTH single-colon traps AND
+    unknown event types, we fix the colons this run; the unknown types
+    keep the page in the tracking category and surface on the next run.
+    """
+    original_text = page.text
+    fixed_text, fix_count = fix_single_colon_trap(original_text)
+
+    if fix_count > 0:
+        page.text = fixed_text
+        page.save(
+            summary="MaccabiBot - תיקון פסיק בודד באירועי שחקנים",
+            bot=True,
+        )
+        return AutoFixedPage(page_name=page_name, fixes_count=fix_count)
+
+    events_value = get_events_param_value(original_text)
+    malformed = find_malformed_rows(events_value)
+    return NeedsManualReviewPage(
+        page_name=page_name,
+        malformed_rows=malformed,
+        events_param_value=events_value,
+    )
+
+
+def main() -> None:
+    """Entry point used by the `find_illegal_events.yaml` workflow.
+
+    1. Fetch all pages in the tracking category
+    2. Process each: auto-fix if possible, else collect for manual review
+    3. Print the report to stdout (captured by the workflow, sent to Telegram
+       only if non-empty)
+    """
+    logging.basicConfig(
+        format="%(asctime)s %(levelname)s %(message)s",
+        level=logging.INFO,
+    )
+
+    page_titles = fetch_category_pages(TRACKING_CATEGORY)
+    logger.info("Found %d pages in tracking category", len(page_titles))
+
+    if not page_titles:
+        return
+
+    from maccabipediabot.common.wiki_login import get_site
+    pw.config.verbose_output = False
+    site = get_site()
+
+    fixed: list[AutoFixedPage] = []
+    needs_review: list[NeedsManualReviewPage] = []
+
+    for title in page_titles:
+        try:
+            page = pw.Page(site, title)
+            if not page.exists():
+                logger.warning("Page not found: %s", title)
+                continue
+            result = process_page(page, page_name=title)
+        except Exception:
+            logger.exception("Failed to process %s", title)
+            continue
+
+        if isinstance(result, AutoFixedPage):
+            fixed.append(result)
+        else:
+            needs_review.append(result)
+
+    report = format_report(fixed, needs_review, date.today())
+    if report:
+        print(report)
+
+
+if __name__ == "__main__":
+    main()

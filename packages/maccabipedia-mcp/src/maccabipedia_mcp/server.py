@@ -62,8 +62,51 @@ def page_exists(title: str) -> dict:
 
 
 @mcp.tool
-def search_pages(query: str, namespace: int | None = None, limit: int = 10) -> list[dict]:
-    """Full-text search across the wiki."""
+def search_pages(query: str, namespace: int | None = 0, limit: int = 500) -> dict:
+    """Search for an exact phrase across wiki page text.
+
+    Wraps the query in quotes for exact-phrase match across full page text
+    (not just titles). Any double-quote characters in *query* are stripped
+    before wrapping, so callers don't need to escape them. Automatically
+    pages through results until *limit* entries are collected.
+
+    Namespace control:
+    - namespace=0 (default): main content namespace only
+    - namespace=N: a specific namespace (e.g. 6=File, 10=Template, 14=Category)
+    - namespace=None: ALL namespaces (main + talk + file + template + category
+      + custom Maccabipedia namespaces like ns=3000 songs)
+
+    Common Maccabipedia namespace IDs:
+      0=Main  6=File  10=Template  14=Category  3000=שיר (songs)
+
+    Returns a dict with:
+    - total_hits: full wiki-wide match count (may exceed limit)
+    - results: list of {pageid, title, snippet}, capped at *limit*
+    On API error, returns {"error": True, "code": ..., "message": ...}.
+
+    Notes on MediaWiki search behavior (live-verified against maccabipedia):
+    - Main-namespace search indexes *rendered* output, not source wikitext.
+      The Template namespace (ns=10) indexes raw source. To find pages that
+      USE a template, search the main namespace for its rendered text; to
+      find the template source itself, use namespace=10 or namespace=None.
+    - ':' inside a phrase does NOT match prefixed names. search_pages(
+      "תבנית:משחק") returns 0 hits even though the template exists — this
+      is MediaWiki tokenization around the colon.
+    - Braces '{{' and '}}' are accepted as literal characters in a phrase
+      query, so you can search for template markup verbatim.
+
+    Examples:
+        search_pages("אבי כהן")
+        → {"total_hits": 312, "results": [
+               {"pageid": 1523, "title": "אבי כהן", "snippet": "..."},
+               {"pageid": 8891, "title": "גמר גביע 1976/77", "snippet": "..."},
+               ...
+           ]}
+
+        search_pages("ערן זהבי", namespace=None, limit=50)
+        → search every namespace (catches file descriptions, categories,
+          song pages, etc.) for the phrase, cap at 50 hits.
+    """
     return _client.search_pages(query, namespace=namespace, limit=limit)
 
 

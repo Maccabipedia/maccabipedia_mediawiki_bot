@@ -27,7 +27,7 @@ class WikiClient:
             return {
                 "error": True,
                 "code": "non_json",
-                "message": f"Cargo returned non-JSON response (Content-Type: {content_type})",
+                "message": f"MediaWiki API returned non-JSON response (Content-Type: {content_type})",
             }
         return None
 
@@ -260,20 +260,61 @@ class WikiClient:
         redirect = "redirect" in page
         return {"exists": exists, "pageid": page.get("pageid"), "redirect": redirect}
 
-    def search_pages(self, query: str, namespace: int | None = None, limit: int = 10) -> list[dict]:
+    def search_pages(self, query: str, namespace: int | None = 0, limit: int = 500) -> dict:
+        if limit <= 0:
+            return {"total_hits": 0, "results": []}
+        # Strip embedded quotes so the outer phrase wrapping stays balanced.
+        phrase = query.replace('"', "")
+        # MediaWiki's 'srnamespace=*' expands to every namespace (including
+        # custom ones like Maccabipedia's ns=3000 songs). Omitting the param
+        # is NOT equivalent — that defaults to ns=0 only.
+        srnamespace: str | int = "*" if namespace is None else namespace
         params: dict[str, Any] = {
             "action": "query",
             "list": "search",
-            "srsearch": query,
-            "srlimit": limit,
+            "srsearch": f'"{phrase}"',
+            "srnamespace": srnamespace,
+            "srlimit": min(limit, 500),
+            "srwhat": "text",
+            "formatversion": 2,
         }
-        if namespace is not None:
-            params["srnamespace"] = namespace
-        resp = self._get(params)
-        return [
-            {"pageid": r["pageid"], "title": r["title"], "snippet": r["snippet"]}
-            for r in resp.json()["query"]["search"]
-        ]
+        results: list[dict] = []
+        total_hits = 0
+
+        while len(results) < limit:
+            resp = self._get(params)
+            json_err = self._check_json(resp)
+            if json_err:
+                return json_err
+
+            data = resp.json()
+            if "error" in data:
+                return {
+                    "error": True,
+                    "code": data["error"]["code"],
+                    "message": data["error"]["info"],
+                }
+
+            query_data = data.get("query", {})
+            total_hits = query_data.get("searchinfo", {}).get("totalhits", total_hits)
+            page_hits = query_data.get("search", [])
+            if not page_hits:
+                break
+
+            remaining = limit - len(results)
+            for hit in page_hits[:remaining]:
+                results.append({
+                    "pageid": hit["pageid"],
+                    "title": hit["title"],
+                    "snippet": hit.get("snippet", ""),
+                })
+
+            next_offset = data.get("continue", {}).get("sroffset")
+            if next_offset is None or next_offset == params.get("sroffset"):
+                break
+            params["sroffset"] = next_offset
+
+        return {"total_hits": total_hits, "results": results}
 
     def list_category_pages(self, category: str, limit: int = 50) -> list[str]:
         if not category.startswith("קטגוריה:"):

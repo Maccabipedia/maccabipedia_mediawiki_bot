@@ -100,25 +100,298 @@ def test_search_pages(client):
         API_URL,
         json={
             "query": {
+                "searchinfo": {"totalhits": 42},
                 "search": [
-                    {"pageid": 10, "title": "Page A", "snippet": "found <span>here</span>"},
-                    {"pageid": 20, "title": "Page B", "snippet": "also <span>here</span>"},
-                ]
+                    {"pageid": 10, "title": "מכבי תל אביב", "snippet": "found <span>here</span>"},
+                    {"pageid": 20, "title": "מכבי חיפה", "snippet": "also <span>here</span>"},
+                ],
             }
         },
     )
-    result = client.search_pages("test query")
-    assert len(result) == 2
-    assert result[0]["pageid"] == 10
-    assert result[0]["title"] == "Page A"
+    result = client.search_pages("מכבי")
+    assert result["total_hits"] == 42
+    assert len(result["results"]) == 2
+    assert result["results"][0]["pageid"] == 10
+    assert result["results"][0]["title"] == "מכבי תל אביב"
+
+
+@responses.activate
+def test_search_pages_wraps_query_in_quotes(client):
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("שחקן מכבי")
+    params = responses.calls[0].request.params
+    assert params["srsearch"] == '"שחקן מכבי"'
+
+
+@responses.activate
+def test_search_pages_default_namespace_zero(client):
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("מכבי")
+    params = responses.calls[0].request.params
+    assert params["srnamespace"] == "0"
 
 
 @responses.activate
 def test_search_pages_with_namespace(client):
-    responses.get(API_URL, json={"query": {"search": []}})
-    client.search_pages("test", namespace=3003)
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("מכבי", namespace=3003)
     params = responses.calls[0].request.params
     assert params["srnamespace"] == "3003"
+
+
+@responses.activate
+def test_search_pages_namespace_none_searches_all(client):
+    # namespace=None must send srnamespace=* (the MediaWiki wildcard that
+    # spans every namespace, including custom ones like Maccabipedia's
+    # ns=3000 songs). Verified against the live API before shipping.
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("מכבי", namespace=None)
+    params = responses.calls[0].request.params
+    assert params["srnamespace"] == "*"
+
+
+@responses.activate
+def test_search_pages_uses_srwhat_text(client):
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("אבי כהן")
+    params = responses.calls[0].request.params
+    assert params["srwhat"] == "text"
+
+
+@responses.activate
+def test_search_pages_autopaging(client):
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 3},
+                "search": [
+                    {"pageid": 1, "title": "מכבי תל אביב א", "snippet": ""},
+                    {"pageid": 2, "title": "מכבי תל אביב ב", "snippet": ""},
+                ],
+            },
+            "continue": {"sroffset": 2, "continue": "-||"},
+        },
+    )
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 3},
+                "search": [{"pageid": 3, "title": "מכבי תל אביב ג", "snippet": ""}],
+            }
+        },
+    )
+    result = client.search_pages("מכבי תל אביב", limit=500)
+    assert result["total_hits"] == 3
+    assert len(result["results"]) == 3
+    assert result["results"][2]["title"] == "מכבי תל אביב ג"
+    assert responses.calls[1].request.params["sroffset"] == "2"
+
+
+@responses.activate
+def test_search_pages_limit_caps_results(client):
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 100},
+                "search": [
+                    {"pageid": i, "title": f"מכבי {i}", "snippet": ""} for i in range(10)
+                ],
+            },
+            "continue": {"sroffset": 10, "continue": "-||"},
+        },
+    )
+    result = client.search_pages("מכבי", limit=5)
+    assert len(result["results"]) == 5
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_search_pages_returns_error_on_api_error(client):
+    responses.get(
+        API_URL,
+        json={"error": {"code": "srsearch-invalid", "info": "Invalid search term"}},
+    )
+    result = client.search_pages("מכבי")
+    assert result["error"] is True
+    assert result["code"] == "srsearch-invalid"
+    assert result["message"] == "Invalid search term"
+
+
+@responses.activate
+def test_search_pages_returns_error_on_non_json(client):
+    responses.get(
+        API_URL,
+        body="<html>Internal Server Error</html>",
+        content_type="text/html",
+    )
+    result = client.search_pages("מכבי")
+    assert result["error"] is True
+    assert result["code"] == "non_json"
+    assert "non-JSON" in result["message"]
+
+
+@responses.activate
+def test_search_pages_strips_embedded_quotes(client):
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages('אבי כהן "קפטן"')
+    params = responses.calls[0].request.params
+    assert params["srsearch"] == '"אבי כהן קפטן"'
+
+
+@responses.activate
+def test_search_pages_apostrophe_passes_through(client):
+    # Apostrophes (ASCII ' and Hebrew geresh ׳) are URL-safe and must be
+    # forwarded to the API unchanged — they're legal inside a phrase search.
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("מיקי ברקוביץ'")
+    params = responses.calls[0].request.params
+    assert params["srsearch"] == '"מיקי ברקוביץ\'"'
+
+
+@responses.activate
+def test_search_pages_url_special_chars_are_encoded_safely(client):
+    # '&' is the URL param separator, '?' the query marker, '+' means space
+    # in form-encoded values, '%' escapes. The requests library must url-
+    # encode all of them so they survive as part of srsearch rather than
+    # splitting the URL into new params.
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("מכבי & הפועל ת״א")
+    params = responses.calls[0].request.params
+    assert params["srsearch"] == '"מכבי & הפועל ת״א"'
+    # Sanity: '&' did not leak and create a phantom param named הפועל / ת״א
+    assert "הפועל" not in params
+    assert "ת״א" not in params
+
+
+@responses.activate
+def test_search_pages_mixed_hebrew_and_english(client):
+    # Mixed-script queries must round-trip cleanly — no encoding surprises.
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("Avi כהן Liverpool")
+    params = responses.calls[0].request.params
+    assert params["srsearch"] == '"Avi כהן Liverpool"'
+
+
+@responses.activate
+def test_search_pages_breaks_on_stale_sroffset(client):
+    # Pathological case: API keeps echoing the same sroffset without advancing.
+    # The loop must break rather than spin forever.
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 999},
+                "search": [{"pageid": 1, "title": "מכבי תל אביב", "snippet": ""}],
+            },
+            "continue": {"sroffset": 5, "continue": "-||"},
+        },
+    )
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 999},
+                "search": [{"pageid": 2, "title": "מכבי חיפה", "snippet": ""}],
+            },
+            "continue": {"sroffset": 5, "continue": "-||"},
+        },
+    )
+    result = client.search_pages("מכבי", limit=500)
+    assert len(responses.calls) == 2
+    assert len(result["results"]) == 2
+
+
+@responses.activate
+def test_search_pages_uses_formatversion_2(client):
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("מכבי")
+    params = responses.calls[0].request.params
+    assert params["formatversion"] == "2"
+
+
+@responses.activate
+def test_search_pages_missing_snippet_defaults_empty(client):
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 1},
+                "search": [{"pageid": 1, "title": "מכבי תל אביב"}],
+            }
+        },
+    )
+    result = client.search_pages("מכבי")
+    assert result["results"][0]["snippet"] == ""
+
+
+@responses.activate
+def test_search_pages_limit_over_500_caps_per_page_request(client):
+    # MediaWiki's srlimit max is 500 — a limit of 1000 must fetch in two pages
+    # of 500 each, not attempt a single srlimit=1000 call.
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 1000},
+                "search": [{"pageid": i, "title": f"מכבי {i}", "snippet": ""} for i in range(500)],
+            },
+            "continue": {"sroffset": 500, "continue": "-||"},
+        },
+    )
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 1000},
+                "search": [
+                    {"pageid": 500 + i, "title": f"מכבי {500 + i}", "snippet": ""}
+                    for i in range(500)
+                ],
+            }
+        },
+    )
+    result = client.search_pages("מכבי", limit=1000)
+    assert len(result["results"]) == 1000
+    assert responses.calls[0].request.params["srlimit"] == "500"
+    assert responses.calls[1].request.params["srlimit"] == "500"
+
+
+@responses.activate
+def test_search_pages_limit_zero_short_circuits(client):
+    result = client.search_pages("מכבי", limit=0)
+    assert result == {"total_hits": 0, "results": []}
+    assert len(responses.calls) == 0
+
+
+@responses.activate
+def test_search_pages_breaks_on_empty_page(client):
+    # API returns a continue block but an empty search array — should break.
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 10},
+                "search": [{"pageid": 1, "title": "מכבי", "snippet": ""}],
+            },
+            "continue": {"sroffset": 1, "continue": "-||"},
+        },
+    )
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 10},
+                "search": [],
+            },
+            "continue": {"sroffset": 2, "continue": "-||"},
+        },
+    )
+    result = client.search_pages("מכבי", limit=500)
+    assert len(responses.calls) == 2
+    assert len(result["results"]) == 1
 
 
 @responses.activate

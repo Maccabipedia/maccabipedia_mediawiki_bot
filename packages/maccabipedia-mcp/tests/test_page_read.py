@@ -100,25 +100,101 @@ def test_search_pages(client):
         API_URL,
         json={
             "query": {
+                "searchinfo": {"totalhits": 42},
                 "search": [
-                    {"pageid": 10, "title": "Page A", "snippet": "found <span>here</span>"},
-                    {"pageid": 20, "title": "Page B", "snippet": "also <span>here</span>"},
-                ]
+                    {"pageid": 10, "title": "מכבי תל אביב", "snippet": "found <span>here</span>"},
+                    {"pageid": 20, "title": "מכבי חיפה", "snippet": "also <span>here</span>"},
+                ],
             }
         },
     )
-    result = client.search_pages("test query")
-    assert len(result) == 2
-    assert result[0]["pageid"] == 10
-    assert result[0]["title"] == "Page A"
+    result = client.search_pages("מכבי")
+    assert result["total_hits"] == 42
+    assert len(result["results"]) == 2
+    assert result["results"][0]["pageid"] == 10
+    assert result["results"][0]["title"] == "מכבי תל אביב"
+
+
+@responses.activate
+def test_search_pages_wraps_query_in_quotes(client):
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("שחקן מכבי")
+    params = responses.calls[0].request.params
+    assert params["srsearch"] == '"שחקן מכבי"'
+
+
+@responses.activate
+def test_search_pages_default_namespace_zero(client):
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("מכבי")
+    params = responses.calls[0].request.params
+    assert params["srnamespace"] == "0"
 
 
 @responses.activate
 def test_search_pages_with_namespace(client):
-    responses.get(API_URL, json={"query": {"search": []}})
-    client.search_pages("test", namespace=3003)
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("מכבי", namespace=3003)
     params = responses.calls[0].request.params
     assert params["srnamespace"] == "3003"
+
+
+@responses.activate
+def test_search_pages_uses_srwhat_text(client):
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("אלי דרייגור")
+    params = responses.calls[0].request.params
+    assert params["srwhat"] == "text"
+
+
+@responses.activate
+def test_search_pages_autopaging(client):
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 3},
+                "search": [
+                    {"pageid": 1, "title": "מכבי תל אביב א", "snippet": ""},
+                    {"pageid": 2, "title": "מכבי תל אביב ב", "snippet": ""},
+                ],
+            },
+            "continue": {"sroffset": 2, "continue": "-||"},
+        },
+    )
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 3},
+                "search": [{"pageid": 3, "title": "מכבי תל אביב ג", "snippet": ""}],
+            }
+        },
+    )
+    result = client.search_pages("מכבי תל אביב", limit=500)
+    assert result["total_hits"] == 3
+    assert len(result["results"]) == 3
+    assert result["results"][2]["title"] == "מכבי תל אביב ג"
+    assert responses.calls[1].request.params["sroffset"] == "2"
+
+
+@responses.activate
+def test_search_pages_limit_caps_results(client):
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 100},
+                "search": [
+                    {"pageid": i, "title": f"Page {i}", "snippet": ""} for i in range(10)
+                ],
+            },
+            "continue": {"sroffset": 10, "continue": "-||"},
+        },
+    )
+    result = client.search_pages("מכבי", limit=5)
+    assert len(result["results"]) == 5
+    assert len(responses.calls) == 1
 
 
 @responses.activate

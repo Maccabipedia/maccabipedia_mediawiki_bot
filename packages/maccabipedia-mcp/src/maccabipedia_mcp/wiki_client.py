@@ -260,20 +260,35 @@ class WikiClient:
         redirect = "redirect" in page
         return {"exists": exists, "pageid": page.get("pageid"), "redirect": redirect}
 
-    def search_pages(self, query: str, namespace: int | None = None, limit: int = 10) -> list[dict]:
+    def search_pages(self, query: str, namespace: int = 0, limit: int = 500) -> dict:
+        per_page = min(limit, 500)
         params: dict[str, Any] = {
             "action": "query",
             "list": "search",
-            "srsearch": query,
-            "srlimit": limit,
+            "srsearch": f'"{query}"',
+            "srnamespace": namespace,
+            "srlimit": per_page,
+            "srwhat": "text",
+            "formatversion": "2",
         }
-        if namespace is not None:
-            params["srnamespace"] = namespace
-        resp = self._get(params)
-        return [
-            {"pageid": r["pageid"], "title": r["title"], "snippet": r["snippet"]}
-            for r in resp.json()["query"]["search"]
-        ]
+        results: list[dict] = []
+        total_hits = 0
+        while True:
+            resp = self._get(params)
+            data = resp.json()
+            query_data = data.get("query", {})
+            total_hits = query_data.get("searchinfo", {}).get("totalhits", total_hits)
+            for r in query_data.get("search", []):
+                results.append({"pageid": r["pageid"], "title": r["title"], "snippet": r.get("snippet", "")})
+                if len(results) >= limit:
+                    break
+            if len(results) >= limit:
+                break
+            sroffset = data.get("continue", {}).get("sroffset")
+            if sroffset is None:
+                break
+            params["sroffset"] = sroffset
+        return {"total_hits": total_hits, "results": results}
 
     def list_category_pages(self, category: str, limit: int = 50) -> list[str]:
         if not category.startswith("קטגוריה:"):

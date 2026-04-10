@@ -28,7 +28,11 @@ from maccabipediabot.common.maccabistats_player_event import PlayerEvent
 logger = logging.getLogger(__name__)
 
 WIKI_BASE_URL = "https://www.maccabipedia.co.il"
-TRACKING_CATEGORY = "משחקים המכילים אירוע לא תקין"
+TRACKING_CATEGORIES = [
+    "משחקים המכילים אירוע לא תקין",     # unknown main event type
+    "שחקנים עם תיוג שער לא חוקי",        # unknown goal sub-type
+    "שחקנים עם תיוג בישול לא חוקי",      # unknown assist sub-type
+]
 FOOTBALL_TEMPLATE = "קטלוג משחקים"
 EVENTS_PARAM = "אירועי שחקנים"
 
@@ -224,8 +228,14 @@ def main() -> None:
     pw.config.verbose_output = False
     site = get_site()
 
-    pages = fetch_category_pages(site, TRACKING_CATEGORY)
-    logger.info("Found %d pages in tracking category", len(pages))
+    seen: set[str] = set()
+    pages: list[pw.Page] = []
+    for category in TRACKING_CATEGORIES:
+        for page in fetch_category_pages(site, category):
+            if page.title() not in seen:
+                seen.add(page.title())
+                pages.append(page)
+    logger.info("Found %d pages across tracking categories", len(pages))
 
     if not pages:
         return

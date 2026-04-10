@@ -86,3 +86,13 @@ Hebrew redirect syntax: `#הפניה [[Target_Page_Name]]`
 ## 9. External Research Sources
 
 See `.claude/maccabipedia_research_sources.md` for the full reference of where to search for data by sport and type (stats, rosters, video, etc.).
+
+## 10. MediaWiki Search Behavior (`list=search`)
+
+Live-verified against maccabipedia (2026-04-10) while building the `search_pages` MCP tool:
+
+- **`srnamespace=*` is the only way to search all namespaces.** Omitting the param defaults to ns=0 only. The wildcard catches custom namespaces too, e.g. `ns=3000` (`שיר:` songs).
+- **Quoted phrase search accepts `{{` and `}}` as literal characters.** Searching `srsearch='"{{משחק"'` returns ~24K hits (template and file pages that contain that literal source).
+- **`:` inside a phrase does NOT match prefixed template names.** `srsearch='"תבנית:משחק"'` returns 0 hits even though hundreds of pages reference `{{תבנית:משחק}}`. To find template *usages*, search for the template body terms in the main namespace; to find the template source itself, use `namespace=10` (Template).
+- **Main-namespace search indexes rendered output**, not source wikitext. Template namespace (ns=10) search indexes raw template source. Example: `srsearch='"מארחת"'` in ns=0 finds game pages where the rendered text says "הקבוצה המארחת", not pages whose wikitext has the template arg `|מארחת=`.
+- **srlimit max is 500 per request.** For more results, use the `continue.sroffset` cursor. The MCP `search_pages` tool handles paging automatically.

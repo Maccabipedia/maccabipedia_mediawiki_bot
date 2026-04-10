@@ -242,6 +242,40 @@ def test_search_pages_strips_embedded_quotes(client):
 
 
 @responses.activate
+def test_search_pages_apostrophe_passes_through(client):
+    # Apostrophes (ASCII ' and Hebrew geresh ׳) are URL-safe and must be
+    # forwarded to the API unchanged — they're legal inside a phrase search.
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("מיקי ברקוביץ'")
+    params = responses.calls[0].request.params
+    assert params["srsearch"] == '"מיקי ברקוביץ\'"'
+
+
+@responses.activate
+def test_search_pages_url_special_chars_are_encoded_safely(client):
+    # '&' is the URL param separator, '?' the query marker, '+' means space
+    # in form-encoded values, '%' escapes. The requests library must url-
+    # encode all of them so they survive as part of srsearch rather than
+    # splitting the URL into new params.
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("מכבי & הפועל ת״א")
+    params = responses.calls[0].request.params
+    assert params["srsearch"] == '"מכבי & הפועל ת״א"'
+    # Sanity: '&' did not leak and create a phantom param named הפועל / ת״א
+    assert "הפועל" not in params
+    assert "ת״א" not in params
+
+
+@responses.activate
+def test_search_pages_mixed_hebrew_and_english(client):
+    # Mixed-script queries must round-trip cleanly — no encoding surprises.
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("Avi כהן Liverpool")
+    params = responses.calls[0].request.params
+    assert params["srsearch"] == '"Avi כהן Liverpool"'
+
+
+@responses.activate
 def test_search_pages_breaks_on_stale_sroffset(client):
     # Pathological case: API keeps echoing the same sroffset without advancing.
     # The loop must break rather than spin forever.

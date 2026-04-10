@@ -76,10 +76,24 @@ def search_pages(query: str, namespace: int | None = 0, limit: int = 500) -> dic
     - namespace=None: ALL namespaces (main + talk + file + template + category
       + custom Maccabipedia namespaces like ns=3000 songs)
 
+    Common Maccabipedia namespace IDs:
+      0=Main  6=File  10=Template  14=Category  3000=שיר (songs)
+
     Returns a dict with:
     - total_hits: full wiki-wide match count (may exceed limit)
     - results: list of {pageid, title, snippet}, capped at *limit*
     On API error, returns {"error": True, "code": ..., "message": ...}.
+
+    Notes on MediaWiki search behavior (live-verified against maccabipedia):
+    - Main-namespace search indexes *rendered* output, not source wikitext.
+      The Template namespace (ns=10) indexes raw source. To find pages that
+      USE a template, search the main namespace for its rendered text; to
+      find the template source itself, use namespace=10 or namespace=None.
+    - ':' inside a phrase does NOT match prefixed names. search_pages(
+      "תבנית:משחק") returns 0 hits even though the template exists — this
+      is MediaWiki tokenization around the colon.
+    - Braces '{{' and '}}' are accepted as literal characters in a phrase
+      query, so you can search for template markup verbatim.
 
     Examples:
         search_pages("אבי כהן")

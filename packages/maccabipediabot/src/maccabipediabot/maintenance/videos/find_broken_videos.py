@@ -85,8 +85,8 @@ def format_removal_report(removed: list[BrokenVideo], report_date: date) -> str:
 
     lines = [f"הוסרו {len(removed)} קישורי וידאו שבורים — {report_date}"]
     for page_name, videos in sorted(by_page.items()):
-        lines.append(f"\n{page_name}")
-        lines.append(_page_url(page_name))
+        url = _page_url(page_name)
+        lines.append(f'\n<a href="{url}">{page_name}</a>')
         for v in videos:
             lines.append(f"  • {v.video_type}: {v.url}")
     return "\n".join(lines)

@@ -151,7 +151,7 @@ def test_format_removal_report_contains_count_and_wiki_url():
     report = format_removal_report(removed, date(2026, 4, 9))
     assert "הוסרו 1" in report
     assert "2026-04-09" in report
-    assert "https://www.maccabipedia.co.il/" in report
+    assert '<a href="https://www.maccabipedia.co.il/' in report
     assert "16-09-1999" in report
     assert "משחק מלא" in report
     assert "https://www.youtube.com/watch?v=JwUrFyR75sY" in report
@@ -166,7 +166,9 @@ def test_format_removal_report_url_encodes_special_chars():
         )
     ]
     report = format_removal_report(removed, date(2026, 4, 9))
-    assert '"' not in report.split("https://www.maccabipedia.co.il/")[1].split("\n")[0]
+    # Extract href URL — between href=" and the closing "
+    href_url = report.split('href="')[1].split('"')[0]
+    assert '"' not in href_url
 
 
 def test_oembed_endpoint_returns_none_for_unknown_domain():

@@ -75,3 +75,29 @@ def test_cards_sorted_by_minute():
     earlier = PlayerEvent("שחקן א", "5", timedelta(minutes=30), "כרטיס צהוב", None, True)
     later = PlayerEvent("שחקן ב", "8", timedelta(minutes=60), "כרטיס צהוב", None, True)
     assert earlier < later
+
+
+# ---------------------------------------------------------------------------
+# maccabistats translation
+# ---------------------------------------------------------------------------
+
+def test_headed_assist_produces_bishul_negisha():
+    """Verify that GOAL_ASSIST + GoalTypes.HEADER → בישול-נגיחה output.
+
+    This is a regression test: the wiki template was updated to accept
+    בישול-נגיחה (subtype 47) and the bot must keep producing it.
+    """
+    from maccabistats.models.player_game_events import GameEventTypes, GoalTypes
+
+    event = PlayerEvent.from_maccabistats_event_type(
+        name="ניר בלקין",
+        number=3,
+        time_occur=timedelta(minutes=55),
+        event_type=GameEventTypes.GOAL_ASSIST,
+        sub_event_type=GoalTypes.HEADER,
+        maccabi_player=True,
+    )
+
+    assert event.event_type == "בישול"
+    assert event.sub_event_type == "נגיחה"
+    assert "בישול-נגיחה" in event.__maccabipedia__()

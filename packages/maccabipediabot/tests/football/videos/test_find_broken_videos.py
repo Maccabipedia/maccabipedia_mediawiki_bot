@@ -1,10 +1,20 @@
+import asyncio
 import requests
 from datetime import date
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+import aiohttp
 import pytest
 
-from maccabipediabot.football.videos.find_broken_videos import BrokenVideo, format_report, format_removal_report, _fetch_from_table, _normalize_url
+from maccabipediabot.football.videos.find_broken_videos import (
+    BrokenVideo,
+    _oembed_endpoint,
+    _fetch_from_table,
+    _normalize_url,
+    format_report,
+    format_removal_report,
+    is_video_broken,
+)
 
 
 def test_format_report_header_contains_count():
@@ -65,6 +75,7 @@ def test_normalize_url_leaves_valid_url_unchanged():
 def test_fetch_from_table_returns_video_entries():
     mock_response = Mock()
     mock_response.raise_for_status = Mock()
+    mock_response.headers = {"Content-Type": "application/json"}
     mock_response.json.return_value = [
         {
             "_pageName": "משחק:01-01-2001 מכבי תל אביב נגד בית\"ר ירושלים - ליגת העל",
@@ -91,6 +102,7 @@ def test_fetch_from_table_returns_video_entries():
 def test_fetch_from_table_skips_null_urls():
     mock_response = Mock()
     mock_response.raise_for_status = Mock()
+    mock_response.headers = {"Content-Type": "application/json"}
     mock_response.json.return_value = [
         {"_pageName": "משחק:01-01-2001 א נגד ב - ליגה", "FullGame": None, "Highlights": None, "Highlights2": None}
     ]
@@ -115,10 +127,23 @@ def test_fetch_from_table_raises_on_http_error():
             _fetch_from_table("Games_Videos", {"FullGame": "משחק מלא"})
 
 
+def test_fetch_from_table_raises_on_non_json_response():
+    mock_response = Mock()
+    mock_response.raise_for_status = Mock()
+    mock_response.headers = {"Content-Type": "text/html"}
+    mock_response.text = "<html>error</html>"
+    with patch(
+        "maccabipediabot.football.videos.find_broken_videos.requests.get",
+        return_value=mock_response,
+    ):
+        with pytest.raises(ValueError, match="Unexpected Content-Type"):
+            _fetch_from_table("Games_Videos", {"FullGame": "משחק מלא"})
+
+
 def test_format_removal_report_contains_count_and_wiki_url():
     removed = [
         BrokenVideo(
-            page_name="משחק:16-09-1999 מכבי תל אביב נגד לאנס - גביע אופא",
+            page_name='משחק:16-09-1999 מכבי תל אביב נגד לאנס - גביע אופא',
             url="https://www.youtube.com/watch?v=JwUrFyR75sY",
             video_type="משחק מלא",
         )
@@ -126,5 +151,66 @@ def test_format_removal_report_contains_count_and_wiki_url():
     report = format_removal_report(removed, date(2026, 4, 9))
     assert "הוסרו 1" in report
     assert "2026-04-09" in report
-    assert "https://www.maccabipedia.co.il/משחק:16-09-1999_מכבי_תל_אביב_נגד_לאנס_-_גביע_אופא" in report
+    assert "https://www.maccabipedia.co.il/" in report
+    assert "16-09-1999" in report
     assert "משחק מלא" in report
+    assert "https://www.youtube.com/watch?v=JwUrFyR75sY" in report
+
+
+def test_format_removal_report_url_encodes_special_chars():
+    removed = [
+        BrokenVideo(
+            page_name='משחק:22-12-2018 בית"ר ירושלים נגד מכבי תל אביב - גביע המדינה',
+            url="https://www.youtube.com/watch?v=abc",
+            video_type="תקציר משני",
+        )
+    ]
+    report = format_removal_report(removed, date(2026, 4, 9))
+    assert '"' not in report.split("https://www.maccabipedia.co.il/")[1].split("\n")[0]
+
+
+def test_oembed_endpoint_returns_none_for_unknown_domain():
+    assert _oembed_endpoint("https://www.facebook.com/video/123") is None
+
+
+def test_oembed_endpoint_returns_youtube_for_youtube_url():
+    result = _oembed_endpoint("https://www.youtube.com/watch?v=abc")
+    assert result is not None
+    assert "youtube.com/oembed" in result
+
+
+def _make_mock_session(status: int) -> Mock:
+    mock_resp = AsyncMock()
+    mock_resp.status = status
+    mock_resp.__aenter__ = AsyncMock(return_value=mock_resp)
+    mock_resp.__aexit__ = AsyncMock(return_value=False)
+    mock_session = Mock()
+    mock_session.get = Mock(return_value=mock_resp)
+    return mock_session
+
+
+def test_is_video_broken_returns_true_on_404():
+    result = asyncio.run(is_video_broken(_make_mock_session(404), "https://www.youtube.com/watch?v=broken"))
+    assert result is True
+
+
+def test_is_video_broken_returns_true_on_401():
+    result = asyncio.run(is_video_broken(_make_mock_session(401), "https://www.youtube.com/watch?v=private"))
+    assert result is True
+
+
+def test_is_video_broken_returns_false_on_200():
+    result = asyncio.run(is_video_broken(_make_mock_session(200), "https://www.youtube.com/watch?v=valid"))
+    assert result is False
+
+
+def test_is_video_broken_returns_false_on_500():
+    result = asyncio.run(is_video_broken(_make_mock_session(500), "https://www.youtube.com/watch?v=server_error"))
+    assert result is False
+
+
+def test_is_video_broken_returns_false_for_unknown_domain():
+    mock_session = Mock()
+    result = asyncio.run(is_video_broken(mock_session, "https://www.facebook.com/video/123"))
+    assert result is False
+    mock_session.get.assert_not_called()

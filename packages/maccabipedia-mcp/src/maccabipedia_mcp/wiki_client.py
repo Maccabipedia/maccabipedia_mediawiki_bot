@@ -260,16 +260,20 @@ class WikiClient:
         redirect = "redirect" in page
         return {"exists": exists, "pageid": page.get("pageid"), "redirect": redirect}
 
-    def search_pages(self, query: str, namespace: int = 0, limit: int = 500) -> dict:
+    def search_pages(self, query: str, namespace: int | None = 0, limit: int = 500) -> dict:
         if limit <= 0:
             return {"total_hits": 0, "results": []}
         # Strip embedded quotes so the outer phrase wrapping stays balanced.
         phrase = query.replace('"', "")
+        # MediaWiki's 'srnamespace=*' expands to every namespace (including
+        # custom ones like Maccabipedia's ns=3000 songs). Omitting the param
+        # is NOT equivalent — that defaults to ns=0 only.
+        srnamespace: str | int = "*" if namespace is None else namespace
         params: dict[str, Any] = {
             "action": "query",
             "list": "search",
             "srsearch": f'"{phrase}"',
-            "srnamespace": namespace,
+            "srnamespace": srnamespace,
             "srlimit": min(limit, 500),
             "srwhat": "text",
             "formatversion": 2,

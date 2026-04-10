@@ -140,6 +140,17 @@ def test_search_pages_with_namespace(client):
 
 
 @responses.activate
+def test_search_pages_namespace_none_searches_all(client):
+    # namespace=None must send srnamespace=* (the MediaWiki wildcard that
+    # spans every namespace, including custom ones like Maccabipedia's
+    # ns=3000 songs). Verified against the live API before shipping.
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("מכבי", namespace=None)
+    params = responses.calls[0].request.params
+    assert params["srnamespace"] == "*"
+
+
+@responses.activate
 def test_search_pages_uses_srwhat_text(client):
     responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
     client.search_pages("אלי דרייגור")

@@ -62,14 +62,21 @@ def page_exists(title: str) -> dict:
 
 
 @mcp.tool
-def search_pages(query: str, namespace: int = 0, limit: int = 500) -> dict:
-    """Search for an exact phrase across wiki page text (main namespace by default).
+def search_pages(query: str, namespace: int | None = 0, limit: int = 500) -> dict:
+    """Search for an exact phrase across wiki page text.
 
     Wraps the query in quotes for exact-phrase match across full page text
     (not just titles). Any double-quote characters in *query* are stripped
     before wrapping, so callers don't need to escape them. Automatically
-    pages through results until *limit* entries are collected. Returns a
-    dict with:
+    pages through results until *limit* entries are collected.
+
+    Namespace control:
+    - namespace=0 (default): main content namespace only
+    - namespace=N: a specific namespace (e.g. 6=File, 10=Template, 14=Category)
+    - namespace=None: ALL namespaces (main + talk + file + template + category
+      + custom Maccabipedia namespaces like ns=3000 songs)
+
+    Returns a dict with:
     - total_hits: full wiki-wide match count (may exceed limit)
     - results: list of {pageid, title, snippet}, capped at *limit*
     On API error, returns {"error": True, "code": ..., "message": ...}.
@@ -82,8 +89,9 @@ def search_pages(query: str, namespace: int = 0, limit: int = 500) -> dict:
                ...
            ]}
 
-        search_pages("גמר גביע המדינה", namespace=14, limit=50)
-        → search the Category namespace (14) for the phrase, cap at 50 hits.
+        search_pages("מכבי תל אביב", namespace=None, limit=50)
+        → search every namespace (catches file descriptions, categories,
+          song pages, etc.) for the phrase, cap at 50 hits.
     """
     return _client.search_pages(query, namespace=namespace, limit=limit)
 

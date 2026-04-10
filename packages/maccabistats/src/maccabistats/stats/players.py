@@ -130,6 +130,11 @@ class MaccabiGamesPlayersStats(object):
             lambda p: p.assists_count_by_assist_type(AssistTypes.THROW_IN_ASSIST))
 
     @property
+    def best_assisters_by_header(self) -> List[PlayerStats]:
+        return self.__get_players_from_all_games_with_most_of_this_condition(
+            lambda p: p.assists_count_by_assist_type(AssistTypes.HEADER_ASSIST))
+
+    @property
     def most_goals_involved(self) -> List[PlayerStats]:
         """
         Top players which involved in goals (score or assist)

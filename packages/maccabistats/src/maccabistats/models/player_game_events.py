@@ -11,6 +11,7 @@ class AssistTypes(Enum):
     CORNER_ASSIST = 'CornerAssist'
     THROW_IN_ASSIST = 'ThrowInAssist'
     PENALTY_WINNING_ASSIST = 'PenaltyWinningAssist'
+    HEADER_ASSIST = 'HeaderAssist'
     UNKNOWN = 'UnknownAssist'
     UNCATEGORIZED = 'UnCategorizedAssist'
 

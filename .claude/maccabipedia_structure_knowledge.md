@@ -83,6 +83,106 @@ Hebrew redirect syntax: `#הפניה [[Target_Page_Name]]`
 **Fan Songs** (`שיר:` namespace, template `{{שיר}}`):
 - Parameters: `קטגוריה`, `שם השיר`, `עונת בכורה`, `על השיר`, `ביצוע לשיר`, `מילים`
 
-## 9. External Research Sources
+## 9. Football Player Events (`|אירועי שחקנים=`)
+
+Each event is one pipe-separated entry in the `|אירועי שחקנים=` parameter of `קטלוג משחקים`.
+
+**Format:** `name::jersey::event_type::time::team`  (5 fields, separator is `::` — double colon)
+
+**Fields:**
+- `name` — player name as it appears on the wiki
+- `jersey` — jersey number, or `אין-מספר` for historical games without jersey numbers
+- `event_type` — see valid types below
+- `time` — minute (integer), or empty for lineup events
+- `team` — `מכבי` or `יריבה`
+
+**Valid event types:**
+
+| Category | Valid values |
+|----------|-------------|
+| Goals | `גול-רגל`, `גול-פנדל`, `גול-נגיחה` |
+| Assists | `בישול-קלאסי`, `בישול-קרן`, `בישול-בעיטה חופשית`, `בישול-סחיטת פנדל`, `בישול-נגיחה` |
+| Lineup | `הרכב`, `הרכב-שוער`, `ספסל`, `ספסל-שוער` |
+| Substitutions | `מחליף`, `מוחלף` |
+| Cards | `כרטיס צהוב`, `כרטיס צהוב-ראשון`, `כרטיס צהוב-שני`, `כרטיס אדום` |
+| Other | `קפטן` |
+
+**Common invalid/legacy types and their correct replacements:**
+
+| Invalid (found in old pages) | Replace with |
+|-----------------------------|-------------|
+| `גול` | `גול-רגל` |
+| `גול-קלאסי` | `גול-רגל` |
+| `גול-ידוע` | `גול-רגל` |
+| `גול-ישראל` | `גול-רגל` |
+| `גול-פרץ` | `גול-רגל` |
+| `גול-רגך` | `גול-רגל` (typo: ך instead of ל) |
+| `גול-לא רגל` | `גול-נגיחה` |
+| `גול-חופשית` | verify context; likely `גול-רגל` |
+| `גול-עצמי` | investigate — own goal; no standard type exists yet |
+| `בישול` | `בישול-קלאסי` |
+| `בישול-רגל` | `בישול-קלאסי` |
+| `בישול-קלאיסי` | `בישול-קלאסי` (typo) |
+| `בישול-סחיטת פנדל מוצלח` | `בישול-סחיטת פנדל` |
+
+**Example:**
+```
+אבי נמני::10::הרכב::0::מכבי
+אבי נמני::10::קפטן::0::מכבי
+אלי דריקס::7::הרכב::0::מכבי
+ערן זהבי::14::ספסל::0::מכבי
+אבי נמני::10::בישול-קלאסי::34::מכבי
+אלי דריקס::7::גול-רגל::34::מכבי
+אלי דריקס::7::מוחלף::72::מכבי
+ערן זהבי::14::מחליף::72::מכבי
+```
+
+**The single-colon trap:**  
+A single `:` before the minute (e.g. `גול-נגיחה:67`) instead of `::` (e.g. `גול-נגיחה::67`) causes the template to tag the page as having illegal events, even though the type name is valid. Always use `::` between every field.
+
+**Tracking category:** Pages with bad events are added to the "אירועי שחקנים לא חוקיים" tracking category.
+
+## 10. Basketball Player Stats (`|שחקנים מכבי=` / `|שחקנים יריבה=`)
+
+Basketball game pages use template `משחק כדורסל`. Player data is **not** a `::` delimited row — each player is a named-parameter sub-template:
+
+```
+{{אירועי שחקן סל |שם=טל ברודי |מספר=7 |דקות=38 |חמישייה=כן |נק=22 |זריקות עונשין=6 |קליעות עונשין=5 |זריקות שתי נק=8 |קליעות שתי נק=4 |זריקות שלוש נק=5 |קליעות שלוש נק=3 |ריבאונד הגנה=3 |ריבאונד התקפה=1 |פאולים=2 |חטיפות=3 |איבודים=2 |אסיסטים=7 |בלוקים=0}},
+{{אירועי שחקן סל |שם=אולסי פרי |מספר=12 |דקות=35 |חמישייה=כן |נק=18 |זריקות עונשין=8 |קליעות עונשין=6 |זריקות שתי נק=7 |קליעות שתי נק=6 |זריקות שלוש נק=0 |קליעות שלוש נק=0 |ריבאונד הגנה=9 |ריבאונד התקפה=3 |פאולים=3 |חטיפות=1 |איבודים=2 |אסיסטים=2 |בלוקים=2}},
+{{אירועי שחקן סל |שם=מיקי ברקוביץ' |מספר=5 |דקות=12 |חמישייה= |נק= |זריקות עונשין=0 |קליעות עונשין=0 |זריקות שתי נק=2 |קליעות שתי נק=0 |זריקות שלוש נק=1 |קליעות שלוש נק=0 |ריבאונד הגנה=1 |ריבאונד התקפה=0 |פאולים=2 |חטיפות=0 |איבודים=1 |אסיסטים=1 |בלוקים=0}}
+```
+
+Multiple players are joined with `,\n` (comma + newline). Both `|שחקנים מכבי=` and `|שחקנים יריבה=` use the same format.
+
+**Key fields:**
+- `מספר` — jersey number (integer or empty)
+- `חמישייה` — `כן` if starting five, empty if bench (real pages use empty string, not `לא`)
+- `נק` — total points scored, or empty if the player scored 0 / data unavailable
+- `זריקות/קליעות שתי נק` — free throw attempts/made (confusingly named "two-point throws")
+- `פאולים טכני` — optional, omit entirely if zero
+
+## 11. Volleyball Player Stats (`|שחקנים מכבי=` / `|שחקנים יריבה=`)
+
+Volleyball game pages use template `משחק כדורעף`. Player data is a `::` delimited row per player:
+
+**Format:** `name::shirt_number::score[::לא-שיחק]`
+
+- `shirt_number` — jersey number (integer)
+- `score` — points scored, or `ללא-נקודות` if the player played but scored 0
+- `לא-שיחק` — optional 4th field; present when the player was listed in the squad but **did not play**
+- Players are joined with `,\n` where the comma starts each new line (the first player has no leading comma)
+
+**Example (from real game):**
+```
+סאם בורגי::3::19
+,גיא כהן::4::2
+,ניקולס גונזלס::5::ללא-נקודות::לא-שיחק
+,וסילי דניסוב::10::12
+,אומרי רויטמן::13::ללא-נקודות
+```
+
+Both `|שחקנים מכבי=` and `|שחקנים יריבה=` use the same format. The volleyball model currently does not carry player data at the game-upload level (`VolleyballGame` dataclass has no players fields).
+
+## 12. External Research Sources
 
 See `.claude/maccabipedia_research_sources.md` for the full reference of where to search for data by sport and type (stats, rosters, video, etc.).

@@ -22,7 +22,7 @@ jobs:
           PYWIKIBOT_DIR: ${{ github.workspace }}/packages/maccabipediabot/src/maccabipediabot/pywikibot_configs
           MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
           MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
-        run: uv run python -m maccabipediabot.football.videos.find_broken_videos > broken_videos_report.txt
+        run: uv run python -m maccabipediabot.maintenance.videos.find_broken_videos > broken_videos_report.txt
       - name: Read report into output
         id: report
         run: |

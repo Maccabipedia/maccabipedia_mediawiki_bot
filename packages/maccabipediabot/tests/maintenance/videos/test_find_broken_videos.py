@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import aiohttp
 import pytest
 
-from maccabipediabot.football.videos.find_broken_videos import (
+from maccabipediabot.maintenance.videos.find_broken_videos import (
     BrokenVideo,
     _oembed_endpoint,
     _fetch_from_table,
@@ -86,7 +86,7 @@ def test_fetch_from_table_returns_video_entries():
     ]
     fields = {"FullGame": "משחק מלא", "Highlights": "תקציר ראשי", "Highlights2": "תקציר משני"}
     with patch(
-        "maccabipediabot.football.videos.find_broken_videos.requests.get",
+        "maccabipediabot.maintenance.videos.find_broken_videos.requests.get",
         return_value=mock_response,
     ):
         entries = _fetch_from_table("Games_Videos", fields)
@@ -108,7 +108,7 @@ def test_fetch_from_table_skips_null_urls():
     ]
     fields = {"FullGame": "משחק מלא", "Highlights": "תקציר ראשי", "Highlights2": "תקציר משני"}
     with patch(
-        "maccabipediabot.football.videos.find_broken_videos.requests.get",
+        "maccabipediabot.maintenance.videos.find_broken_videos.requests.get",
         return_value=mock_response,
     ):
         entries = _fetch_from_table("Games_Videos", fields)
@@ -120,7 +120,7 @@ def test_fetch_from_table_raises_on_http_error():
     mock_response = Mock()
     mock_response.raise_for_status.side_effect = requests.HTTPError("500")
     with patch(
-        "maccabipediabot.football.videos.find_broken_videos.requests.get",
+        "maccabipediabot.maintenance.videos.find_broken_videos.requests.get",
         return_value=mock_response,
     ):
         with pytest.raises(requests.HTTPError):
@@ -133,7 +133,7 @@ def test_fetch_from_table_raises_on_non_json_response():
     mock_response.headers = {"Content-Type": "text/html"}
     mock_response.text = "<html>error</html>"
     with patch(
-        "maccabipediabot.football.videos.find_broken_videos.requests.get",
+        "maccabipediabot.maintenance.videos.find_broken_videos.requests.get",
         return_value=mock_response,
     ):
         with pytest.raises(ValueError, match="Unexpected Content-Type"):

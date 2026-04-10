@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>Telegram Preview</title>
+<style>
+  body {
+    background: #0e1621;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .chat {
+    width: 460px;
+    padding: 20px;
+  }
+  .bubble {
+    background: #182533;
+    border-radius: 12px 12px 12px 2px;
+    padding: 10px 14px 8px;
+    display: inline-block;
+    width: 100%;
+    box-sizing: border-box;
+    color: #e8e8e8;
+    font-size: 14.5px;
+    line-height: 1.5;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  .sender {
+    color: #6ab3f3;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .header {
+    font-weight: 700;
+    font-size: 15px;
+    color: #ffffff;
+    margin-bottom: 12px;
+  }
+  .item {
+    margin: 10px 0;
+    padding: 8px 10px;
+    background: #1e2f3f;
+    border-radius: 8px;
+    border-right: 3px solid #6ab3f3;
+  }
+  .game-title {
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 4px;
+  }
+  .vtype {
+    font-size: 12.5px;
+    color: #aaaaaa;
+    margin-bottom: 6px;
+  }
+  .links {
+    display: flex;
+    gap: 12px;
+    font-size: 13px;
+  }
+  a {
+    color: #6ab3f3;
+    text-decoration: none;
+  }
+  a:hover { text-decoration: underline; }
+  .time {
+    font-size: 11px;
+    color: #6b7f93;
+    text-align: left;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="chat">
+  <div class="bubble">
+    <div class="sender">🤖 MaccabiBot</div>
+    <div class="header">🗓 2026-04-10 — הוסרו 3 קישורי וידאו שבורים</div>
+
+    <div class="item">
+      <div class="game-title">1. 13-07-2017 מכבי תל אביב נגד קיי.אר. רייקיאוויק - מוקדמות הליגה האירופית</div>
+      <div class="vtype">📺 משחק מלא</div>
+      <div class="links">
+        <a href="#">דף המשחק</a>
+        <a href="#">יוטיוב (שבור)</a>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="game-title">2. 05-10-2023 גנט נגד מכבי תל אביב - הליגה האזורית</div>
+      <div class="vtype">📺 תקציר ראשי</div>
+      <div class="links">
+        <a href="#">דף המשחק</a>
+        <a href="#">יוטיוב (שבור)</a>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="game-title">3. 15-09-2004 מכבי תל אביב נגד באיירן מינכן - ליגת האלופות</div>
+      <div class="vtype">📺 תקציר ראשי</div>
+      <div class="links">
+        <a href="#">דף המשחק</a>
+        <a href="#">יוטיוב (שבור)</a>
+      </div>
+    </div>
+
+    <div class="time">06:14</div>
+  </div>
+</div>
+</body>
+</html>

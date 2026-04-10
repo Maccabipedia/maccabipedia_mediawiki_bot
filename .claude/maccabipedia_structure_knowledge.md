@@ -121,7 +121,6 @@ Each event is one pipe-separated entry in the `|אירועי שחקנים=` para
 | `גול-חופשית` | verify context; likely `גול-רגל` |
 | `גול-עצמי` | investigate — own goal; no standard type exists yet |
 | `בישול` | `בישול-קלאסי` |
-| `בישול-נגיחה` | `בישול-קלאסי` (header assist on a headed goal) |
 | `בישול-רגל` | `בישול-קלאסי` |
 | `בישול-קלאיסי` | `בישול-קלאסי` (typo) |
 | `בישול-סחיטת פנדל מוצלח` | `בישול-סחיטת פנדל` |

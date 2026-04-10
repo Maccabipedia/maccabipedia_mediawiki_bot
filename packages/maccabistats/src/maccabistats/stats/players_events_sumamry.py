@@ -38,6 +38,10 @@ class MaccabiGamesPlayersEventsSummaryStats(object):
     def total_goals_assists_by_throw_in_for_maccabi_players(self) -> int:
         return sum(player[1] for player in self.maccabi_games_stats.players.best_assisters_by_throw_in)
 
+    @property
+    def total_goals_assists_by_header_for_maccabi_players(self) -> int:
+        return sum(player[1] for player in self.maccabi_games_stats.players.best_assisters_by_header)
+
     # endregion
 
     # region goals
@@ -136,6 +140,7 @@ class MaccabiGamesPlayersEventsSummaryStats(object):
                      f"         By corner: {compared_field('total_goals_assists_by_corner_for_maccabi_players')}\n" \
                      f"         By freekick: {compared_field('total_goals_assists_by_free_kick_for_maccabi_players')}\n" \
                      f"         By throw-in: {compared_field('total_goals_assists_by_throw_in_for_maccabi_players')}\n" \
+                     f"         By header: {compared_field('total_goals_assists_by_header_for_maccabi_players')}\n" \
                      f"   Goals involved: {compared_field('total_goals_involved_counted_for_maccabi_players')}\n" \
                      f"   Cards:\n" \
                      f"         Yellow cards: {compared_field('total_yellow_card_counted_for_maccabi_players')}\n" \
@@ -160,6 +165,7 @@ class MaccabiGamesPlayersEventsSummaryStats(object):
                f"           By corner: {self.total_goals_assists_by_corner_for_maccabi_players}\n" \
                f"           By freekick: {self.total_goals_assists_by_free_kick_for_maccabi_players}\n" \
                f"           By throw-in: {self.total_goals_assists_by_throw_in_for_maccabi_players}\n" \
+               f"           By header: {self.total_goals_assists_by_header_for_maccabi_players}\n" \
                f"   Goals involved: {self.total_goals_involved_counted_for_maccabi_players}\n" \
                f"   Cards:\n" \
                f"        Yellow cards: {self.total_yellow_card_counted_for_maccabi_players}\n" \

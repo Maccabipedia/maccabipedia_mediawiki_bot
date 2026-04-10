@@ -15,6 +15,22 @@
 - **Use worktrees** for feature branches to avoid collisions between parallel sessions. Hooks in `.claude/hooks/` automatically create worktrees at `../maccabipedia_mediawikibot-wt/<name>/` with config and venv.
 - Before any `git add`, run `git status` and review every file. Only stage files directly related to the current task.
 
+### Commit Message Format
+All commits use **Conventional Commits** with a scope: `type(scope): description`
+
+| Scope | Covers |
+|---|---|
+| `maccabistats` | `packages/maccabistats/` |
+| `mcp` | `packages/maccabipedia-mcp/` |
+| `football` | `maccabipediabot/football/` |
+| `volleyball` | `maccabipediabot/volleyball/` |
+| `basketball` | `maccabipediabot/basketball/` |
+| `maintenance` | `maccabipediabot/maintenance/` (videos, papers, etc.) |
+| `ci` | `.github/workflows/` |
+| `dev` | `pyproject.toml`, `CLAUDE.md`, settings, tooling |
+
+Examples: `fix(maintenance): treat HTTP 400 from oEmbed as broken video`, `feat(maccabistats): add best_scorers_in_one_game`
+
 ## 4. Lessons Learned
 
 ### Always validate API responses before parsing

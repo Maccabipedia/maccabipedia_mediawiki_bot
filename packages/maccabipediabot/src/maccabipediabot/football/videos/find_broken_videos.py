@@ -127,20 +127,15 @@ def _oembed_endpoint(url: str) -> str | None:
 
 async def is_video_broken(session: aiohttp.ClientSession, url: str) -> bool:
     oembed = _oembed_endpoint(url)
-    if oembed:
-        try:
-            async with session.get(oembed) as resp:
-                return resp.status != 200
-        except Exception:
-            logger.exception("Error checking %s — skipping", url)
-            return False
-    else:
-        try:
-            async with session.head(url, allow_redirects=True) as resp:
-                return resp.status >= 400
-        except Exception:
-            logger.exception("Error checking %s — skipping", url)
-            return False
+    if not oembed:
+        logger.debug("No oEmbed endpoint for %s — skipping", url)
+        return False
+    try:
+        async with session.get(oembed) as resp:
+            return resp.status != 200
+    except Exception:
+        logger.exception("Error checking %s — skipping", url)
+        return False
 
 
 async def _find_broken_videos() -> list[BrokenVideo]:

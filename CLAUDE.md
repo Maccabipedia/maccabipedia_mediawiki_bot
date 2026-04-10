@@ -26,8 +26,9 @@ All commits use **Conventional Commits** with a scope: `type(scope): description
 | `volleyball` | `maccabipediabot/volleyball/` |
 | `basketball` | `maccabipediabot/basketball/` |
 | `maintenance` | `maccabipediabot/maintenance/` (videos, papers, etc.) |
+| `calendar` | `maccabipediabot/calendar/` |
 | `ci` | `.github/workflows/` |
-| `dev` | `pyproject.toml`, `CLAUDE.md`, settings, tooling |
+| `dev` | `pyproject.toml`, `CLAUDE.md`, settings, tooling, `common/`, `pywikibot_configs/` |
 
 Examples: `fix(maintenance): treat HTTP 400 from oEmbed as broken video`, `feat(maccabistats): add best_scorers_in_one_game`
 

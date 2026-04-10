@@ -2,6 +2,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import date
+from urllib.parse import quote
 
 import aiohttp
 import mwparserfromhell as mw
@@ -23,6 +24,7 @@ OEMBED_ENDPOINTS = {
     "dailymotion.com": "https://www.dailymotion.com/services/oembed?url={url}&format=json",
 }
 MAX_CONCURRENT = 20
+REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=15)
 
 _FOOTBALL_FIELDS = {
     "FullGame": "משחק מלא",
@@ -58,6 +60,10 @@ class BrokenVideo:
     video_type: str
 
 
+def _page_url(page_name: str) -> str:
+    return f"{WIKI_BASE_URL}/{quote(page_name.replace(' ', '_'), safe='/:')}"
+
+
 def format_report(broken: list[BrokenVideo], report_date: date) -> str:
     by_page: dict[str, list[BrokenVideo]] = {}
     for v in broken:
@@ -79,9 +85,10 @@ def format_removal_report(removed: list[BrokenVideo], report_date: date) -> str:
 
     lines = [f"הוסרו {len(removed)} קישורי וידאו שבורים — {report_date}"]
     for page_name, videos in sorted(by_page.items()):
-        page_url = f"{WIKI_BASE_URL}/{page_name.replace(' ', '_')}"
+        lines.append(f"\n{page_name}")
+        lines.append(_page_url(page_name))
         for v in videos:
-            lines.append(f"• {v.video_type} — {page_url}")
+            lines.append(f"  • {v.video_type}: {v.url}")
     return "\n".join(lines)
 
 
@@ -90,6 +97,8 @@ def _fetch_from_table(table: str, fields: dict[str, str]) -> list[tuple[str, str
     fields_str = "_pageName," + ",".join(fields.keys())
     response = requests.get(f"{CARGO_BASE}&tables={table}&fields={fields_str}")
     response.raise_for_status()
+    if "application/json" not in response.headers.get("Content-Type", ""):
+        raise ValueError(f"Unexpected Content-Type from Cargo for {table}: {response.text[:200]}")
     result = []
     for row in response.json():
         page_name = row["_pageName"]
@@ -127,20 +136,16 @@ def _oembed_endpoint(url: str) -> str | None:
 
 async def is_video_broken(session: aiohttp.ClientSession, url: str) -> bool:
     oembed = _oembed_endpoint(url)
-    if oembed:
-        try:
-            async with session.get(oembed) as resp:
-                return resp.status != 200
-        except Exception:
-            logger.exception("Error checking %s — skipping", url)
+    if not oembed:
+        logger.debug("No oEmbed endpoint for %s — skipping", url)
+        return False
+    async with session.get(oembed) as resp:
+        if resp.status in (404, 401):
+            return True
+        if resp.status != 200:
+            logger.warning("Unexpected oEmbed status %s for %s — skipping", resp.status, url)
             return False
-    else:
-        try:
-            async with session.head(url, allow_redirects=True) as resp:
-                return resp.status >= 400
-        except Exception:
-            logger.exception("Error checking %s — skipping", url)
-            return False
+        return False
 
 
 async def _find_broken_videos() -> list[BrokenVideo]:
@@ -153,7 +158,7 @@ async def _find_broken_videos() -> list[BrokenVideo]:
             if await is_video_broken(session, url):
                 broken.append(BrokenVideo(page_name=page_name, url=url, video_type=label))
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(timeout=REQUEST_TIMEOUT) as session:
         tasks = [check(session, page_name, url, label) for page_name, url, label in entries]
         await asyncio.gather(*tasks)
 
@@ -188,7 +193,11 @@ def _remove_broken_link(site: pw.Site, video: BrokenVideo) -> bool:
 
     tmpl.get(field).value = ""
     page.text = str(parsed)
-    page.save(summary="MaccabiBot - Remove broken video link", bot=True)
+    try:
+        page.save(summary="MaccabiBot - Remove broken video link", bot=True)
+    except pw.exceptions.PageSaveRelatedError:
+        logger.exception("Failed to save page: %s", video.page_name)
+        return False
     logger.info("Cleared '%s' in: %s", field, video.page_name)
     return True
 

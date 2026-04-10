@@ -186,7 +186,7 @@ def test_search_pages_limit_caps_results(client):
             "query": {
                 "searchinfo": {"totalhits": 100},
                 "search": [
-                    {"pageid": i, "title": f"Page {i}", "snippet": ""} for i in range(10)
+                    {"pageid": i, "title": f"מכבי {i}", "snippet": ""} for i in range(10)
                 ],
             },
             "continue": {"sroffset": 10, "continue": "-||"},
@@ -257,6 +257,68 @@ def test_search_pages_breaks_on_stale_sroffset(client):
     result = client.search_pages("מכבי", limit=500)
     assert len(responses.calls) == 2
     assert len(result["results"]) == 2
+
+
+@responses.activate
+def test_search_pages_uses_formatversion_2(client):
+    responses.get(API_URL, json={"query": {"searchinfo": {"totalhits": 0}, "search": []}})
+    client.search_pages("מכבי")
+    params = responses.calls[0].request.params
+    assert params["formatversion"] == "2"
+
+
+@responses.activate
+def test_search_pages_missing_snippet_defaults_empty(client):
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 1},
+                "search": [{"pageid": 1, "title": "מכבי תל אביב"}],
+            }
+        },
+    )
+    result = client.search_pages("מכבי")
+    assert result["results"][0]["snippet"] == ""
+
+
+@responses.activate
+def test_search_pages_limit_over_500_caps_per_page_request(client):
+    # MediaWiki's srlimit max is 500 — a limit of 1000 must fetch in two pages
+    # of 500 each, not attempt a single srlimit=1000 call.
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 1000},
+                "search": [{"pageid": i, "title": f"מכבי {i}", "snippet": ""} for i in range(500)],
+            },
+            "continue": {"sroffset": 500, "continue": "-||"},
+        },
+    )
+    responses.get(
+        API_URL,
+        json={
+            "query": {
+                "searchinfo": {"totalhits": 1000},
+                "search": [
+                    {"pageid": 500 + i, "title": f"מכבי {500 + i}", "snippet": ""}
+                    for i in range(500)
+                ],
+            }
+        },
+    )
+    result = client.search_pages("מכבי", limit=1000)
+    assert len(result["results"]) == 1000
+    assert responses.calls[0].request.params["srlimit"] == "500"
+    assert responses.calls[1].request.params["srlimit"] == "500"
+
+
+@responses.activate
+def test_search_pages_limit_zero_short_circuits(client):
+    result = client.search_pages("מכבי", limit=0)
+    assert result == {"total_hits": 0, "results": []}
+    assert len(responses.calls) == 0
 
 
 @responses.activate

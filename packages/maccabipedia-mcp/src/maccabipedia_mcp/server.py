@@ -66,8 +66,10 @@ def search_pages(query: str, namespace: int = 0, limit: int = 500) -> dict:
     """Search for an exact phrase across wiki page text (main namespace by default).
 
     Wraps the query in quotes for exact-phrase match across full page text
-    (not just titles). Automatically pages through results until *limit*
-    entries are collected. Returns a dict with:
+    (not just titles). Any double-quote characters in *query* are stripped
+    before wrapping, so callers don't need to escape them. Automatically
+    pages through results until *limit* entries are collected. Returns a
+    dict with:
     - total_hits: full wiki-wide match count (may exceed limit)
     - results: list of {pageid, title, snippet}, capped at *limit*
     On API error, returns {"error": True, "code": ..., "message": ...}.

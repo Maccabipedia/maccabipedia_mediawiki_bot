@@ -27,7 +27,7 @@ class WikiClient:
             return {
                 "error": True,
                 "code": "non_json",
-                "message": f"Cargo returned non-JSON response (Content-Type: {content_type})",
+                "message": f"MediaWiki API returned non-JSON response (Content-Type: {content_type})",
             }
         return None
 
@@ -261,6 +261,8 @@ class WikiClient:
         return {"exists": exists, "pageid": page.get("pageid"), "redirect": redirect}
 
     def search_pages(self, query: str, namespace: int = 0, limit: int = 500) -> dict:
+        if limit <= 0:
+            return {"total_hits": 0, "results": []}
         # Strip any embedded quotes so the outer phrase wrapping stays balanced.
         phrase = query.replace('"', "")
         per_page = min(limit, 500)
@@ -271,7 +273,7 @@ class WikiClient:
             "srnamespace": namespace,
             "srlimit": per_page,
             "srwhat": "text",
-            "formatversion": "2",
+            "formatversion": 2,
         }
         results: list[dict] = []
         total_hits = 0

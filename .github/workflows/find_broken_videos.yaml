@@ -40,7 +40,7 @@ jobs:
         if: steps.report.outputs.has_removed == 'true'
         uses: appleboy/telegram-action@v2.25.0
         with:
-          to: ${{ secrets.MACCABIPEDIA_ERRORS_TELEGRAM_TO }}
+          to: -5109918442
           token: ${{ secrets.MACCABIPEDIA_ERRORS_TELEGRAM_TOKEN }}
           message: ${{ steps.report.outputs.content }}
 

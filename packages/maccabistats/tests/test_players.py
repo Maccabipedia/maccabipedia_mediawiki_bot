@@ -52,6 +52,11 @@ class TestAssistTypes:
         # חיים רביבו: corner assists in game 1 and game 4
         assert corner_assists.get("חיים רביבו", 0) == 2
 
+    def test_best_assisters_by_header(self, maccabi_games):
+        header_assists = dict(maccabi_games.players.best_assisters_by_header)
+        # חיים רביבו: header assists in games 4 and 7
+        assert header_assists.get("חיים רביבו", 0) == 2
+
 
 class TestMostPlayed:
     def test_most_played(self, maccabi_games):

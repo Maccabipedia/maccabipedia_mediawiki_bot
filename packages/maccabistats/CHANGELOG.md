@@ -1,3 +1,8 @@
+## Version 2.63 ##
+
+    Add HEADER_ASSIST to AssistTypes and map MaccabiPedia subtype 47 (בישול-נגיחה) to it.
+    Add best_assisters_by_header stat to PlayersStats.
+
 ## Version 2.62 ##
 
     Add best_scorers_in_one_game(score_at_least) and best_assisters_in_one_game(assist_at_least)

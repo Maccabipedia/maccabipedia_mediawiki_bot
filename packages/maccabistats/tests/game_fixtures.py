@@ -38,7 +38,7 @@ Goal types covered (each >=2):
   - NORMAL_KICK, HEADER, PENALTY, FREE_KICK, OWN_GOAL
 
 Assist types covered (each >=2):
-  - NORMAL_ASSIST, CORNER_ASSIST
+  - NORMAL_ASSIST, CORNER_ASSIST, HEADER_ASSIST
 """
 import datetime
 from datetime import timedelta
@@ -245,7 +245,7 @@ GAMES.append(_game(
     home_team=TeamInGame("מכבי תל אביב", "אברם גרנט", 2, [
         _player("אבי נמני", 10, [_lineup(), _captain(), _goal(25, GoalTypes.FREE_KICK)]),
         _player("אלי דריקס", 7, [_lineup(), _goal(50, GoalTypes.HEADER)]),
-        _player("חיים רביבו", 8, [_lineup(), _assist(25, AssistTypes.CORNER_ASSIST), _assist(50)]),
+        _player("חיים רביבו", 8, [_lineup(), _assist(25, AssistTypes.CORNER_ASSIST), _assist(50, AssistTypes.HEADER_ASSIST)]),
         _player("טל בן חיים", 3, [_lineup()]),
         _player("אלכסנדר אובארוב", 1, [_lineup(), _penalty_stopped(35)]),
         _player("שייע גלזר", 5, [_lineup()]),
@@ -323,7 +323,7 @@ GAMES.append(_game(
     home_team=TeamInGame("מכבי תל אביב", "פאולו סוזה", 2, [
         _player("אבי נמני", 10, [_lineup(), _captain(), _goal(30)]),
         _player("אלי דריקס", 7, [_lineup()]),
-        _player("חיים רביבו", 8, [_lineup(), _assist(30)]),
+        _player("חיים רביבו", 8, [_lineup(), _assist(30, AssistTypes.HEADER_ASSIST)]),
         _player("טל בן חיים", 3, [_lineup()]),
         _player("אלכסנדר אובארוב", 1, [_lineup()]),
         _player("שייע גלזר", 5, [_lineup()]),

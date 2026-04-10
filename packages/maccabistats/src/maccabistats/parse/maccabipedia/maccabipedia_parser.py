@@ -71,6 +71,7 @@ MACCABIPEDIA_ASSISTS_TYPE = {40: AssistTypes.UNCATEGORIZED,
                              44: AssistTypes.PENALTY_WINNING_ASSIST,
                              45: AssistTypes.THROW_IN_ASSIST,
                              46: AssistTypes.UNKNOWN,
+                             47: AssistTypes.HEADER_ASSIST,
                              }
 
 

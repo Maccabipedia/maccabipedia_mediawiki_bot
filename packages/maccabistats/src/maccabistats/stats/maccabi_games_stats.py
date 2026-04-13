@@ -47,7 +47,10 @@ class MaccabiGamesStats:
     _DEFAULT_DESCRIPTION = 'All games'
 
     def __init__(self, games: List[GameData], description: str = None,
-                 players_data: MaccabiPediaPlayers = None) -> None:
+                 players_data: MaccabiPediaPlayers = None,  # required: always pass players_data
+                 ) -> None:
+        if players_data is None:
+            raise TypeError("players_data is required — always pass a MaccabiPediaPlayers instance")
         self.games: List[GameData] = sorted(games, key=lambda g: g.date)  # Sort the games by date
         self.description = description or self._DEFAULT_DESCRIPTION
         self.players_data = players_data

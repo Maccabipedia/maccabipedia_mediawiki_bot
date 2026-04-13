@@ -182,5 +182,5 @@ def test_filter_chain_preserves_players_data(monkeypatch):
 def test_players_data_required_for_player_stats():
     """Without players_data, accessing player stats should fail."""
     games = [_make_game(datetime(2024, 9, 1))]
-    with pytest.raises((AttributeError, TypeError)):
+    with pytest.raises(TypeError):
         MaccabiGamesStats(games)

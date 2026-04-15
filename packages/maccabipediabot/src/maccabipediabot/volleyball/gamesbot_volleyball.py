@@ -266,6 +266,10 @@ def create_or_update_volleyball_game_pages(games_to_add: List[VolleyballGame]):
 
     logging.info("Finished adding new games.")
 
+    # The main page shows the latest 5 games list, so purge it too
+    if all_pages_to_purge:
+        all_pages_to_purge.add("עמוד ראשי")
+
     # Batch purge all collected pages at the end
     if SHOULD_SAVE and SHOULD_PURGE_RELATED_PAGES:
         purge_pages_batch(all_pages_to_purge)

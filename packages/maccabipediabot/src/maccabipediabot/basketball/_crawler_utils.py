@@ -9,17 +9,32 @@ from maccabipediabot.basketball.basketball_game import BasketballGame
 logger = logging.getLogger(__name__)
 
 
+# Box-score scrapers treat absent / None / "" / "-" as "0" deliberately —
+# a player who didn't take any free throws genuinely has 0 attempts.
+_NUMERIC_ABSENT = {None, "", "-"}
+
+
 def to_int(value) -> int:
+    if value in _NUMERIC_ABSENT:
+        return 0
     try:
         return int(value)
     except (TypeError, ValueError):
+        # Unexpected non-numeric, non-absent value — log so a future schema
+        # drift (e.g. nested {"value": N}) is discoverable.
+        logger.debug("to_int got unexpected value %r (%s); defaulting to 0",
+                     value, type(value).__name__)
         return 0
 
 
 def to_int_or_none(value) -> int | None:
+    if value in _NUMERIC_ABSENT:
+        return None
     try:
         return int(value)
     except (TypeError, ValueError):
+        logger.debug("to_int_or_none got unexpected value %r (%s); returning None",
+                     value, type(value).__name__)
         return None
 
 

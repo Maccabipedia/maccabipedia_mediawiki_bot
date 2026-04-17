@@ -45,11 +45,7 @@ GAME_URL_PREFIX = "https://www.euroleaguebasketball.net"
 
 @dataclass(frozen=True)
 class EuroleagueGameMeta:
-    """Metadata about a Euroleague game from the team-results discovery step.
-
-    `page_title` is intentionally NOT a field — it's derived from game_date +
-    translated team names + competition. Use `page_title_for(meta)` if needed.
-    """
+    """Metadata about a Euroleague game from the team-results discovery step."""
     scrape_url: str
     game_date: datetime
     is_maccabi_home: bool
@@ -205,7 +201,8 @@ def discover_games_from_html(html: str, limit: int | None = None) -> list[Eurole
     data = extract_next_data(html)
     results = data["props"]["pageProps"]["results"]["results"]
 
-    dropped = {"non_final": 0, "bad_date": 0, "missing_score": 0, "missing_team_name": 0, "no_url": 0}
+    dropped = {"non_final": 0, "bad_date": 0, "missing_score": 0, "zero_zero": 0,
+               "missing_team_name": 0, "no_url": 0}
     metas: list[EuroleagueGameMeta] = []
     for r in results:
         # Only finished games. Status "result" is what the team-results page returns for past games.
@@ -229,6 +226,12 @@ def discover_games_from_html(html: str, limit: int | None = None) -> list[Eurole
         away_score = to_int_or_none(away.get("score"))
         if home_score is None or away_score is None:
             dropped["missing_score"] += 1
+            continue
+        # Defense in depth: a real basketball game can't end 0-0. status="result"
+        # *should* gate this, but guard anyway in case Euroleague ever ships
+        # a placeholder row that satisfies the status filter.
+        if home_score + away_score == 0:
+            dropped["zero_zero"] += 1
             continue
 
         home_name = (home.get("name") or "").strip()
@@ -266,15 +269,6 @@ def discover_games_from_html(html: str, limit: int | None = None) -> list[Eurole
         logger.info("Euroleague discovery: kept=%d dropped=%r", len(metas), dropped)
 
     return metas
-
-
-def page_title_for(meta: EuroleagueGameMeta) -> str:
-    """Build the MaccabiPedia page title for a discovered Euroleague game."""
-    opponent_he = team_name_to_hebrew(meta.opponent_name_eng)
-    home_he = "מכבי תל אביב" if meta.is_maccabi_home else opponent_he
-    away_he = opponent_he if meta.is_maccabi_home else "מכבי תל אביב"
-    date = meta.game_date.strftime("%d-%m-%Y")
-    return f"כדורסל:{date} {home_he} נגד {away_he} - {COMPETITION_NAME_HE}"
 
 
 def discover_games_latest_season(limit: int | None = None) -> list[EuroleagueGameMeta]:

@@ -35,10 +35,7 @@ MAX_CONNECTIONS = 100
 
 @dataclass(frozen=True)
 class GameDiscoveryMeta:
-    """Metadata known about a game from the discovery step (before per-game scrape).
-
-    `page_title` is intentionally NOT a field — derive it via `page_title_for(meta)`.
-    """
+    """Metadata known about a game from the discovery step (before per-game scrape)."""
     game_id: int
     scrape_url: str
     game_date: datetime
@@ -426,12 +423,24 @@ async def extract_games_links_from_seasons_pages(session: ClientSession, season:
         BASKET_CO_IL_SITE_MACCABI_BASE_PAGE.format(team_id=team_id),
         season)
 
+    enriched = 0
+    failures: list[str] = []
     for game in season_games:
         try:
             await enrich_game(session, game)
-        except Exception:
-            logging.exception(f"Could not enrich game: {game.game_url}")
+            enriched += 1
+        except Exception as exc:
+            logging.exception("Could not enrich game: %s", game.game_url)
+            failures.append(f"{game.game_url}: {exc!r}")
 
+    if season_games and enriched == 0:
+        raise RuntimeError(
+            f"All {len(season_games)} games for season {season} failed to enrich. "
+            f"First error: {failures[0]}"
+        )
+    if failures:
+        logging.warning("season %s: enriched %d/%d games (%d failed)",
+                        season, enriched, len(season_games), len(failures))
     return season_games
 
 
@@ -541,14 +550,6 @@ def fetch_game_html(scrape_url: str) -> str:
     resp.raise_for_status()
     resp.encoding = "utf-8"  # basket.co.il sends bytes without a declared charset
     return resp.text
-
-
-def page_title_for(meta: GameDiscoveryMeta) -> str:
-    """Build the MaccabiPedia page title for a discovered basket.co.il game."""
-    home = "מכבי תל אביב" if meta.is_maccabi_home else meta.opponent_name
-    away = meta.opponent_name if meta.is_maccabi_home else "מכבי תל אביב"
-    date = meta.game_date.strftime("%d-%m-%Y")
-    return f"כדורסל:{date} {home} נגד {away} - {meta.competition}"
 
 
 def _run_latest_season(limit: int | None) -> list[BasketballGame]:

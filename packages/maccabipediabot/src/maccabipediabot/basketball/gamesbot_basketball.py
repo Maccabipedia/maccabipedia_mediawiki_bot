@@ -5,7 +5,6 @@ from pathlib import Path
 from pydantic import TypeAdapter
 
 from maccabipediabot.basketball.basketball_game import BasketballGame, PlayerSummary
-from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 from maccabipediabot.common.wiki_login import get_site
 
 import tldextract
@@ -209,6 +208,9 @@ def handle_game(game: BasketballGame, site, skip_existing: bool, existing_titles
 
     logging.info("Saving %s", game_page.title())
     game_page.save(summary="MaccabiBot - Uploading basketball games")
+
+    # Lazy import: prettify_games_pages does a wiki login at module load.
+    from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 
     logging.info("Prettifying %s", game_page.title())
     prettify_game_page_main_template(game_page)

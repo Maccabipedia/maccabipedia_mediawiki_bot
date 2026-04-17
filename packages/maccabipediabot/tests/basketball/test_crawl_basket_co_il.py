@@ -61,9 +61,17 @@ def test_parse_game_page_extracts_coaches():
 
 def test_parse_game_page_extracts_player_lists():
     game = parse_game_page(_read_fixture(), _meta())
-    assert len(game.maccabi_players) >= 5
-    assert len(game.opponent_players) >= 5
+    # Real box scores list full rosters; accept 8+ to tolerate minor fixture noise.
+    assert len(game.maccabi_players) >= 8
+    assert len(game.opponent_players) >= 8
     assert any(p.name and p.total_points > 0 for p in game.maccabi_players)
+
+
+def test_parse_game_page_starting_five_matches_star_only():
+    """Regression guard: is_starting_five must be true only when the HE cell is '*'."""
+    game = parse_game_page(_read_fixture(), _meta())
+    starters = [p for p in game.maccabi_players if p.is_starting_five]
+    assert len(starters) == 5, f"expected exactly 5 starters, got {len(starters)}"
 
 
 def test_parse_game_page_sets_team_names():

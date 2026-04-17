@@ -266,7 +266,7 @@ def _parse_player_rows(table: Tag) -> list[PlayerSummary]:
         players.append(PlayerSummary(
             number=_to_int(number_link.get_text() if number_link else None) or None,
             name=normalize_player_name(raw_name),
-            is_starting_five=bool(tds[2].get_text(strip=True)),
+            is_starting_five=tds[2].get_text(strip=True) == "*",
             minutes_played=_to_int(tds[3].get_text()),
             total_points=_to_int(tds[4].get_text()),
             field_goals_attempts=fg_attempts,

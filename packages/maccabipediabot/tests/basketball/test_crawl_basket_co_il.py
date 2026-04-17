@@ -70,3 +70,23 @@ def test_parse_game_page_sets_team_names():
     game = parse_game_page(_read_fixture(), _meta())
     assert game.home_team_name == "הפועל חולון"
     assert game.away_team_name == "מכבי תל אביב"
+
+
+# ---------------------------------------------------------------------------
+# Live discovery (integration — hits basket.co.il)
+# ---------------------------------------------------------------------------
+
+import pytest
+
+from maccabipediabot.basketball.crawl_basket_co_il import discover_games_latest_season
+
+
+@pytest.mark.integration
+def test_discover_games_latest_season_hits_live_api():
+    games = discover_games_latest_season(limit=5)
+    assert isinstance(games, list)
+    # During the off-season this could be empty; only assert structure when populated.
+    for meta in games:
+        assert meta.scrape_url.startswith("https://basket.co.il/game-zone.asp?GameId=")
+        assert meta.opponent_name
+        assert meta.competition

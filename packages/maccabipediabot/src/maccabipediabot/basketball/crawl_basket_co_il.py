@@ -523,7 +523,124 @@ async def crawl_game_pages():
     RESULTS_FILE.write_text(json.dumps(basketball_games_from_season_pages, default=pydantic_encoder))
 
 
-if __name__ == '__main__':
-    logging.info("Started fetch games")
-    asyncio.run(crawl_game_pages())
-    logging.info("finished fetch games")
+import argparse
+
+import requests
+
+from maccabipediabot.basketball.translations import (
+    basket_co_il_competition_name,
+    team_name_to_hebrew,
+)
+
+GAMES_ALL_FEED_URL = "https://basket.co.il/pbp/json/games_all.json"
+MACCABI_TEAM_NAME_ENG = "Maccabi Tel-Aviv"
+GAME_PAGE_URL_TEMPLATE = "https://basket.co.il/game-zone.asp?GameId={game_id}"
+
+
+def discover_games_latest_season(limit: int | None = None) -> list[GameDiscoveryMeta]:
+    """Fetch basket.co.il's current-season feed, return Maccabi finished games sorted desc by date."""
+    resp = requests.get(GAMES_ALL_FEED_URL, timeout=30)
+    if resp.status_code != 200:
+        raise RuntimeError(
+            f"Unexpected games_all response: status={resp.status_code} "
+            f"ctype={resp.headers.get('Content-Type')}\n{resp.text[:300]}"
+        )
+
+    # The feed is served as text/html and starts with a UTF-8 BOM, so json() fails.
+    payload = json.loads(resp.content.decode("utf-8-sig"))
+    games = payload[0]["games"]
+
+    maccabi_games = [g for g in games
+                     if g.get("team_name_eng_1") == MACCABI_TEAM_NAME_ENG
+                     or g.get("team_name_eng_2") == MACCABI_TEAM_NAME_ENG]
+    finished = [g for g in maccabi_games if g.get("score_team1") and g.get("score_team2")]
+
+    def _sort_key(game: dict) -> datetime:
+        d, m, y = game["game_date_txt"].split("/")
+        return datetime(int(y), int(m), int(d))
+
+    finished.sort(key=_sort_key, reverse=True)
+    if limit:
+        finished = finished[:limit]
+
+    metas: list[GameDiscoveryMeta] = []
+    for g in finished:
+        d, m, y = g["game_date_txt"].split("/")
+        time_str = g.get("game_time") or "00:00"
+        hour, minute = time_str.split(":") if ":" in time_str else ("0", "0")
+        game_dt = datetime(int(y), int(m), int(d), int(hour), int(minute))
+
+        home_team = team_name_to_hebrew(g["team_name_eng_1"])
+        away_team = team_name_to_hebrew(g["team_name_eng_2"])
+        is_maccabi_home = home_team == "מכבי תל אביב"
+        opponent = away_team if is_maccabi_home else home_team
+
+        competition = basket_co_il_competition_name(g["game_type"])
+        if not competition:
+            logging.warning("unknown basket.co.il game_type %s for game %s, skipping",
+                            g["game_type"], g.get("id"))
+            continue
+
+        metas.append(GameDiscoveryMeta(
+            game_id=int(g["id"]),
+            scrape_url=GAME_PAGE_URL_TEMPLATE.format(game_id=g["id"]),
+            page_title=f"כדורסל:{d}-{m}-{y} {home_team} נגד {away_team} - {competition}",
+            game_date=game_dt,
+            is_maccabi_home=is_maccabi_home,
+            opponent_name=opponent,
+            home_team_score=int(g["score_team1"]),
+            away_team_score=int(g["score_team2"]),
+            competition=competition,
+        ))
+    return metas
+
+
+def fetch_game_html(scrape_url: str) -> str:
+    """Fetch a basket.co.il game-zone.asp page as UTF-8 HTML."""
+    resp = requests.get(scrape_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=30)
+    resp.raise_for_status()
+    resp.encoding = "utf-8"  # basket.co.il sends bytes without a declared charset
+    return resp.text
+
+
+def _write_results(games: list[BasketballGame], output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps([g.model_dump(mode="json") for g in games], ensure_ascii=False),
+        encoding="utf-8",
+    )
+    logging.info("Wrote %d games to %s", len(games), output_path)
+
+
+def _run_latest_season(limit: int | None) -> list[BasketballGame]:
+    metas = discover_games_latest_season(limit=limit)
+    logging.info("Discovered %d Maccabi games for latest season", len(metas))
+    out: list[BasketballGame] = []
+    for meta in metas:
+        try:
+            html = fetch_game_html(meta.scrape_url)
+            out.append(parse_game_page(html, meta))
+        except Exception:
+            logging.exception("Failed to parse %s", meta.scrape_url)
+    return out
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Crawl basket.co.il for Maccabi games.")
+    parser.add_argument("--season", choices=("latest", "all"), default="latest")
+    parser.add_argument("--limit", type=int, default=None,
+                        help="Cap the number of most-recent games (latest mode only).")
+    parser.add_argument("--output", type=Path, required=True, help="Path to write JSON output.")
+    args = parser.parse_args()
+
+    if args.season == "latest":
+        games = _run_latest_season(args.limit)
+    else:
+        # All-seasons mode is async; rewired in the next task to honor --output.
+        raise NotImplementedError("--season all is updated in a follow-up task")
+
+    _write_results(games, args.output)
+
+
+if __name__ == "__main__":
+    main()

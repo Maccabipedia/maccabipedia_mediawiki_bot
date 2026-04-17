@@ -23,9 +23,6 @@ BASKET_CO_IL_SITE_MACCABI_BASE_PAGE = "https://basket.co.il/team.asp?TeamId={tea
 COMPETITION_NAME = 'ליגת Winner סל'
 BASKET_CO_IL_SITE_PREFIX = 'https://basket.co.il/'
 
-BASKETBALL_BASE_FOLDER = Path("C:\\") / "maccabi" / "basketball"
-RESULTS_FILE = BASKETBALL_BASE_FOLDER / 'basket_co_il_results.json'
-
 MAX_CONNECTIONS = 100
 
 
@@ -297,101 +294,59 @@ def _season_from_date(d: datetime) -> str:
     return f"{year - 1}/{year % 100:02d}"
 
 
-def parse_players_events_from_soup_table_element(soup_table: BeautifulSoup) -> list[PlayerSummary]:
-    rows = soup_table.find_all('tr')
-    # rows 0-1 are not real headers, it's team name and stats category like: "rebounds"
-    header_cells = rows[2].find_all(['th', 'td'])
-    headers = [cell.get_text(strip=True) for cell in header_cells]
-    if headers != ['#', 'שם שחקן', 'חמ', 'דק', 'נק', 'זרק/קלע', '%', 'זרק/קלע', '%', 'זרק/קלע', '%', 'הג', 'הת', 'סהכ',
-                   'של', 'על', 'חט', 'אב', 'אס', 'של', 'על', 'מדד', '+/-'] and headers != ['#', 'שם שחקן', 'חמ', 'דק', 'נק', 'זרק/קלע', '%', 'זרק/קלע', '%', 'זרק/קלע', '%', 'הג', 'הת', 'סהכ', 'של', 'על', 'חט', 'אב', 'אס', 'של', 'על', 'מדד']:
-        raise RuntimeError(f"We should work only on familiar headers: {headers}")
-
-    def parse_attempts_scored(cell):
-        # "13/4" → (13, 4)
-        match = re.match(r'(\d+)\s*/\s*(\d+)', cell.text)
-        if match:
-            return int(match.group(1)), int(match.group(2))
-        else:
-            raise RuntimeError(f"Could not parse: {cell.text}")
-
-    players = []
-
-    # Iterate over player rows
-    for row in rows[3:]:
-        cells = row.find_all('td')
-        if not cells:
-            continue  # skip empty rows
-
-        if cells[1].get_text(strip=True) in ('קבוצתי', 'סה"כ', '-'):
-            continue  # Skip summary rows
-
-        two_points = parse_attempts_scored(cells[5])
-        three_points = parse_attempts_scored(cells[7])
-        one_points = parse_attempts_scored(cells[9])
-
-
-        def optional_int(cell_id: int):
-            return None if cells[cell_id].get_text(strip=True) in ['-', ''] else int(cells[cell_id].get_text(strip=True))
-
-
-        player = PlayerSummary(
-            number=int(cells[0].get_text(strip=True)),
-            name=cells[1].get_text(strip=True),
-            is_starting_five=cells[2].get_text(strip=True) == '*',
-            minutes_played=optional_int(3),
-            total_points=int(cells[4].get_text(strip=True)),
-            three_scores_attempts=three_points[1],
-            three_scores_scored=three_points[0],
-            field_goals_attempts=two_points[1],
-            field_goals_scored=two_points[0],
-            free_throws_attempts=one_points[1],
-            free_throws_scored=one_points[0],
-            defensive_rebounds=optional_int(11),
-            offensive_rebounds=optional_int(12),
-            personal_total_fouls=optional_int(14),
-            steals=optional_int(16),
-            turnovers=optional_int(17),
-            assists=optional_int(18),
-            blocks=optional_int(19)
-        )
-
-        players.append(player)
-
-    return players
-
-
 async def enrich_game(session: ClientSession, game: BasketballGame) -> None:
-    async with (session.get(game.game_url) as response):
-        logging.info(f"Fetching all players events for game: {game.game_url}")
+    """Fetch the per-game page and fill in the rest of the BasketballGame fields.
 
+    Backed by parse_game_page (sync) for parity with the latest-season crawler.
+    """
+    url = game.game_url[0] if isinstance(game.game_url, list) else game.game_url
+    async with session.get(url) as response:
+        logging.info("Fetching per-game data: %s", url)
         content = await response.text()
-        soup = BeautifulSoup(content, "html.parser")
 
-        players_stats = soup.find_all(lambda tag: tag.name == "table" and "שם שחקן" in tag.get_text())
+    is_maccabi_home = game.home_team_name == "מכבי תל אביב"
+    opponent = game.away_team_name if is_maccabi_home else game.home_team_name
+    game_id_match = re.search(r"GameId=(\d+)", url)
+    game_id = int(game_id_match.group(1)) if game_id_match else 0
 
-        if len(players_stats) != 2:
-            raise RuntimeError(f"Could not find 2 player stats for game: {game.game_url}")
+    meta = GameDiscoveryMeta(
+        game_id=game_id,
+        scrape_url=url,
+        page_title="",
+        game_date=game.game_date,
+        is_maccabi_home=is_maccabi_home,
+        opponent_name=opponent,
+        home_team_score=game.home_team_score,
+        away_team_score=game.away_team_score,
+        competition=game.competition,
+    )
+    parsed = parse_game_page(content, meta)
 
-        def is_maccabi_table(text):
-            return "מכבי תל אביב" in text or "מכבי Playtika תל אביב" in text or "מכבי פוקס תל אביב" in text or "מכבי אלקטרה תל אביב" in text or "מכבי עלית תל אביב" in text # There are sponsor in between maybe
-
-        if is_maccabi_table(players_stats[0].text) and not is_maccabi_table(players_stats[1].text):
-            maccabi_players = parse_players_events_from_soup_table_element(players_stats[0])
-            opponent_players = parse_players_events_from_soup_table_element(players_stats[1])
-        elif is_maccabi_table(players_stats[1].text) and not is_maccabi_table(players_stats[0].text):
-            maccabi_players = parse_players_events_from_soup_table_element(players_stats[1])
-            opponent_players = parse_players_events_from_soup_table_element(players_stats[0])
-        else:
-            raise RuntimeError('Can not find maccabi players events')
-
-        game.maccabi_players = maccabi_players
-        game.opponent_players = opponent_players
-
-        more_game_data = soup.find("div", class_='more_data').text.replace('\xa0', ' ').strip()
-        if "צופים: " in more_game_data:
-            game.crowd = more_game_data.split("צופים: ")[1].strip()
-
-        a=6
+    # Merge parsed fields into the existing game (preserve discovery-set fields)
+    game.arena = parsed.arena
+    game.crowd = parsed.crowd
+    game.referee = parsed.referee
+    game.referee_assistants = parsed.referee_assistants
+    game.maccabi_coach = parsed.maccabi_coach
+    game.opponent_coach = parsed.opponent_coach
+    game.maccabi_players = parsed.maccabi_players
+    game.opponent_players = parsed.opponent_players
+    game.first_quarter_maccabi_points = parsed.first_quarter_maccabi_points
+    game.second_quarter_maccabi_points = parsed.second_quarter_maccabi_points
+    game.third_quarter_maccabi_points = parsed.third_quarter_maccabi_points
+    game.fourth_quarter_maccabi_points = parsed.fourth_quarter_maccabi_points
+    game.first_overtime_maccabi_points = parsed.first_overtime_maccabi_points
+    game.second_overtime_maccabi_points = parsed.second_overtime_maccabi_points
+    game.third_overtime_maccabi_points = parsed.third_overtime_maccabi_points
+    game.fourth_overtime_maccabi_points = parsed.fourth_overtime_maccabi_points
+    game.first_quarter_opponent_points = parsed.first_quarter_opponent_points
+    game.second_quarter_opponent_points = parsed.second_quarter_opponent_points
+    game.third_quarter_opponent_points = parsed.third_quarter_opponent_points
+    game.fourth_quarter_opponent_points = parsed.fourth_quarter_opponent_points
+    game.first_overtime_opponent_points = parsed.first_overtime_opponent_points
+    game.second_overtime_opponent_points = parsed.second_overtime_opponent_points
+    game.third_overtime_opponent_points = parsed.third_overtime_opponent_points
+    game.fourth_overtime_opponent_points = parsed.fourth_overtime_opponent_points
 
 async def build_seasons_games_metadata_from_season_url(session: ClientSession, season_url: str, season: str) -> list[
     BasketballGame]:
@@ -504,23 +459,6 @@ async def get_team_ids_for_all_seasons(session: ClientSession) -> dict[str, str]
         seasons_to_team_ids = {opt.text.strip().replace('-', '/'): opt["value"] for opt in options if opt.get("value")}
 
         return seasons_to_team_ids
-
-
-async def crawl_game_pages():
-    limited_connector = aiohttp.TCPConnector(limit=MAX_CONNECTIONS)
-
-    async with aiohttp.ClientSession(connector=limited_connector) as session:
-        seasons_to_team_ids = await get_team_ids_for_all_seasons(session)
-        logging.info(f'Seasons to team ids: {seasons_to_team_ids}')
-
-        logging.info(f'Extracting specific games links from seasons pages')
-        season_tasks = [extract_games_links_from_seasons_pages(session, season, team_id) for (season, team_id) in
-                        seasons_to_team_ids.items()]
-
-        basketball_games_from_season_pages = await asyncio.gather(*season_tasks)
-
-    logging.info(f"Writing file to: {RESULTS_FILE}")
-    RESULTS_FILE.write_text(json.dumps(basketball_games_from_season_pages, default=pydantic_encoder))
 
 
 import argparse
@@ -636,8 +574,18 @@ def main() -> None:
     if args.season == "latest":
         games = _run_latest_season(args.limit)
     else:
-        # All-seasons mode is async; rewired in the next task to honor --output.
-        raise NotImplementedError("--season all is updated in a follow-up task")
+        async def _run_all() -> list[BasketballGame]:
+            connector = aiohttp.TCPConnector(limit=MAX_CONNECTIONS)
+            async with aiohttp.ClientSession(connector=connector) as session:
+                seasons_to_team_ids = await get_team_ids_for_all_seasons(session)
+                logging.info("Seasons to team ids: %s", seasons_to_team_ids)
+                season_tasks = [
+                    extract_games_links_from_seasons_pages(session, season, team_id)
+                    for season, team_id in seasons_to_team_ids.items()
+                ]
+                results_per_season = await asyncio.gather(*season_tasks)
+            return [g for season in results_per_season for g in season]
+        games = asyncio.run(_run_all())
 
     _write_results(games, args.output)
 

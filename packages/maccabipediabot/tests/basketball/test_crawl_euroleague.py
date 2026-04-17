@@ -17,13 +17,12 @@ def _meta() -> EuroleagueGameMeta:
     """Game E2025 R1: Anadolu Efes (home) vs Maccabi Tel Aviv (away)."""
     return EuroleagueGameMeta(
         scrape_url="https://www.euroleaguebasketball.net/en/euroleague/game-center/2025-26/anadolu-efes-istanbul-maccabi-rapyd-tel-aviv/E2025/1/",
-        page_title="",
         game_date=datetime(2025, 9, 30, 20, 30),
         is_maccabi_home=False,
         opponent_name_eng="Anadolu Efes Istanbul",
         home_team_score=85,
         away_team_score=78,
-        fixture="1",
+        fixture_round=1,
     )
 
 
@@ -165,13 +164,12 @@ def _synthetic_next_data(
 def _maccabi_home_meta() -> EuroleagueGameMeta:
     return EuroleagueGameMeta(
         scrape_url="https://www.euroleaguebasketball.net/test-game/",
-        page_title="",
         game_date=datetime(2025, 11, 1, 20, 30),
         is_maccabi_home=True,
         opponent_name_eng="Olympiacos Piraeus",
         home_team_score=85,
         away_team_score=80,
-        fixture="7",
+        fixture_round=7,
     )
 
 

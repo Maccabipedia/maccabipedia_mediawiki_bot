@@ -15,7 +15,6 @@ def _meta() -> GameDiscoveryMeta:
     return GameDiscoveryMeta(
         game_id=26383,
         scrape_url="https://basket.co.il/game-zone.asp?GameId=26383",
-        page_title="כדורסל:30-05-2025 הפועל חולון נגד מכבי תל אביב - ליגת העל",
         game_date=datetime(2025, 5, 30, 20, 30),
         is_maccabi_home=False,
         opponent_name="הפועל חולון",

@@ -28,10 +28,12 @@ MAX_CONNECTIONS = 100
 
 @dataclass(frozen=True)
 class GameDiscoveryMeta:
-    """Metadata known about a game from the discovery step (before per-game scrape)."""
+    """Metadata known about a game from the discovery step (before per-game scrape).
+
+    `page_title` is intentionally NOT a field — derive it via `page_title_for(meta)`.
+    """
     game_id: int
     scrape_url: str
-    page_title: str
     game_date: datetime
     is_maccabi_home: bool
     opponent_name: str
@@ -305,12 +307,13 @@ async def enrich_game(session: ClientSession, game: BasketballGame) -> None:
     is_maccabi_home = game.home_team_name == "מכבי תל אביב"
     opponent = game.away_team_name if is_maccabi_home else game.home_team_name
     game_id_match = re.search(r"GameId=(\d+)", url)
-    game_id = int(game_id_match.group(1)) if game_id_match else 0
+    if not game_id_match:
+        raise ValueError(f"Cannot extract GameId from URL: {url}")
+    game_id = int(game_id_match.group(1))
 
     meta = GameDiscoveryMeta(
         game_id=game_id,
         scrape_url=url,
-        page_title="",
         game_date=game.game_date,
         is_maccabi_home=is_maccabi_home,
         opponent_name=opponent,
@@ -491,9 +494,16 @@ def discover_games_latest_season(limit: int | None = None) -> list[GameDiscovery
                      or g.get("team_name_eng_2") == MACCABI_TEAM_NAME_ENG]
 
     def _is_finished(g: dict) -> bool:
-        # Both scores must be present (not None and not empty string). 0 is a valid score.
+        # Both scores must be present (not None / not empty string) AND at least one
+        # team must have scored. basket.co.il's feed marks unplayed-but-scheduled games
+        # with 0-0 as a placeholder; in basketball a real result of 0-0 doesn't happen.
         s1, s2 = g.get("score_team1"), g.get("score_team2")
-        return s1 not in (None, "") and s2 not in (None, "")
+        if s1 in (None, "") or s2 in (None, ""):
+            return False
+        try:
+            return int(s1) + int(s2) > 0
+        except (TypeError, ValueError):
+            return False
 
     finished = [g for g in maccabi_games if _is_finished(g)]
 
@@ -529,7 +539,6 @@ def discover_games_latest_season(limit: int | None = None) -> list[GameDiscovery
         metas.append(GameDiscoveryMeta(
             game_id=int(g["id"]),
             scrape_url=GAME_PAGE_URL_TEMPLATE.format(game_id=g["id"]),
-            page_title=f"כדורסל:{d}-{m}-{y} {home_team} נגד {away_team} - {competition}",
             game_date=game_dt,
             is_maccabi_home=is_maccabi_home,
             opponent_name=opponent,
@@ -552,6 +561,14 @@ def fetch_game_html(scrape_url: str) -> str:
     resp.raise_for_status()
     resp.encoding = "utf-8"  # basket.co.il sends bytes without a declared charset
     return resp.text
+
+
+def page_title_for(meta: GameDiscoveryMeta) -> str:
+    """Build the MaccabiPedia page title for a discovered basket.co.il game."""
+    home = "מכבי תל אביב" if meta.is_maccabi_home else meta.opponent_name
+    away = meta.opponent_name if meta.is_maccabi_home else "מכבי תל אביב"
+    date = meta.game_date.strftime("%d-%m-%Y")
+    return f"כדורסל:{date} {home} נגד {away} - {meta.competition}"
 
 
 def _write_results(games: list[BasketballGame], output_path: Path) -> None:

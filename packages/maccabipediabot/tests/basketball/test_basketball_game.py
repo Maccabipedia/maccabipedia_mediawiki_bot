@@ -67,6 +67,22 @@ def test_player_summary_template_wrapper():
     assert result.endswith("}}")
 
 
+def test_player_summary_renders_2pt_under_correct_label():
+    """Bug fix: זריקות שתי נק must reflect field_goals (2-pointers), not free_throws (1-pt)."""
+    p = _make_player(
+        name="טל ברודי",
+        field_goals_attempts=10,
+        field_goals_scored=5,
+        free_throws_attempts=8,
+        free_throws_scored=6,
+    )
+    rendered = p.__maccabipedia__()
+    assert "זריקות שתי נק=10" in rendered
+    assert "קליעות שתי נק=5" in rendered
+    assert "זריקות עונשין=8" in rendered
+    assert "קליעות עונשין=6" in rendered
+
+
 # ---------------------------------------------------------------------------
 # BasketballGame — home/away logic
 # ---------------------------------------------------------------------------

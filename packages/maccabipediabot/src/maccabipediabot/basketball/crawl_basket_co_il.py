@@ -112,15 +112,16 @@ def _parse_header(soup: BeautifulSoup) -> dict:
 
     h5 = container.select_one("h5")
     stadium = ""
-    crowd: int | None = None
     if h5:
         stadium = h5.get_text(",", strip=True).split(",")[0].strip()
-        crowd_div = h5.select_one("div.link-1")
-        if crowd_div and "צופים:" in crowd_div.get_text():
-            text = crowd_div.get_text().split("צופים:")[1].strip()
-            digits = re.sub(r"[^\d]", "", text)
-            if digits:
-                crowd = int(digits)
+
+    # Crowd ('צופים: NNNN') lives somewhere inside #wrap_inner_3 — exact selector
+    # has shifted over time, so just search the container text.
+    crowd: int | None = None
+    container_text = container.get_text(" ", strip=True).replace("\xa0", " ")
+    crowd_match = re.search(r"צופים:\s*(\d[\d,]*)", container_text)
+    if crowd_match:
+        crowd = int(crowd_match.group(1).replace(",", ""))
 
     h6 = container.select_one("h6")
     main_referee = ""

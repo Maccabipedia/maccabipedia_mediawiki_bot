@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import requests
 from bs4 import BeautifulSoup
@@ -41,6 +42,7 @@ HTTP_HEADERS = {
 COMPETITION_NAME_HE = "יורוליג"
 MACCABI_TEAM_NAME_ENG = "Maccabi Rapyd Tel Aviv"
 GAME_URL_PREFIX = "https://www.euroleaguebasketball.net"
+ISRAEL_TZ = ZoneInfo("Asia/Jerusalem")
 
 
 @dataclass(frozen=True)
@@ -216,7 +218,13 @@ def discover_games_from_html(html: str, limit: int | None = None) -> list[Eurole
             dropped["bad_date"] += 1
             continue
         try:
-            game_dt = datetime.fromisoformat(date_str.replace("Z", "+00:00")).replace(tzinfo=None)
+            # Euroleague feed timestamps are in UTC. Convert to Israel local time
+            # (matches the wiki convention) and drop tzinfo for the BasketballGame model.
+            game_dt = (
+                datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+                .astimezone(ISRAEL_TZ)
+                .replace(tzinfo=None)
+            )
         except ValueError:
             dropped["bad_date"] += 1
             continue

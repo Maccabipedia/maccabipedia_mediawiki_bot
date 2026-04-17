@@ -58,13 +58,29 @@ def test_player_summary_starting_five_yes():
 
 
 def test_player_summary_starting_five_no():
-    assert "חמישייה=לא" in _make_player(is_starting_five=False).__maccabipedia__()
+    # Wiki convention: empty (not "לא") for non-starters; matches TS uploader output.
+    assert "חמישייה= |" in _make_player(is_starting_five=False).__maccabipedia__()
 
 
 def test_player_summary_template_wrapper():
     result = _make_player().__maccabipedia__()
-    assert result.startswith("{{אירועי שחקן סל|")
+    assert result.startswith("{{אירועי שחקן סל |")
     assert result.endswith("}}")
+    assert " }}" not in result  # no extra space before closing braces
+
+
+def test_player_summary_zero_points_renders_as_empty():
+    """Wiki convention: a player who scored 0 (or DNP) shows 'נק=' not 'נק=0'."""
+    rendered = _make_player(total_points=0).__maccabipedia__()
+    assert "|נק= |" in rendered or "|נק=|" in rendered
+
+
+def test_player_summary_2pt_listed_before_3pt():
+    """Field order must match the existing wiki convention: 2pt before 3pt."""
+    rendered = _make_player().__maccabipedia__()
+    two_pt = rendered.find("זריקות שתי נק")
+    three_pt = rendered.find("זריקות שלוש נק")
+    assert 0 < two_pt < three_pt, f"expected 2pt before 3pt, got 2pt={two_pt} 3pt={three_pt}"
 
 
 def test_player_summary_renders_2pt_under_correct_label():

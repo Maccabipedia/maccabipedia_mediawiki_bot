@@ -27,18 +27,21 @@ class PlayerSummary(BaseModel):
     blocks: Optional[int] = None
 
     def __maccabipedia__(self) -> str:
-        inner = "| ".join([
+        # Field order matches the existing wiki convention: 2pt before 3pt;
+        # is_starting_five is empty (not "לא") for non-starters; total_points
+        # falsy values (0 / None) render as empty so a DNP looks like "נק=" not "נק=0".
+        inner = " |".join([
             f"שם={self.name}",
             f"מספר={self.number}",
             f"דקות={self.minutes_played}",
-            f"חמישייה={'כן' if self.is_starting_five else 'לא'}",
-            f"נק={self.total_points}",
+            f"חמישייה={'כן' if self.is_starting_five else ''}",
+            f"נק={self.total_points or ''}",
             f"זריקות עונשין={self.free_throws_attempts}",
             f"קליעות עונשין={self.free_throws_scored}",
-            f"זריקות שלוש נק={self.three_scores_attempts}",
-            f"קליעות שלוש נק={self.three_scores_scored}",
             f"זריקות שתי נק={self.field_goals_attempts}",
             f"קליעות שתי נק={self.field_goals_scored}",
+            f"זריקות שלוש נק={self.three_scores_attempts}",
+            f"קליעות שלוש נק={self.three_scores_scored}",
             f"ריבאונד הגנה={self.defensive_rebounds}",
             f"ריבאונד התקפה={self.offensive_rebounds}",
             f"פאולים={self.personal_total_fouls}",
@@ -46,10 +49,10 @@ class PlayerSummary(BaseModel):
             f"חטיפות={self.steals}",
             f"איבודים={self.turnovers}",
             f"אסיסטים={self.assists}",
-            f"בלוקים={self.blocks}"
+            f"בלוקים={self.blocks}",
         ])
 
-        return f"{{{{אירועי שחקן סל| {inner} }}}}"
+        return f"{{{{אירועי שחקן סל |{inner}}}}}"
 
 class BasketballGame(BaseModel):
     home_team_name: str

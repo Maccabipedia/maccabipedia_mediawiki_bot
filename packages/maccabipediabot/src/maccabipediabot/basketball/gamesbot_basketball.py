@@ -104,15 +104,22 @@ def generate_page_name_from_game(game: BasketballGame) -> str:
 def get_players_events_for_template(players_summary: list[PlayerSummary]) -> str:
     return ",\n".join(player_summary.__maccabipedia__() for player_summary in players_summary).rstrip()
 
+_SOURCE_LABELS = {
+    "basket.co.il": "מנהלת ליגת העל בכדורסל",
+    "euroleaguebasketball.net": "היורוליג",
+}
+
+
 def format_url(game_url: str) -> str:
-    main_domain = tldextract.extract(game_url).domain
-    return f"[{game_url} עמוד המשחק באתר {main_domain}]"
+    netloc = tldextract.extract(game_url).registered_domain
+    label = _SOURCE_LABELS.get(netloc, tldextract.extract(game_url).domain)
+    return f"[{game_url} עמוד המשחק באתר {label}]"
 
 def __get_football_game_template_with_maccabistats_game_value(game: BasketballGame) -> dict[str, str]:
     template_arguments = {
         GAME_DATE: str(game.game_date.strftime("%d-%m-%Y")),
-        # We don't want to upload the hour if it's equal to zero (that an unknown time)
-        GAME_HOUR: game.game_date.hour if game.game_date.hour != 0 else '',
+        # Emit full HH:MM. Skip the field for midnight (unknown game time).
+        GAME_HOUR: game.game_date.strftime("%H:%M") if (game.game_date.hour or game.game_date.minute) else "",
         SEASON: game.season,
         COMPETITION: game.competition,
         FIXTURE: game.fixture,
@@ -169,6 +176,18 @@ def __get_football_game_template_with_maccabistats_game_value(game: BasketballGa
     return template_arguments
 
 
+# Optional period scores: skip if None so unused OT / half slots don't litter
+# the page source with empty placeholders.
+_OPTIONAL_PERIOD_KEYS = frozenset([
+    FIRST_OVERTIME_MACCABI_POINTS, SECOND_OVERTIME_MACCABI_POINTS,
+    THIRD_OVERTIME_MACCABI_POINTS, FOURTH_OVERTIME_MACCABI_POINTS,
+    FIRST_OVERTIME_OPPONENT_POINTS, SECOND_OVERTIME_OPPONENT_POINTS,
+    THIRD_OVERTIME_OPPONENT_POINTS, FOURTH_OVERTIME_OPPONENT_POINTS,
+    FIRST_HALF_MACCABI_POINTS, SECOND_HALF_MACCABI_POINTS,
+    FIRST_HALF_OPPONENT_POINTS, SECOND_HALF_OPPONENT_POINTS,
+])
+
+
 def render_basketball_game_to_wiki(game: BasketballGame) -> str:
     """Build the {{משחק כדורסל ...}} wiki template text from a BasketballGame.
 
@@ -176,6 +195,8 @@ def render_basketball_game_to_wiki(game: BasketballGame) -> str:
     """
     template = Template(basketball_games_template_name)
     for arg_name, arg_value in __get_football_game_template_with_maccabistats_game_value(game).items():
+        if arg_name in _OPTIONAL_PERIOD_KEYS and arg_value in (None, ""):
+            continue
         template.add(arg_name, arg_value)
     return str(template)
 

@@ -1,24 +1,24 @@
 import logging
+from functools import lru_cache
 from pathlib import Path
 
 from pydantic import TypeAdapter
 
-from basketball.basketball_game import BasketballGame, PlayerSummary
+from maccabipediabot.basketball.basketball_game import BasketballGame, PlayerSummary
+from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 from maccabipediabot.common.wiki_login import get_site
 
-
-import mwparserfromhell
 import tldextract
 import pywikibot as pw
 from mwparserfromhell.nodes.template import Template
 
-site = get_site()
-
-from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
-
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
-EXAMPLE_GAMES_FILE_PATH = Path(r"C:\maccabi\basketball\games_for_upload.json")
+
+@lru_cache(maxsize=1)
+def _site() -> pw.Site:
+    """Lazy pywikibot site/login. Avoids logging in at module import time."""
+    return get_site()
 
 basketball_games_template_name = "משחק כדורסל"
 basketball_games_prefix = "כדורסל"
@@ -198,22 +198,27 @@ def handle_existing_page(game_page: pw.page.Page, game: BasketballGame):
             game_page.text += "<!--{num}-->".format(num=randint(0, 10000))
 
 
+def render_basketball_game_to_wiki(game: BasketballGame) -> str:
+    """Build the {{משחק כדורסל ...}} wiki template text from a BasketballGame.
+
+    Pure function: no I/O, no pywikibot. Used by handle_new_page and tested
+    in isolation.
+    """
+    template = Template(basketball_games_template_name)
+    for arg_name, arg_value in __get_football_game_template_with_maccabistats_game_value(game).items():
+        template.add(arg_name, arg_value)
+    return str(template)
+
+
 def handle_new_page(game_page: pw.page.Page, game: BasketballGame):
-    basketball_template = Template(basketball_games_template_name)
-
-    arguments = __get_football_game_template_with_maccabistats_game_value(game)
-
-    for argument_name, argument_value in arguments.items():
-        basketball_template.add(argument_name, argument_value)
-
-    game_page.text = str(basketball_template)
+    game_page.text = render_basketball_game_to_wiki(game)
 
 
 def handle_game(game: BasketballGame, overwrite_existing_pages: bool = True):
     logging.info(f"Checking game : {game.game_date}")
 
     page_name = generate_page_name_from_game(game)
-    game_page = pw.Page(site, page_name)
+    game_page = pw.Page(_site(), page_name)
     page_exists = game_page.exists()
 
     if page_exists and not overwrite_existing_pages:

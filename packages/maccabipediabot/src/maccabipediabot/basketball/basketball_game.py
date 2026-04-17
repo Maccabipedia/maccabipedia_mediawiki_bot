@@ -7,7 +7,8 @@ from pydantic import BaseModel, Field
 class PlayerSummary(BaseModel):
     name: str
     number: Optional[int] = None
-    is_starting_five: bool
+    # True / False / None: True → "כן", False → "לא", None → "" (unknown).
+    is_starting_five: Optional[bool] = None
     minutes_played: Optional[int] = None
     total_points: int
     field_goals_attempts: int
@@ -28,13 +29,14 @@ class PlayerSummary(BaseModel):
 
     def __maccabipedia__(self) -> str:
         # Field order matches the existing wiki convention: 2pt before 3pt;
-        # is_starting_five is empty (not "לא") for non-starters; total_points
-        # falsy values (0 / None) render as empty so a DNP looks like "נק=" not "נק=0".
+        # is_starting_five renders True→"כן", False→"לא", None→"" (unknown);
+        # total_points falsy values (0 / None) render as empty so a DNP looks like "נק=" not "נק=0".
+        starting_five_str = {True: "כן", False: "לא"}.get(self.is_starting_five, "")
         inner = " |".join([
             f"שם={self.name}",
             f"מספר={self.number}",
             f"דקות={self.minutes_played}",
-            f"חמישייה={'כן' if self.is_starting_five else ''}",
+            f"חמישייה={starting_five_str}",
             f"נק={self.total_points or ''}",
             f"זריקות עונשין={self.free_throws_attempts}",
             f"קליעות עונשין={self.free_throws_scored}",

@@ -27,9 +27,11 @@ logger = logging.getLogger(__name__)
 
 SEASON_23_24_TEAM_ID = 1096
 BASKET_CO_IL_SITE_MACCABI_BASE_PAGE = "https://basket.co.il/team.asp?TeamId={team_id}"
-COMPETITION_NAME = 'ליגת Winner סל'
-BASKET_CO_IL_SITE_PREFIX = 'https://basket.co.il/'
-
+COMPETITION_NAME = "ליגת Winner סל"
+BASKET_CO_IL_SITE_PREFIX = "https://basket.co.il/"
+GAMES_ALL_FEED_URL = "https://basket.co.il/pbp/json/games_all.json"
+GAME_PAGE_URL_TEMPLATE = "https://basket.co.il/game-zone.asp?GameId={game_id}"
+MACCABI_TEAM_NAME_ENG = "Maccabi Tel-Aviv"
 MAX_CONNECTIONS = 100
 
 
@@ -132,7 +134,7 @@ def _parse_header(soup: BeautifulSoup) -> dict:
             after = text.split("שופטים:", 1)[1]
             if "משקיף:" in after:
                 after = after.split("משקיף:", 1)[0]
-            refs = [r.strip() for r in after.split(",") if r.strip()]
+            refs = [ref.strip() for ref in after.split(",") if ref.strip()]
             if refs:
                 main_referee = refs[0]
                 assistant_referees = refs[1:]
@@ -447,7 +449,7 @@ async def extract_games_links_from_seasons_pages(session: ClientSession, season:
 
 async def get_team_ids_for_all_seasons(session: ClientSession) -> dict[str, str]:
     async with session.get(BASKET_CO_IL_SITE_MACCABI_BASE_PAGE.format(team_id=SEASON_23_24_TEAM_ID)) as response:
-        logging.info(f"Fetching all seasons team id")
+        logging.info("Fetching all seasons team id")
 
         content = await response.text()
         soup = BeautifulSoup(content, 'html.parser')
@@ -459,11 +461,6 @@ async def get_team_ids_for_all_seasons(session: ClientSession) -> dict[str, str]
         seasons_to_team_ids = {opt.text.strip().replace('-', '/'): opt["value"] for opt in options if opt.get("value")}
 
         return seasons_to_team_ids
-
-
-GAMES_ALL_FEED_URL = "https://basket.co.il/pbp/json/games_all.json"
-MACCABI_TEAM_NAME_ENG = "Maccabi Tel-Aviv"
-GAME_PAGE_URL_TEMPLATE = "https://basket.co.il/game-zone.asp?GameId={game_id}"
 
 
 def discover_games_latest_season(limit: int | None = None) -> list[GameDiscoveryMeta]:
@@ -479,23 +476,24 @@ def discover_games_latest_season(limit: int | None = None) -> list[GameDiscovery
     payload = json.loads(resp.content.decode("utf-8-sig"))
     games = payload[0]["games"]
 
-    maccabi_games = [g for g in games
-                     if g.get("team_name_eng_1") == MACCABI_TEAM_NAME_ENG
-                     or g.get("team_name_eng_2") == MACCABI_TEAM_NAME_ENG]
+    maccabi_games = [game for game in games
+                     if game.get("team_name_eng_1") == MACCABI_TEAM_NAME_ENG
+                     or game.get("team_name_eng_2") == MACCABI_TEAM_NAME_ENG]
 
-    def _is_finished(g: dict) -> bool:
+    def _is_finished(game: dict) -> bool:
         # Both scores must be present (not None / not empty string) AND at least one
         # team must have scored. basket.co.il's feed marks unplayed-but-scheduled games
         # with 0-0 as a placeholder; in basketball a real result of 0-0 doesn't happen.
-        s1, s2 = g.get("score_team1"), g.get("score_team2")
-        if s1 in (None, "") or s2 in (None, ""):
+        score_team_1 = game.get("score_team1")
+        score_team_2 = game.get("score_team2")
+        if score_team_1 in (None, "") or score_team_2 in (None, ""):
             return False
         try:
-            return int(s1) + int(s2) > 0
+            return int(score_team_1) + int(score_team_2) > 0
         except (TypeError, ValueError):
             return False
 
-    finished = [g for g in maccabi_games if _is_finished(g)]
+    finished = [game for game in maccabi_games if _is_finished(game)]
 
     def _sort_key(game: dict) -> datetime:
         d, m, y = game["game_date_txt"].split("/")
@@ -507,33 +505,33 @@ def discover_games_latest_season(limit: int | None = None) -> list[GameDiscovery
 
     metas: list[GameDiscoveryMeta] = []
     unknown_competition_games: list[dict] = []
-    for g in finished:
-        d, m, y = g["game_date_txt"].split("/")
-        time_str = g.get("game_time") or "00:00"
+    for game in finished:
+        day, month, year = game["game_date_txt"].split("/")
+        time_str = game.get("game_time") or "00:00"
         hour, minute = time_str.split(":") if ":" in time_str else ("0", "0")
-        game_dt = datetime(int(y), int(m), int(d), int(hour), int(minute))
+        game_dt = datetime(int(year), int(month), int(day), int(hour), int(minute))
 
-        home_team = team_name_to_hebrew(g["team_name_eng_1"])
-        away_team = team_name_to_hebrew(g["team_name_eng_2"])
+        home_team = team_name_to_hebrew(game["team_name_eng_1"])
+        away_team = team_name_to_hebrew(game["team_name_eng_2"])
         is_maccabi_home = home_team == "מכבי תל אביב"
         opponent = away_team if is_maccabi_home else home_team
 
-        competition = basket_co_il_competition_name(g["game_type"])
+        competition = basket_co_il_competition_name(game["game_type"])
         if not competition:
             unknown_competition_games.append(
-                {"id": g.get("id"), "game_type": g.get("game_type"),
-                 "date": g.get("game_date_txt"), "opp": opponent}
+                {"id": game.get("id"), "game_type": game.get("game_type"),
+                 "date": game.get("game_date_txt"), "opp": opponent}
             )
             continue
 
         metas.append(GameDiscoveryMeta(
-            game_id=int(g["id"]),
-            scrape_url=GAME_PAGE_URL_TEMPLATE.format(game_id=g["id"]),
+            game_id=int(game["id"]),
+            scrape_url=GAME_PAGE_URL_TEMPLATE.format(game_id=game["id"]),
             game_date=game_dt,
             is_maccabi_home=is_maccabi_home,
             opponent_name=opponent,
-            home_team_score=int(g["score_team1"]),
-            away_team_score=int(g["score_team2"]),
+            home_team_score=int(game["score_team1"]),
+            away_team_score=int(game["score_team2"]),
             competition=competition,
         ))
     if unknown_competition_games:
@@ -599,7 +597,7 @@ def main() -> None:
                     for season, team_id in seasons_to_team_ids.items()
                 ]
                 results_per_season = await asyncio.gather(*season_tasks)
-            return [g for season in results_per_season for g in season]
+            return [game for season_games in results_per_season for game in season_games]
         games = asyncio.run(_run_all())
 
     write_results(games, args.output)

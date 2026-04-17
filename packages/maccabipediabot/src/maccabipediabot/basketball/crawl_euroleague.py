@@ -76,7 +76,7 @@ def _flip_name(name: str) -> str:
     if not name:
         return ""
     if "," in name:
-        last, first = [p.strip() for p in name.split(",", 1)]
+        last, first = [part.strip() for part in name.split(",", 1)]
         return f"{first.title()} {last.title()}"
     return name.title()
 
@@ -88,8 +88,8 @@ def parse_game_page(next_data: dict, meta: EuroleagueGameMeta) -> BasketballGame
 
     home_coach = person_name_to_hebrew(_flip_name((home.get("coach") or {}).get("name") or ""))
     away_coach = person_name_to_hebrew(_flip_name((away.get("coach") or {}).get("name") or ""))
-    home_players = [_to_player(p) for p in home.get("players") or []]
-    away_players = [_to_player(p) for p in away.get("players") or []]
+    home_players = [_to_player(player_data) for player_data in home.get("players") or []]
+    away_players = [_to_player(player_data) for player_data in away.get("players") or []]
 
     if meta.is_maccabi_home:
         maccabi_players, opponent_players = home_players, away_players
@@ -151,7 +151,7 @@ def parse_game_page(next_data: dict, meta: EuroleagueGameMeta) -> BasketballGame
 
 
 def _parse_referees(referees: list[dict]) -> tuple[str, list[str]]:
-    names_he = [person_name_to_hebrew(_flip_name(r.get("name") or "")) for r in referees if r.get("name")]
+    names_he = [person_name_to_hebrew(_flip_name(ref.get("name") or "")) for ref in referees if ref.get("name")]
     if not names_he:
         return "", []
     return names_he[0], names_he[1:]

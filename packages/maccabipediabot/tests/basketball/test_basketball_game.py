@@ -1,151 +1,99 @@
 from datetime import datetime
 
+import pytest
+
 from maccabipediabot.basketball.basketball_game import BasketballGame, PlayerSummary
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def _make_player(**overrides) -> PlayerSummary:
     defaults = dict(
         name="ישראל ישראלי",
         is_starting_five=True,
         total_points=10,
-        field_goals_attempts=5,
-        field_goals_scored=3,
-        three_scores_attempts=2,
-        three_scores_scored=1,
-        free_throws_attempts=2,
-        free_throws_scored=2,
+        field_goals_attempts=10,   # 2pt: distinct from free_throws to detect a swap
+        field_goals_scored=5,
+        three_scores_attempts=4,
+        three_scores_scored=2,
+        free_throws_attempts=8,    # 1pt
+        free_throws_scored=6,
     )
     return PlayerSummary(**{**defaults, **overrides})
 
 
-def _make_game(**overrides) -> BasketballGame:
-    defaults = dict(
-        home_team_name="מכבי תל אביב",
-        away_team_name="הפועל ירושלים",
-        competition="BSL",
-        fixture="1",
-        game_date=datetime(2024, 1, 15),
-        home_team_score=90,
-        away_team_score=80,
-        game_url=[],
-    )
-    return BasketballGame(**{**defaults, **overrides})
-
-
 def _raw_game(**overrides):
     defaults = dict(
-        HomeAway="בית",
-        Opponent="הפועל ירושלים",
-        Competition="BSL",
-        Date="15-01-2024",
-        TotalPointsMaccabi=90,
-        TotalPointsOpponent=80,
-        GameUrl=["http://example.com"],
+        HomeAway="בית", Opponent="הפועל ירושלים", Competition="BSL", Date="15-01-2024",
+        TotalPointsMaccabi=90, TotalPointsOpponent=80, GameUrl=["http://example.com"],
     )
     return {**defaults, **overrides}
 
 
 # ---------------------------------------------------------------------------
-# PlayerSummary
+# PlayerSummary template — one comprehensive render check + the bug-fix guard
 # ---------------------------------------------------------------------------
 
-def test_player_summary_starting_five_yes():
-    assert "חמישייה=כן" in _make_player(is_starting_five=True).__maccabipedia__()
+def test_player_summary_renders_full_template_correctly():
+    """Single render check covering: wrapper, field order (2pt before 3pt), label
+    correctness (free_throws → עונשין, field_goals → שתי נק), is_starting_five mapping,
+    no trailing space before }}."""
+    p = _make_player(name="טל ברודי", is_starting_five=True)
+    rendered = p.__maccabipedia__()
+    assert rendered.startswith("{{אירועי שחקן סל |")
+    assert rendered.endswith("}}")
+    assert " }}" not in rendered  # no extra space before closing braces
+
+    # Bug-fix guard: 2pt and free-throw labels not swapped.
+    assert "זריקות שתי נק=10" in rendered    # field_goals_attempts (2pt)
+    assert "קליעות שתי נק=5" in rendered     # field_goals_scored
+    assert "זריקות עונשין=8" in rendered     # free_throws_attempts (1pt)
+    assert "קליעות עונשין=6" in rendered     # free_throws_scored
+
+    # Field order: 2pt block must appear before 3pt block.
+    assert 0 < rendered.find("זריקות שתי נק") < rendered.find("זריקות שלוש נק")
 
 
-def test_player_summary_starting_five_no():
-    # Wiki convention: empty (not "לא") for non-starters; matches TS uploader output.
-    assert "חמישייה= |" in _make_player(is_starting_five=False).__maccabipedia__()
-
-
-def test_player_summary_template_wrapper():
-    result = _make_player().__maccabipedia__()
-    assert result.startswith("{{אירועי שחקן סל |")
-    assert result.endswith("}}")
-    assert " }}" not in result  # no extra space before closing braces
+@pytest.mark.parametrize("starting_five, expected_text", [
+    (True, "חמישייה=כן |"),
+    (False, "חמישייה=לא |"),     # confirmed non-starter → "לא"
+    (None, "חמישייה= |"),         # unknown → empty
+])
+def test_player_summary_starting_five_three_states(starting_five, expected_text):
+    assert expected_text in _make_player(is_starting_five=starting_five).__maccabipedia__()
 
 
 def test_player_summary_zero_points_renders_as_empty():
     """Wiki convention: a player who scored 0 (or DNP) shows 'נק=' not 'נק=0'."""
-    rendered = _make_player(total_points=0).__maccabipedia__()
-    assert "|נק= |" in rendered or "|נק=|" in rendered
+    assert "|נק= |" in _make_player(total_points=0).__maccabipedia__()
 
 
-def test_player_summary_2pt_listed_before_3pt():
-    """Field order must match the existing wiki convention: 2pt before 3pt."""
-    rendered = _make_player().__maccabipedia__()
-    two_pt = rendered.find("זריקות שתי נק")
-    three_pt = rendered.find("זריקות שלוש נק")
-    assert 0 < two_pt < three_pt, f"expected 2pt before 3pt, got 2pt={two_pt} 3pt={three_pt}"
+# ---------------------------------------------------------------------------
+# BasketballGame — home/away logic + from_raw
+# ---------------------------------------------------------------------------
 
-
-def test_player_summary_renders_2pt_under_correct_label():
-    """Bug fix: זריקות שתי נק must reflect field_goals (2-pointers), not free_throws (1-pt)."""
-    p = _make_player(
-        name="טל ברודי",
-        field_goals_attempts=10,
-        field_goals_scored=5,
-        free_throws_attempts=8,
-        free_throws_scored=6,
+@pytest.mark.parametrize("home, away, home_score, away_score, expected_opp, expected_maccabi_pts", [
+    ("מכבי תל אביב", "הפועל ירושלים", 90, 80, "הפועל ירושלים", 90),  # home game
+    ("הפועל ירושלים", "מכבי תל אביב", 80, 90, "הפועל ירושלים", 90),  # away game
+])
+def test_basketball_game_opponent_and_maccabi_points(home, away, home_score, away_score,
+                                                     expected_opp, expected_maccabi_pts):
+    game = BasketballGame(
+        home_team_name=home, away_team_name=away, competition="BSL", fixture="1",
+        game_date=datetime(2024, 1, 15), home_team_score=home_score,
+        away_team_score=away_score, game_url=[],
     )
-    rendered = p.__maccabipedia__()
-    assert "זריקות שתי נק=10" in rendered
-    assert "קליעות שתי נק=5" in rendered
-    assert "זריקות עונשין=8" in rendered
-    assert "קליעות עונשין=6" in rendered
+    assert game.opponent_name == expected_opp
+    assert game.maccabi_points == expected_maccabi_pts
 
 
-# ---------------------------------------------------------------------------
-# BasketballGame — home/away logic
-# ---------------------------------------------------------------------------
-
-def test_home_game_opponent_name():
-    game = _make_game(away_team_name="הפועל ירושלים")
-    assert game.opponent_name == "הפועל ירושלים"
-
-
-def test_home_game_maccabi_points():
-    game = _make_game(home_team_score=90, away_team_score=80)
-    assert game.maccabi_points == 90
-
-
-def test_away_game_opponent_name():
-    game = _make_game(home_team_name="הפועל ירושלים", away_team_name="מכבי תל אביב")
-    assert game.opponent_name == "הפועל ירושלים"
-
-
-def test_away_game_maccabi_points():
-    game = _make_game(home_team_name="הפועל ירושלים", away_team_name="מכבי תל אביב",
-                      home_team_score=80, away_team_score=90)
-    assert game.maccabi_points == 90
-
-
-# ---------------------------------------------------------------------------
-# BasketballGame.from_raw
-# ---------------------------------------------------------------------------
-
-def test_from_raw_home_sets_teams():
-    game = BasketballGame.from_raw(_raw_game(HomeAway="בית"))
-    assert game.home_team_name == "מכבי תל אביב"
-    assert game.away_team_name == "הפועל ירושלים"
-
-
-def test_from_raw_away_sets_teams():
-    game = BasketballGame.from_raw(_raw_game(HomeAway="חוץ"))
-    assert game.home_team_name == "הפועל ירושלים"
-    assert game.away_team_name == "מכבי תל אביב"
-
-
-def test_from_raw_away_swaps_scores():
-    game = BasketballGame.from_raw(_raw_game(HomeAway="חוץ", TotalPointsMaccabi=90, TotalPointsOpponent=80))
-    assert game.home_team_score == 80
-    assert game.away_team_score == 90
-
-
-def test_from_raw_date_parsed():
-    game = BasketballGame.from_raw(_raw_game(Date="15-01-2024"))
+@pytest.mark.parametrize("home_away, expected_home, expected_away, expected_home_score, expected_away_score", [
+    ("בית", "מכבי תל אביב", "הפועל ירושלים", 90, 80),
+    ("חוץ", "הפועל ירושלים", "מכבי תל אביב", 80, 90),
+])
+def test_basketball_game_from_raw(home_away, expected_home, expected_away,
+                                  expected_home_score, expected_away_score):
+    game = BasketballGame.from_raw(_raw_game(HomeAway=home_away))
+    assert game.home_team_name == expected_home
+    assert game.away_team_name == expected_away
+    assert game.home_team_score == expected_home_score
+    assert game.away_team_score == expected_away_score
     assert game.game_date == datetime(2024, 1, 15)

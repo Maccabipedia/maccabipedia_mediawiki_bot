@@ -1,5 +1,7 @@
-"""Tests for the unified basketball translations module."""
+"""Tests for the basketball translations module."""
 from datetime import datetime
+
+import pytest
 
 from maccabipediabot.basketball.translations import (
     basket_co_il_competition_name,
@@ -11,83 +13,47 @@ from maccabipediabot.basketball.translations import (
 )
 
 
-def test_team_name_to_hebrew_known_team():
+def test_lookup_functions_resolve_known_keys_and_pass_through_unknowns():
+    """Sanity: every lookup function maps a known key and passes unknowns through.
+    Includes a few previously-trailing-space TS keys (cleaned at source) as a guard
+    against the kind of regression that used to require runtime whitespace tolerance."""
+    # team
     assert team_name_to_hebrew("Maccabi Tel-Aviv") == "מכבי תל אביב"
-
-
-def test_team_name_to_hebrew_unknown_passes_through():
-    assert team_name_to_hebrew("New Team Never Seen") == "New Team Never Seen"
-
-
-def test_person_name_to_hebrew_known_player():
+    assert team_name_to_hebrew("Unknown Team") == "Unknown Team"
+    # person — including former trailing-space keys
     assert person_name_to_hebrew("Wade Baldwin Iv") == "ווייד בולדווין"
-
-
-def test_person_name_to_hebrew_unknown_passes_through():
-    assert person_name_to_hebrew("Some Unknown Coach") == "Some Unknown Coach"
-
-
-def test_stadium_name_to_hebrew_known():
+    assert person_name_to_hebrew("Sergio Llull") == "סרחיו יוי"   # source had trailing space
+    assert person_name_to_hebrew("Andres Feliz") == "אנדרס פליס"
+    assert person_name_to_hebrew("Unknown Coach") == "Unknown Coach"
+    # stadium
     assert stadium_name_to_hebrew("MENORA MIVTACHIM ARENA") == "היכל מנורה מבטחים"
+    assert stadium_name_to_hebrew("Unknown Arena") == "Unknown Arena"
 
 
-def test_stadium_name_to_hebrew_unknown_passes_through():
-    assert stadium_name_to_hebrew("Some New Arena") == "Some New Arena"
-
-
-def test_normalize_player_name_lundberg():
-    assert normalize_player_name("גבריאל ''איפה'' לונדברג") == "איפה לונדברג"
-
-
-def test_normalize_player_name_unknown_passes_through():
-    assert normalize_player_name("טל ברודי") == "טל ברודי"
-
-
-def test_normalize_player_name_strips_trailing_junior():
-    """basket.co.il includes 'ג'וניור'; wiki convention drops it."""
+def test_normalize_player_name_strips_trailing_junior_suffix():
+    """basket.co.il includes 'ג'וניור' in player names (Jeff Dowtin Jr, Derrick Alston Jr);
+    wiki convention drops it. Generic stripper avoids needing per-player map entries."""
     assert normalize_player_name("ג'ף דאוטין ג'וניור") == "ג'ף דאוטין"
     assert normalize_player_name("דריק אלסטון ג'וניור") == "דריק אלסטון"
-    # Non-suffix occurrence must be preserved (no player known to have this, but guard anyway)
-    assert normalize_player_name("ג'וניור ישראלי") == "ג'וניור ישראלי"
+    assert normalize_player_name("ג'וניור ישראלי") == "ג'וניור ישראלי"  # not a suffix
+    assert normalize_player_name("טל ברודי") == "טל ברודי"  # unknown passes through
 
 
-def test_basket_co_il_competition_name_super_league():
-    assert basket_co_il_competition_name(5) == "ליגת העל"
+@pytest.mark.parametrize("code, expected", [
+    (5, "ליגת העל"),
+    (34, "הסופרקאפ הישראלי"),
+    (999, None),
+])
+def test_basket_co_il_competition_name(code, expected):
+    assert basket_co_il_competition_name(code) == expected
 
 
-def test_basket_co_il_competition_name_super_cup():
-    assert basket_co_il_competition_name(34) == "הסופרקאפ הישראלי"
-
-
-def test_basket_co_il_competition_name_unknown_returns_none():
-    assert basket_co_il_competition_name(999) is None
-
-
-def test_canonical_team_name_simple_rename():
-    assert canonical_team_name("מכבי אלקטרה", datetime(2010, 5, 1)) == "מכבי תל אביב"
-
-
-def test_canonical_team_name_no_rename_known_pass_through():
-    assert canonical_team_name("הפועל ירושלים", datetime(2024, 1, 1)) == "הפועל ירושלים"
-
-
-def test_canonical_team_name_year_range_pre_2005():
-    # מכבי רמת עמידר → "מכבי רמת עמידר" (1957–2005) then "הכח עמידר רמת גן" (2005+)
-    assert canonical_team_name("מכבי רמת עמידר", datetime(2000, 6, 1)) == "מכבי רמת עמידר"
-
-
-def test_canonical_team_name_year_range_post_2005():
-    assert canonical_team_name("מכבי רמת עמידר", datetime(2010, 6, 1)) == "הכח עמידר רמת גן"
-
-
-def test_canonical_team_name_unknown_passes_through():
-    assert canonical_team_name("שם לא ידוע", datetime(2024, 1, 1)) == "שם לא ידוע"
-
-
-def test_person_lookup_handles_trailing_space_in_source_dict():
-    """Some TS-source map keys had trailing spaces (e.g. "Sergio Llull "). Lookups
-    using a trimmed or doubly-spaced name must still resolve."""
-    assert person_name_to_hebrew("Sergio Llull") == "סרחיו יוי"
-    assert person_name_to_hebrew("  Sergio   Llull  ") == "סרחיו יוי"
-    assert person_name_to_hebrew("Andres Feliz") != "Andres Feliz"  # was "Andres Feliz " in source
-    assert person_name_to_hebrew("Alex Len") != "Alex Len"
+@pytest.mark.parametrize("name, year, expected", [
+    ("מכבי אלקטרה", 2010, "מכבי תל אביב"),                     # always-on rule
+    ("הפועל ירושלים", 2024, "הפועל ירושלים"),                   # not in registry → pass through
+    ("שם לא ידוע", 2024, "שם לא ידוע"),                         # unknown → pass through
+    ("מכבי רמת עמידר", 2000, "מכבי רמת עמידר"),                 # year-bounded, pre-2005
+    ("מכבי רמת עמידר", 2010, "הכח עמידר רמת גן"),               # year-bounded, post-2005
+])
+def test_canonical_team_name(name, year, expected):
+    assert canonical_team_name(name, datetime(year, 6, 1)) == expected

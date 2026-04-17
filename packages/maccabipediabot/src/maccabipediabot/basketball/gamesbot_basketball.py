@@ -242,7 +242,7 @@ def handle_game(game: BasketballGame, site, *, skip_existing: bool,
 def upload_basketball_games_to_maccabipedia(games: list[BasketballGame], *,
                                             skip_existing: bool, dry_run: bool) -> None:
     site = _site()
-    page_names = [generate_page_name_from_game(g) for g in games]
+    page_names = [generate_page_name_from_game(game) for game in games]
     existing = batch_check_existence(site, page_names) if skip_existing else set()
 
     if not dry_run:

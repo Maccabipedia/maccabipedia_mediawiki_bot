@@ -1,23 +1,4 @@
-"""Unified normalization for basketball data flowing into MaccabiPedia.
-
-Contains:
-- EN→HE translations for teams, people, stadiums.
-- HE→HE player-name normalization (e.g. stripping nicknames).
-- basket.co.il game_type code → Hebrew competition name.
-- Year-aware HE→HE legacy team-name canonicalization (canonical_team_name).
-"""
-import re
-from datetime import datetime
-from typing import NamedTuple, Optional
-
-
-class TeamRename(NamedTuple):
-    """A team-name canonicalization rule active for a given year range (inclusive)."""
-    new_name: str
-    from_year: int
-    to_year: int
-
-
+# === TEAMS ===
 _TEAM_NAMES: dict[str, str] = {
     "Maccabi Tel-Aviv": "מכבי תל אביב",
     "Hapoel Jerusalem": "הפועל ירושלים",
@@ -54,6 +35,9 @@ _TEAM_NAMES: dict[str, str] = {
     "LDLC ASVEL Villeurbanne": "ליון-וילרבאן",
 }
 
+# total entries: 33
+
+# === PERSONS ===
 _PERSON_NAMES: dict[str, str] = {
     "Oded Kattash": "עודד קטש",
     "Pedro Martinez": "פדרו מרטינז",
@@ -178,11 +162,6 @@ _PERSON_NAMES: dict[str, str] = {
     "Armando Bacot Jr": "ארמנדו בקוט",
     "Metecan Birsen": "מצ'אן בירסן",
     "Wade Baldwin Iv": "ווייד בולדווין",
-    "Julius Thomas": "ג'וליוס תומאס",
-    "Pablo Laso": "פבלו לאסו",
-    "Eduard Udyanskyy": "אדוארד אודיאנסקי",
-    "Yam Madar": "ים מדר",
-    "O'Shae J Brissett": "אושיי בריסט",
     "Nicolo Melli": "ניקולו מלי",
     "Talen Horton Tucker": "טיילן הורטון-טאקר",
     "Brandon Boston Jr": "ברנדון בוסטון",
@@ -327,9 +306,9 @@ _PERSON_NAMES: dict[str, str] = {
     "Wenyen Gabriel": "ווניין גבריאל",
     "Youssoupha Fall": "יוסופה פאל",
     "Nicolas Laprovittola": "ניקולאס לפרוויטולה",
-    "Sergio Llull": "סרחיו יוי",
-    "Andres Feliz": "אנדרס פליס",
-    "Alex Len": "אלכס לן",
+    "Sergio Llull ": "סרחיו יוי",
+    "Andres Feliz ": "אנדרס פליס",
+    "Alex Len ": "אלכס לן",
     "Dovydas Giedraitis": "דווידאס גדרייטיס",
     "Thomas Walkup": "תומאס וולקאפ",
     "Shaquielle Mckissic": "שאקיל מקיסיק",
@@ -359,7 +338,7 @@ _PERSON_NAMES: dict[str, str] = {
     "Trent Forrest": "טרנט פורסט",
     "Gytis Radzevicius": "גיטיס רדזביצ'יוס",
     "Vit Hrabar": "ויט גרבר",
-    "Stefan Joksimovic": "סטפן יוקסימוביץ'",
+    "Stefan Joksimovic ": "סטפן יוקסימוביץ'",
     "Jared Rhoden": "ג'ארד רודן",
     "Lamar Stevens": "למאר סטיבנס",
     "Daulton Hommes": "דאולטון הומס",
@@ -368,7 +347,7 @@ _PERSON_NAMES: dict[str, str] = {
     "Guido Giovannetti": "גווידו ג'ובאנטי",
     "Emin Mogulkoc": "אמין מוגולקוץ'",
     "Jakub Zamojski": "ג׳אקוב זמויסקי",
-    "Milos Koljensic": "מילוש קויג'נסיץ'",
+    "Milos  Koljensic": "מילוש קויג'נסיץ'",
     "Sasa Pukl": "סשה פוקל",
     "Joseph Bissang": "ג'וזף ביסאנג",
     "Huseyin Celik": "חוסיין צ'ליק",
@@ -380,7 +359,7 @@ _PERSON_NAMES: dict[str, str] = {
     "Damir Javor": "דאמיר יאבור",
     "Saulius Racys": "סאוליוס ראסיס",
     "Leandro Lezcano": "לאנדרו לסקאנו",
-    "Tomislav Hordov": "טומיסלב הורדוב",
+    "Tomislav  Hordov": "טומיסלב הורדוב",
     "Ioannis Foufis": "יאניס פופיס",
     "Vasiliki Tsaroucha": "ואסיליקי צרוכה",
     "Miguel Angel Perez": "מיגל אנחל פרז",
@@ -389,7 +368,7 @@ _PERSON_NAMES: dict[str, str] = {
     "Olegs Latisevs": "אולג לטיסבס",
     "Carlos Cortes": "קרלוס קורטס",
     "Milan Nedovic": "מילאן נדוביץ'",
-    "Uros Obrknezevic": "אורוש אובקנזביץ'",
+    "Uros  Obrknezevic": "אורוש אובקנזביץ'",
     "Juan Carlos Garcia": "חואן קרלוס גרסיה",
     "Jordi Aliaga": "ג'ורדי אליאחה",
     "Saso Petek": "סאשו פטק",
@@ -412,9 +391,11 @@ _PERSON_NAMES: dict[str, str] = {
     "Mehdi Difallah": "מהדי דיפאללה",
 }
 
+# total entries: 350
+
+# === STADIUMS ===
 _STADIUM_NAMES: dict[str, str] = {
     "PAIS ARENA JERUSALEM": "פיס ארנה",
-    "SALLE GASTON MEDECIN": "סאל גסטון מדסין",
     "MENORA MIVTACHIM ARENA": "היכל מנורה מבטחים",
     "ZALGIRIO ARENA": "ז'לגיריס ארנה",
     "ALEKSANDAR NIKOLIC HALL": "היכל פיוניר",
@@ -429,102 +410,25 @@ _STADIUM_NAMES: dict[str, str] = {
     "MOVISTAR ARENA": "ארמון הספורט של קהילת מדריד",
     "PEACE AND FRIENDSHIP STADIUM": "היכל השלום והאחווה",
     "ROIG ARENA": "רואיג ארנה",
-    "ASTROBALLE": "אסטרובל",
+    "ASTROBALLE ": "אסטרובל",
     "BUESA ARENA": "פרננדו בואסה ארנה",
     "ADIDAS ARENA": "ארנה פורט דה לה שאפל",
 }
 
+# total entries: 18
+
+# === NORMALIZE ===
 _PLAYER_NAME_NORMALIZE: dict[str, str] = {
     "גבריאל ''איפה'' לונדברג": "איפה לונדברג",
 }
 
+# total entries: 1
+
+# === BASKET GAME TYPES ===
 _BASKET_GAME_TYPE: dict[int, str] = {
     5: "ליגת העל",
     34: "הסופרקאפ הישראלי",
 }
 
+# total entries: 2
 
-def team_name_to_hebrew(name: str) -> str:
-    return _TEAM_NAMES.get(name, name)
-
-
-def person_name_to_hebrew(name: str) -> str:
-    return _PERSON_NAMES.get(name, name)
-
-
-def stadium_name_to_hebrew(name: str) -> str:
-    return _STADIUM_NAMES.get(name, name)
-
-
-_JR_SUFFIX_RE = re.compile(r"\s+ג['׳]וניור\s*$")
-
-
-def normalize_player_name(name: str) -> str:
-    """Map HE player names to the wiki convention.
-
-    In addition to the explicit map, strip a trailing "ג'וניור" / "ג׳וניור"
-    (Junior) — basket.co.il includes the suffix, the wiki doesn't.
-    """
-    looked_up = _PLAYER_NAME_NORMALIZE.get(name, name)
-    return _JR_SUFFIX_RE.sub("", looked_up)
-
-
-def basket_co_il_competition_name(game_type_code: int) -> Optional[str]:
-    return _BASKET_GAME_TYPE.get(game_type_code)
-
-
-# Year-aware HE→HE legacy team renames. Most rules cover all years; only special
-# cases need narrower windows (e.g. teams that switched names mid-history).
-def _all_years(new_name: str) -> list[TeamRename]:
-    return [TeamRename(new_name, 1900, 2100)]
-
-
-_TEAM_RENAMES: dict[str, list[TeamRename]] = {
-    'מכבי ת"א': _all_years("מכבי תל אביב"),
-    "מכבי אלקטרה": _all_years("מכבי תל אביב"),
-    'ראשל"צ': _all_years("מכבי ראשון לציון"),
-    "ראשון לציון": _all_years("מכבי ראשון לציון"),
-    'פנדור ראשל"צ': _all_years("מכבי ראשון לציון"),
-    'אופיצי ראשל"צ': _all_years("מכבי ראשון לציון"),
-    'מכבי ר"ג': _all_years("מכבי רמת גן"),
-    'מכבי צפון ת"א': _all_years("מכבי צפון תל אביב"),
-    'מכבי דרום ת"א': _all_years("מכבי דרום תל אביב"),
-    'מכבי פ"ת': _all_years("מכבי פתח תקווה"),
-    "מכבי פ``ת": _all_years("מכבי פתח תקווה"),
-    "מכבי פתח-תקווה": _all_years("מכבי פתח תקווה"),
-    "מכבי בזן חיפה": _all_years("מכבי חיפה"),
-    "מ.כ חיפה": _all_years("מכבי חיפה"),
-    "מכבי חיפה היט": _all_years("מכבי חיפה"),
-    "Hunter חיפה": _all_years("מכבי חיפה"),
-    "מגדל י-ם": _all_years("הפועל ירושלים"),
-    "הפועל י-ם": _all_years("הפועל ירושלים"),
-    "יונט חולון": _all_years("הפועל חולון"),
-    "UNET חולון": _all_years("הפועל חולון"),
-    'הפועל ת"א': _all_years("הפועל תל אביב"),
-    'הפועל SP ת"א': _all_years("הפועל תל אביב"),
-    "SCE אשדוד": _all_years("מכבי אשדוד"),
-    'ביתר י"ם': _all_years("ביתר ירושלים"),
-    "אוניקאחה מלאגה": _all_years("אוניקאחה מאלגה"),
-    "פנאתנייקוס": _all_years("פנאתינאיקוס"),
-    "פנאתינייקוס": _all_years("פנאתינאיקוס"),
-    "Aris BC": _all_years("אריס סלוניקי"),
-    "חובנטוד באדלונה": _all_years("חובנטוד בדאלונה"),
-    "ז'אלגריס קובנה": _all_years("ז'לגיריס קובנה"),
-    "אפס פילזן איסטנבול": _all_years("אפס פילזן"),
-    "מכבי רמת עמידר": [
-        TeamRename("מכבי רמת עמידר", 1957, 2005),
-        TeamRename("הכח עמידר רמת גן", 2005, 2100),
-    ],
-}
-
-
-def canonical_team_name(name: str, game_date: datetime) -> str:
-    """Year-aware canonical Hebrew team name (handles legacy team renames over time)."""
-    rules = _TEAM_RENAMES.get(name)
-    if not rules:
-        return name
-    year = game_date.year
-    for rule in rules:
-        if rule.from_year <= year <= rule.to_year:
-            return rule.new_name
-    return name

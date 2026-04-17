@@ -49,7 +49,7 @@ def season_from_date(d: datetime) -> str:
 def write_results(games: list[BasketballGame], output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
-        json.dumps([g.model_dump(mode="json") for g in games], ensure_ascii=False),
+        json.dumps([game.model_dump(mode="json") for game in games], ensure_ascii=False),
         encoding="utf-8",
     )
     logger.info("Wrote %d games to %s", len(games), output_path)

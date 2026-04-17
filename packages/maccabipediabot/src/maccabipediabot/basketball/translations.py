@@ -460,8 +460,17 @@ def stadium_name_to_hebrew(name: str) -> str:
     return _STADIUM_NAMES.get(_normalize_lookup(name), name)
 
 
+_JR_SUFFIX_RE = __import__("re").compile(r"\s+ג['׳]וניור\s*$")
+
+
 def normalize_player_name(name: str) -> str:
-    return _PLAYER_NAME_NORMALIZE.get(_normalize_lookup(name), name)
+    """Map HE player names to the wiki convention.
+
+    In addition to the explicit map, strip a trailing "ג'וניור" / "ג׳וניור"
+    (Junior) — basket.co.il includes the suffix, the wiki doesn't.
+    """
+    looked_up = _PLAYER_NAME_NORMALIZE.get(_normalize_lookup(name), name)
+    return _JR_SUFFIX_RE.sub("", looked_up)
 
 
 def basket_co_il_competition_name(game_type_code: int) -> Optional[str]:

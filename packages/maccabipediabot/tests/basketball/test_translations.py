@@ -43,6 +43,14 @@ def test_normalize_player_name_unknown_passes_through():
     assert normalize_player_name("טל ברודי") == "טל ברודי"
 
 
+def test_normalize_player_name_strips_trailing_junior():
+    """basket.co.il includes 'ג'וניור'; wiki convention drops it."""
+    assert normalize_player_name("ג'ף דאוטין ג'וניור") == "ג'ף דאוטין"
+    assert normalize_player_name("דריק אלסטון ג'וניור") == "דריק אלסטון"
+    # Non-suffix occurrence must be preserved (no player known to have this, but guard anyway)
+    assert normalize_player_name("ג'וניור ישראלי") == "ג'וניור ישראלי"
+
+
 def test_basket_co_il_competition_name_super_league():
     assert basket_co_il_competition_name(5) == "ליגת העל"
 

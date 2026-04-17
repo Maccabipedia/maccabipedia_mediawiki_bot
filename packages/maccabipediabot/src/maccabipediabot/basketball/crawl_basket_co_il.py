@@ -2,16 +2,18 @@ import asyncio
 import json
 import logging
 import re
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Tuple
 
 from maccabipediabot.basketball.basketball_game import BasketballGame, PlayerSummary
+from maccabipediabot.basketball.translations import normalize_player_name
 
 import aiohttp
 import bs4
 from aiohttp import ClientSession
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from pydantic.json import pydantic_encoder
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
@@ -25,6 +27,274 @@ BASKETBALL_BASE_FOLDER = Path("C:\\") / "maccabi" / "basketball"
 RESULTS_FILE = BASKETBALL_BASE_FOLDER / 'basket_co_il_results.json'
 
 MAX_CONNECTIONS = 100
+
+
+@dataclass(frozen=True)
+class GameDiscoveryMeta:
+    """Metadata known about a game from the discovery step (before per-game scrape)."""
+    game_id: int
+    scrape_url: str
+    page_title: str
+    game_date: datetime
+    is_maccabi_home: bool
+    opponent_name: str
+    home_team_score: int
+    away_team_score: int
+    competition: str
+
+
+def parse_game_page(html: str, meta: GameDiscoveryMeta) -> BasketballGame:
+    """Parse one basket.co.il game-zone.asp HTML page into a BasketballGame.
+
+    Extracts: header (fixture, stadium, referees, crowd), per-quarter scores,
+    box-score (coach + player stats per team).
+    Mirrors basketball_game_uploader/src/services/game-parser/basket/basket-game-parser.service.ts.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+
+    header = _parse_header(soup)
+    quarter_scores = _parse_quarter_scores(soup, meta.is_maccabi_home)
+    box_score = _parse_box_score(soup, meta.is_maccabi_home)
+
+    return BasketballGame(
+        home_team_name="מכבי תל אביב" if meta.is_maccabi_home else meta.opponent_name,
+        away_team_name=meta.opponent_name if meta.is_maccabi_home else "מכבי תל אביב",
+        competition=meta.competition,
+        fixture=header["fixture"],
+        game_date=meta.game_date,
+        home_team_score=meta.home_team_score,
+        away_team_score=meta.away_team_score,
+        game_url=[meta.scrape_url],
+        arena=header["stadium"],
+        crowd=header["crowd"],
+        referee=header["main_referee"],
+        referee_assistants=header["assistant_referees"],
+        first_quarter_maccabi_points=quarter_scores["maccabi"][0],
+        second_quarter_maccabi_points=quarter_scores["maccabi"][1],
+        third_quarter_maccabi_points=quarter_scores["maccabi"][2],
+        fourth_quarter_maccabi_points=quarter_scores["maccabi"][3],
+        first_overtime_maccabi_points=quarter_scores["maccabi"][4],
+        second_overtime_maccabi_points=quarter_scores["maccabi"][5],
+        third_overtime_maccabi_points=quarter_scores["maccabi"][6],
+        fourth_overtime_maccabi_points=quarter_scores["maccabi"][7],
+        first_quarter_opponent_points=quarter_scores["opponent"][0],
+        second_quarter_opponent_points=quarter_scores["opponent"][1],
+        third_quarter_opponent_points=quarter_scores["opponent"][2],
+        fourth_quarter_opponent_points=quarter_scores["opponent"][3],
+        first_overtime_opponent_points=quarter_scores["opponent"][4],
+        second_overtime_opponent_points=quarter_scores["opponent"][5],
+        third_overtime_opponent_points=quarter_scores["opponent"][6],
+        fourth_overtime_opponent_points=quarter_scores["opponent"][7],
+        maccabi_coach=box_score["maccabi_coach"],
+        opponent_coach=box_score["opponent_coach"],
+        maccabi_players=box_score["maccabi_players"],
+        opponent_players=box_score["opponent_players"],
+        season=_season_from_date(meta.game_date),
+    )
+
+
+def _parse_header(soup: BeautifulSoup) -> dict:
+    """Extract fixture, stadium, referees, crowd from #wrap_inner_3."""
+    container = soup.select_one("#wrap_inner_3")
+    if not container:
+        raise RuntimeError("game-zone page missing #wrap_inner_3")
+
+    h4 = container.select_one("h4")
+    fixture = ""
+    if h4:
+        img = h4.find("img")
+        if img and img.next_sibling:
+            sibling_text = (img.next_sibling.get_text() if hasattr(img.next_sibling, "get_text")
+                            else str(img.next_sibling))
+            fixture = sibling_text.strip().replace("סל", "").strip()
+
+    h5 = container.select_one("h5")
+    stadium = ""
+    crowd: int | None = None
+    if h5:
+        stadium = h5.get_text(",", strip=True).split(",")[0].strip()
+        crowd_div = h5.select_one("div.link-1")
+        if crowd_div and "צופים:" in crowd_div.get_text():
+            text = crowd_div.get_text().split("צופים:")[1].strip()
+            digits = re.sub(r"[^\d]", "", text)
+            if digits:
+                crowd = int(digits)
+
+    h6 = container.select_one("h6")
+    main_referee = ""
+    assistant_referees: list[str] = []
+    if h6:
+        text = re.sub(r"\s+", " ", h6.get_text()).strip()
+        if "שופטים:" in text:
+            after = text.split("שופטים:", 1)[1]
+            if "משקיף:" in after:
+                after = after.split("משקיף:", 1)[0]
+            refs = [r.strip() for r in after.split(",") if r.strip()]
+            if refs:
+                main_referee = refs[0]
+                assistant_referees = refs[1:]
+
+    return {
+        "fixture": fixture,
+        "stadium": stadium,
+        "main_referee": main_referee,
+        "assistant_referees": assistant_referees,
+        "crowd": crowd,
+    }
+
+
+def _parse_quarter_scores(soup: BeautifulSoup, is_maccabi_home: bool) -> dict:
+    """Extract per-quarter and per-OT scores from `table.stats_tbl.categories`.
+
+    Returns {maccabi: list, opponent: list}, each list 8 entries
+    [Q1,Q2,Q3,Q4,OT1,OT2,OT3,OT4] with None for absent periods.
+    """
+    cats = soup.select("table.stats_tbl.categories")
+    if not cats:
+        raise RuntimeError("game-zone page missing table.stats_tbl.categories")
+    rows = cats[0].select("tr")
+    if len(rows) < 3:
+        raise RuntimeError("score table has fewer than 3 rows")
+
+    # row 0 = header (period labels), row 1 = home team scores, row 2 = away team scores
+    home_cells = [td.get_text(strip=True) for td in rows[1].select("td")][1:]
+    away_cells = [td.get_text(strip=True) for td in rows[2].select("td")][1:]
+
+    def _to_quarters(cells: list[str]) -> list[int | None]:
+        out: list[int | None] = []
+        for cell in cells:
+            try:
+                out.append(int(cell))
+            except (ValueError, TypeError):
+                out.append(None)
+        return out[:8] + [None] * max(0, 8 - len(out))
+
+    home_scores = _to_quarters(home_cells)
+    away_scores = _to_quarters(away_cells)
+
+    if is_maccabi_home:
+        return {"maccabi": home_scores, "opponent": away_scores}
+    return {"maccabi": away_scores, "opponent": home_scores}
+
+
+def _parse_box_score(soup: BeautifulSoup, is_maccabi_home: bool) -> dict:
+    """Extract coaches and player stats from the per-team `table.stats_tbl` tables."""
+    tables = soup.select("table.stats_tbl")
+    if len(tables) < 4:
+        return {
+            "maccabi_coach": "",
+            "opponent_coach": "",
+            "maccabi_players": [],
+            "opponent_players": [],
+        }
+    home_table, away_table = tables[2], tables[3]
+
+    home_coach = _coach_from_table(home_table)
+    away_coach = _coach_from_table(away_table)
+    home_players = _parse_player_rows(home_table)
+    away_players = _parse_player_rows(away_table)
+
+    if is_maccabi_home:
+        return {
+            "maccabi_coach": home_coach,
+            "opponent_coach": away_coach,
+            "maccabi_players": home_players,
+            "opponent_players": away_players,
+        }
+    return {
+        "maccabi_coach": away_coach,
+        "opponent_coach": home_coach,
+        "maccabi_players": away_players,
+        "opponent_players": home_players,
+    }
+
+
+def _coach_from_table(table: Tag) -> str:
+    """The coach is the second link in the team's table header (`<a>...:NAME</a>`)."""
+    links = table.select("tr td a")
+    if len(links) < 2:
+        return ""
+    text = links[1].get_text() or ""
+    parts = text.split(":")
+    return parts[1].strip() if len(parts) > 1 else ""
+
+
+def _parse_player_rows(table: Tag) -> list[PlayerSummary]:
+    """Parse player rows from one team's box-score table.
+
+    Layout: header rows first, then `<tr class="row">` per player. The first
+    `tr.row` is the column header; players start at the second.
+    """
+    rows = table.select("tr")
+    if not rows:
+        return []
+
+    start_index = -1
+    seen = 0
+    for i, row in enumerate(rows):
+        if "row" in row.get("class", []):
+            seen += 1
+            if seen == 2:
+                start_index = i
+                break
+    if start_index == -1:
+        return []
+
+    players: list[PlayerSummary] = []
+    for row in rows[start_index:-1]:  # last row is totals
+        tds = row.select("td")
+        if len(tds) < 21:
+            continue
+
+        def _to_int(text: str | None) -> int:
+            try:
+                return int((text or "").strip())
+            except (ValueError, TypeError):
+                return 0
+
+        def _split_stat(text: str | None) -> tuple[int, int]:
+            if not text:
+                return (0, 0)
+            parts = text.split("/")
+            return (_to_int(parts[0]), _to_int(parts[1]) if len(parts) > 1 else 0)
+
+        fg_scored, fg_attempts = _split_stat(tds[5].get_text())
+        tg_scored, tg_attempts = _split_stat(tds[7].get_text())
+        ft_scored, ft_attempts = _split_stat(tds[9].get_text())
+
+        number_link = tds[0].select_one("a")
+        name_link = tds[1].select_one("a")
+        raw_name = name_link.get_text(strip=True) if name_link else ""
+
+        players.append(PlayerSummary(
+            number=_to_int(number_link.get_text() if number_link else None) or None,
+            name=normalize_player_name(raw_name),
+            is_starting_five=bool(tds[2].get_text(strip=True)),
+            minutes_played=_to_int(tds[3].get_text()),
+            total_points=_to_int(tds[4].get_text()),
+            field_goals_attempts=fg_attempts,
+            field_goals_scored=fg_scored,
+            three_scores_attempts=tg_attempts,
+            three_scores_scored=tg_scored,
+            free_throws_attempts=ft_attempts,
+            free_throws_scored=ft_scored,
+            defensive_rebounds=_to_int(tds[11].get_text()),
+            offensive_rebounds=_to_int(tds[12].get_text()),
+            personal_total_fouls=_to_int(tds[14].get_text()),
+            steals=_to_int(tds[16].get_text()),
+            turnovers=_to_int(tds[17].get_text()),
+            assists=_to_int(tds[18].get_text()),
+            blocks=_to_int(tds[19].get_text()),
+        ))
+    return players
+
+
+def _season_from_date(d: datetime) -> str:
+    """Return season string like '2024/25'. Israeli basketball season runs Sep–Jun."""
+    year = d.year
+    if d.month >= 9:
+        return f"{year}/{(year + 1) % 100:02d}"
+    return f"{year - 1}/{year % 100:02d}"
 
 
 def parse_players_events_from_soup_table_element(soup_table: BeautifulSoup) -> list[PlayerSummary]:

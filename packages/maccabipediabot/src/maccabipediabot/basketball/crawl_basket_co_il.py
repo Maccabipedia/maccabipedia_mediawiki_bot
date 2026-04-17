@@ -3,7 +3,6 @@ import asyncio
 import json
 import logging
 import re
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
@@ -12,16 +11,14 @@ import requests
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup, Tag
 
-from maccabipediabot.basketball._crawler_utils import (
-    season_from_date,
-    write_results,
-)
+from maccabipediabot.basketball._crawler_utils import season_from_date
 from maccabipediabot.basketball.basketball_game import BasketballGame, PlayerSummary
 from maccabipediabot.basketball.translations import (
     basket_co_il_competition_name,
     normalize_player_name,
     team_name_to_hebrew,
 )
+from maccabipediabot.common.json_io import write_pydantic_list_as_json
 
 logger = logging.getLogger(__name__)
 
@@ -35,40 +32,24 @@ MACCABI_TEAM_NAME_ENG = "Maccabi Tel-Aviv"
 MAX_CONNECTIONS = 100
 
 
-@dataclass(frozen=True)
-class GameDiscoveryMeta:
-    """Metadata known about a game from the discovery step (before per-game scrape)."""
-    game_id: int
-    scrape_url: str
-    game_date: datetime
-    is_maccabi_home: bool
-    opponent_name: str
-    home_team_score: int
-    away_team_score: int
-    competition: str
+def parse_game_page(html: str, partial_game: BasketballGame) -> BasketballGame:
+    """Enrich a partially-built BasketballGame (from discovery) with per-game data.
 
+    Discovery sets: home/away team names + scores, date, competition, game URL.
+    This function adds: fixture (round/series), arena, crowd, referees,
+    coaches, per-quarter and per-OT scores, full player rosters per team.
 
-def parse_game_page(html: str, meta: GameDiscoveryMeta) -> BasketballGame:
-    """Parse one basket.co.il game-zone.asp HTML page into a BasketballGame.
-
-    Extracts: header (fixture, stadium, referees, crowd), per-quarter scores,
-    box-score (coach + player stats per team).
+    Returns a new BasketballGame; does not mutate the input.
     """
     soup = BeautifulSoup(html, "html.parser")
 
+    is_maccabi_home = partial_game.home_team_name == "מכבי תל אביב"
     header = _parse_header(soup)
-    quarter_scores = _parse_quarter_scores(soup, meta.is_maccabi_home)
-    box_score = _parse_box_score(soup, meta.is_maccabi_home)
+    quarter_scores = _parse_quarter_scores(soup, is_maccabi_home)
+    box_score = _parse_box_score(soup, is_maccabi_home)
 
-    return BasketballGame(
-        home_team_name="מכבי תל אביב" if meta.is_maccabi_home else meta.opponent_name,
-        away_team_name=meta.opponent_name if meta.is_maccabi_home else "מכבי תל אביב",
-        competition=meta.competition,
+    return partial_game.model_copy(update=dict(
         fixture=header["fixture"],
-        game_date=meta.game_date,
-        home_team_score=meta.home_team_score,
-        away_team_score=meta.away_team_score,
-        game_url=[meta.scrape_url],
         arena=header["stadium"],
         crowd=header["crowd"],
         referee=header["main_referee"],
@@ -93,8 +74,8 @@ def parse_game_page(html: str, meta: GameDiscoveryMeta) -> BasketballGame:
         opponent_coach=box_score["opponent_coach"],
         maccabi_players=box_score["maccabi_players"],
         opponent_players=box_score["opponent_players"],
-        season=season_from_date(meta.game_date),
-    )
+        season=season_from_date(partial_game.game_date),
+    ))
 
 
 def _parse_header(soup: BeautifulSoup) -> dict:
@@ -287,56 +268,13 @@ def _parse_player_rows(table: Tag) -> list[PlayerSummary]:
 
 
 
-async def enrich_game(session: ClientSession, game: BasketballGame) -> None:
-    """Fetch the per-game page and fill in the rest of the BasketballGame fields."""
+async def enrich_game(session: ClientSession, game: BasketballGame) -> BasketballGame:
+    """Fetch the per-game page and return an enriched BasketballGame."""
     url = game.game_url[0] if isinstance(game.game_url, list) else game.game_url
     async with session.get(url) as response:
         logging.info("Fetching per-game data: %s", url)
         content = await response.text()
-
-    is_maccabi_home = game.home_team_name == "מכבי תל אביב"
-    opponent = game.away_team_name if is_maccabi_home else game.home_team_name
-    game_id_match = re.search(r"GameId=(\d+)", url)
-    if not game_id_match:
-        raise ValueError(f"Cannot extract GameId from URL: {url}")
-    game_id = int(game_id_match.group(1))
-
-    meta = GameDiscoveryMeta(
-        game_id=game_id,
-        scrape_url=url,
-        game_date=game.game_date,
-        is_maccabi_home=is_maccabi_home,
-        opponent_name=opponent,
-        home_team_score=game.home_team_score,
-        away_team_score=game.away_team_score,
-        competition=game.competition,
-    )
-    parsed = parse_game_page(content, meta)
-
-    game.arena = parsed.arena
-    game.crowd = parsed.crowd
-    game.referee = parsed.referee
-    game.referee_assistants = parsed.referee_assistants
-    game.maccabi_coach = parsed.maccabi_coach
-    game.opponent_coach = parsed.opponent_coach
-    game.maccabi_players = parsed.maccabi_players
-    game.opponent_players = parsed.opponent_players
-    game.first_quarter_maccabi_points = parsed.first_quarter_maccabi_points
-    game.second_quarter_maccabi_points = parsed.second_quarter_maccabi_points
-    game.third_quarter_maccabi_points = parsed.third_quarter_maccabi_points
-    game.fourth_quarter_maccabi_points = parsed.fourth_quarter_maccabi_points
-    game.first_overtime_maccabi_points = parsed.first_overtime_maccabi_points
-    game.second_overtime_maccabi_points = parsed.second_overtime_maccabi_points
-    game.third_overtime_maccabi_points = parsed.third_overtime_maccabi_points
-    game.fourth_overtime_maccabi_points = parsed.fourth_overtime_maccabi_points
-    game.first_quarter_opponent_points = parsed.first_quarter_opponent_points
-    game.second_quarter_opponent_points = parsed.second_quarter_opponent_points
-    game.third_quarter_opponent_points = parsed.third_quarter_opponent_points
-    game.fourth_quarter_opponent_points = parsed.fourth_quarter_opponent_points
-    game.first_overtime_opponent_points = parsed.first_overtime_opponent_points
-    game.second_overtime_opponent_points = parsed.second_overtime_opponent_points
-    game.third_overtime_opponent_points = parsed.third_overtime_opponent_points
-    game.fourth_overtime_opponent_points = parsed.fourth_overtime_opponent_points
+    return parse_game_page(content, game)
 
 async def build_seasons_games_metadata_from_season_url(session: ClientSession, season_url: str, season: str) -> list[
     BasketballGame]:
@@ -463,8 +401,9 @@ async def get_team_ids_for_all_seasons(session: ClientSession) -> dict[str, str]
         return seasons_to_team_ids
 
 
-def discover_games_latest_season(limit: int | None = None) -> list[GameDiscoveryMeta]:
-    """Fetch basket.co.il's current-season feed, return Maccabi finished games sorted desc by date."""
+def discover_games_latest_season(limit: int | None = None) -> list[BasketballGame]:
+    """Fetch basket.co.il's current-season feed; return partial BasketballGame objects
+    for Maccabi's finished games (per-game scrape fields filled later by parse_game_page)."""
     resp = requests.get(GAMES_ALL_FEED_URL, timeout=30)
     if resp.status_code != 200:
         raise RuntimeError(
@@ -503,7 +442,7 @@ def discover_games_latest_season(limit: int | None = None) -> list[GameDiscovery
     if limit:
         finished = finished[:limit]
 
-    metas: list[GameDiscoveryMeta] = []
+    discovered: list[BasketballGame] = []
     unknown_competition_games: list[dict] = []
     for game in finished:
         day, month, year = game["game_date_txt"].split("/")
@@ -513,26 +452,24 @@ def discover_games_latest_season(limit: int | None = None) -> list[GameDiscovery
 
         home_team = team_name_to_hebrew(game["team_name_eng_1"])
         away_team = team_name_to_hebrew(game["team_name_eng_2"])
-        is_maccabi_home = home_team == "מכבי תל אביב"
-        opponent = away_team if is_maccabi_home else home_team
 
         competition = basket_co_il_competition_name(game["game_type"])
         if not competition:
             unknown_competition_games.append(
                 {"id": game.get("id"), "game_type": game.get("game_type"),
-                 "date": game.get("game_date_txt"), "opp": opponent}
+                 "date": game.get("game_date_txt")}
             )
             continue
 
-        metas.append(GameDiscoveryMeta(
-            game_id=int(game["id"]),
-            scrape_url=GAME_PAGE_URL_TEMPLATE.format(game_id=game["id"]),
+        discovered.append(BasketballGame(
+            home_team_name=home_team,
+            away_team_name=away_team,
+            competition=competition,
+            fixture="",  # filled by parse_game_page
             game_date=game_dt,
-            is_maccabi_home=is_maccabi_home,
-            opponent_name=opponent,
             home_team_score=int(game["score_team1"]),
             away_team_score=int(game["score_team2"]),
-            competition=competition,
+            game_url=[GAME_PAGE_URL_TEMPLATE.format(game_id=game["id"])],
         ))
     if unknown_competition_games:
         raise RuntimeError(
@@ -540,7 +477,7 @@ def discover_games_latest_season(limit: int | None = None) -> list[GameDiscovery
             "extend translations._BASKET_GAME_TYPE before re-running. "
             f"Affected games: {unknown_competition_games}"
         )
-    return metas
+    return discovered
 
 
 def fetch_game_html(scrape_url: str) -> str:
@@ -552,26 +489,26 @@ def fetch_game_html(scrape_url: str) -> str:
 
 
 def _run_latest_season(limit: int | None) -> list[BasketballGame]:
-    metas = discover_games_latest_season(limit=limit)
-    logging.info("Discovered %d Maccabi games for latest season", len(metas))
+    discovered = discover_games_latest_season(limit=limit)
+    logging.info("Discovered %d Maccabi games for latest season", len(discovered))
     out: list[BasketballGame] = []
     failures: list[tuple[str, str]] = []
-    for meta in metas:
+    for partial_game in discovered:
+        url = partial_game.game_url[0]
         try:
-            html = fetch_game_html(meta.scrape_url)
-            out.append(parse_game_page(html, meta))
+            out.append(parse_game_page(fetch_game_html(url), partial_game))
         except Exception as exc:
             logging.exception("Failed to parse %s (date=%s opp=%s)",
-                              meta.scrape_url, meta.game_date.date(), meta.opponent_name)
-            failures.append((meta.scrape_url, repr(exc)))
-    if metas and not out:
+                              url, partial_game.game_date.date(), partial_game.opponent_name)
+            failures.append((url, repr(exc)))
+    if discovered and not out:
         raise RuntimeError(
-            f"All {len(metas)} discovered basket.co.il games failed to parse — "
+            f"All {len(discovered)} discovered basket.co.il games failed to parse — "
             f"likely schema drift. First error: {failures[0][1]}"
         )
     if failures:
         logging.warning("basket.co.il: parsed %d/%d games (%d failed)",
-                        len(out), len(metas), len(failures))
+                        len(out), len(discovered), len(failures))
     return out
 
 
@@ -600,7 +537,7 @@ def main() -> None:
             return [game for season_games in results_per_season for game in season_games]
         games = asyncio.run(_run_all())
 
-    write_results(games, args.output)
+    write_pydantic_list_as_json(games, args.output)
 
 
 if __name__ == "__main__":

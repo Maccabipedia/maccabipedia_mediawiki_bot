@@ -6,7 +6,6 @@ or headless browser.
 import argparse
 import json
 import logging
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -19,7 +18,6 @@ from maccabipediabot.basketball._crawler_utils import (
     season_from_date,
     to_int,
     to_int_or_none,
-    write_results,
 )
 from maccabipediabot.basketball.basketball_game import BasketballGame, PlayerSummary
 from maccabipediabot.basketball.translations import (
@@ -27,6 +25,7 @@ from maccabipediabot.basketball.translations import (
     stadium_name_to_hebrew,
     team_name_to_hebrew,
 )
+from maccabipediabot.common.json_io import write_pydantic_list_as_json
 
 logger = logging.getLogger(__name__)
 
@@ -43,18 +42,6 @@ COMPETITION_NAME_HE = "יורוליג"
 MACCABI_TEAM_NAME_ENG = "Maccabi Rapyd Tel Aviv"
 GAME_URL_PREFIX = "https://www.euroleaguebasketball.net"
 ISRAEL_TZ = ZoneInfo("Asia/Jerusalem")
-
-
-@dataclass(frozen=True)
-class EuroleagueGameMeta:
-    """Metadata about a Euroleague game from the team-results discovery step."""
-    scrape_url: str
-    game_date: datetime
-    is_maccabi_home: bool
-    opponent_name_eng: str
-    home_team_score: int
-    away_team_score: int
-    fixture_round: int | None
 
 
 def extract_next_data(html: str) -> dict[str, Any]:
@@ -81,44 +68,34 @@ def _flip_name(name: str) -> str:
     return name.title()
 
 
-def parse_game_page(next_data: dict, meta: EuroleagueGameMeta) -> BasketballGame:
-    """Parse a Euroleague game-center page's __NEXT_DATA__ into a BasketballGame."""
+def parse_game_page(next_data: dict, partial_game: BasketballGame) -> BasketballGame:
+    """Enrich a partially-built BasketballGame (from discovery) with per-game data
+    from the Euroleague game-center page's __NEXT_DATA__ JSON.
+
+    Returns a new BasketballGame; does not mutate the input.
+    """
     raw = next_data["props"]["pageProps"]["mappedData"]["rawGameInfo"]
     home, away = raw["home"], raw["away"]
+    is_maccabi_home = partial_game.home_team_name == "מכבי תל אביב"
 
     home_coach = person_name_to_hebrew(_flip_name((home.get("coach") or {}).get("name") or ""))
     away_coach = person_name_to_hebrew(_flip_name((away.get("coach") or {}).get("name") or ""))
     home_players = [_to_player(player_data) for player_data in home.get("players") or []]
     away_players = [_to_player(player_data) for player_data in away.get("players") or []]
 
-    if meta.is_maccabi_home:
+    if is_maccabi_home:
         maccabi_players, opponent_players = home_players, away_players
         maccabi_coach, opponent_coach = home_coach, away_coach
+        maccabi_q, opponent_q = home.get("quarters") or {}, away.get("quarters") or {}
     else:
         maccabi_players, opponent_players = away_players, home_players
         maccabi_coach, opponent_coach = away_coach, home_coach
+        maccabi_q, opponent_q = away.get("quarters") or {}, home.get("quarters") or {}
 
     main_referee, assistant_referees = _parse_referees(raw.get("referees") or [])
     venue_name = stadium_name_to_hebrew((raw.get("venue") or {}).get("name") or "")
 
-    home_q = home.get("quarters") or {}
-    away_q = away.get("quarters") or {}
-    if meta.is_maccabi_home:
-        maccabi_q, opponent_q = home_q, away_q
-    else:
-        maccabi_q, opponent_q = away_q, home_q
-
-    opponent_name_he = team_name_to_hebrew(meta.opponent_name_eng)
-
-    return BasketballGame(
-        home_team_name="מכבי תל אביב" if meta.is_maccabi_home else opponent_name_he,
-        away_team_name=opponent_name_he if meta.is_maccabi_home else "מכבי תל אביב",
-        competition=COMPETITION_NAME_HE,
-        fixture=f"מחזור {meta.fixture_round}" if meta.fixture_round is not None else "",
-        game_date=meta.game_date,
-        home_team_score=meta.home_team_score,
-        away_team_score=meta.away_team_score,
-        game_url=[meta.scrape_url],
+    return partial_game.model_copy(update=dict(
         arena=venue_name,
         # Euroleague reports audience=0 when attendance is unavailable (e.g. behind-closed-doors
         # games, or preliminary data before a venue count is published). Treat 0 as "unknown" so
@@ -146,8 +123,8 @@ def parse_game_page(next_data: dict, meta: EuroleagueGameMeta) -> BasketballGame
         second_overtime_opponent_points=opponent_q.get("ot2"),
         third_overtime_opponent_points=opponent_q.get("ot3"),
         fourth_overtime_opponent_points=opponent_q.get("ot4"),
-        season=season_from_date(meta.game_date),
-    )
+        season=season_from_date(partial_game.game_date),
+    ))
 
 
 def _parse_referees(referees: list[dict]) -> tuple[str, list[str]]:
@@ -198,7 +175,7 @@ def _seconds_to_minutes(seconds) -> int | None:
     return s // 60 + (1 if s % 60 else 0)
 
 
-def discover_games_from_html(html: str, limit: int | None = None) -> list[EuroleagueGameMeta]:
+def discover_games_from_html(html: str, limit: int | None = None) -> list[BasketballGame]:
     """Parse the team-results page HTML and return discovery metas for finished games.
 
     Sorted descending by date; optionally capped at N most-recent.
@@ -208,15 +185,15 @@ def discover_games_from_html(html: str, limit: int | None = None) -> list[Eurole
 
     dropped = {"non_final": 0, "bad_date": 0, "missing_score": 0, "zero_zero": 0,
                "missing_team_name": 0, "no_url": 0}
-    metas: list[EuroleagueGameMeta] = []
-    for r in results:
+    discovered: list[BasketballGame] = []
+    for result in results:
         # Only finished games. Status "result" is what the team-results page returns for past games.
-        status = (r.get("status") or "").lower()
-        if status not in {"result", "finished"} and not r.get("isPreviousGame"):
+        status = (result.get("status") or "").lower()
+        if status not in {"result", "finished"} and not result.get("isPreviousGame"):
             dropped["non_final"] += 1
             continue
 
-        date_str = r.get("date") or ""
+        date_str = result.get("date") or ""
         if not date_str:
             dropped["bad_date"] += 1
             continue
@@ -232,7 +209,7 @@ def discover_games_from_html(html: str, limit: int | None = None) -> list[Eurole
             dropped["bad_date"] += 1
             continue
 
-        home, away = r.get("home") or {}, r.get("away") or {}
+        home, away = result.get("home") or {}, result.get("away") or {}
         home_score = to_int_or_none(home.get("score"))
         away_score = to_int_or_none(away.get("score"))
         if home_score is None or away_score is None:
@@ -250,63 +227,64 @@ def discover_games_from_html(html: str, limit: int | None = None) -> list[Eurole
         if not home_name or not away_name:
             dropped["missing_team_name"] += 1
             continue
-        is_maccabi_home = home_name == MACCABI_TEAM_NAME_ENG
-        opponent_name_eng = away_name if is_maccabi_home else home_name
+        home_name_he = team_name_to_hebrew(home_name)
+        away_name_he = team_name_to_hebrew(away_name)
 
-        url_path = r.get("url") or ""
+        url_path = result.get("url") or ""
         if not url_path:
             dropped["no_url"] += 1
             continue
         scrape_url = url_path if url_path.startswith("http") else f"{GAME_URL_PREFIX}{url_path}"
 
-        round_obj = r.get("round") or {}
+        round_obj = result.get("round") or {}
         fixture_round = to_int_or_none(round_obj.get("round"))
 
-        metas.append(EuroleagueGameMeta(
-            scrape_url=scrape_url,
+        discovered.append(BasketballGame(
+            home_team_name=home_name_he,
+            away_team_name=away_name_he,
+            competition=COMPETITION_NAME_HE,
+            fixture=f"מחזור {fixture_round}" if fixture_round is not None else "",
             game_date=game_dt,
-            is_maccabi_home=is_maccabi_home,
-            opponent_name_eng=opponent_name_eng,
             home_team_score=home_score,
             away_team_score=away_score,
-            fixture_round=fixture_round,
+            game_url=[scrape_url],
         ))
 
-    metas.sort(key=lambda m: m.game_date, reverse=True)
+    discovered.sort(key=lambda game: game.game_date, reverse=True)
     if limit:
-        metas = metas[:limit]
+        discovered = discovered[:limit]
 
     if any(dropped.values()):
-        logger.info("Euroleague discovery: kept=%d dropped=%r", len(metas), dropped)
+        logger.info("Euroleague discovery: kept=%d dropped=%r", len(discovered), dropped)
 
-    return metas
+    return discovered
 
 
-def discover_games_latest_season(limit: int | None = None) -> list[EuroleagueGameMeta]:
+def discover_games_latest_season(limit: int | None = None) -> list[BasketballGame]:
     return discover_games_from_html(fetch_html(TEAM_RESULTS_URL), limit=limit)
 
 
 def _run_latest_season(limit: int | None) -> list[BasketballGame]:
-    metas = discover_games_latest_season(limit=limit)
-    logger.info("Discovered %d Euroleague games", len(metas))
+    discovered = discover_games_latest_season(limit=limit)
+    logger.info("Discovered %d Euroleague games", len(discovered))
     out: list[BasketballGame] = []
     failures: list[tuple[str, str]] = []
-    for meta in metas:
+    for partial_game in discovered:
+        url = partial_game.game_url[0]
         try:
-            html = fetch_html(meta.scrape_url)
-            out.append(parse_game_page(extract_next_data(html), meta))
+            out.append(parse_game_page(extract_next_data(fetch_html(url)), partial_game))
         except Exception as exc:
             logger.exception("Failed to parse %s (date=%s opp=%s)",
-                             meta.scrape_url, meta.game_date.date(), meta.opponent_name_eng)
-            failures.append((meta.scrape_url, repr(exc)))
-    if metas and not out:
+                             url, partial_game.game_date.date(), partial_game.opponent_name)
+            failures.append((url, repr(exc)))
+    if discovered and not out:
         raise RuntimeError(
-            f"All {len(metas)} discovered Euroleague games failed to parse — "
+            f"All {len(discovered)} discovered Euroleague games failed to parse — "
             f"likely schema drift. First error: {failures[0][1]}"
         )
     if failures:
         logger.warning("euroleague: parsed %d/%d games (%d failed)",
-                       len(out), len(metas), len(failures))
+                       len(out), len(discovered), len(failures))
     return out
 
 
@@ -318,7 +296,7 @@ def main() -> None:
     args = parser.parse_args()
 
     games = _run_latest_season(args.limit)
-    write_results(games, args.output)
+    write_pydantic_list_as_json(games, args.output)
 
 
 if __name__ == "__main__":

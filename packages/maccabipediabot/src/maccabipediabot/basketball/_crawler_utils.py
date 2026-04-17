@@ -1,10 +1,6 @@
 """Shared helpers used by crawl_basket_co_il and crawl_euroleague."""
-import json
 import logging
 from datetime import datetime
-from pathlib import Path
-
-from maccabipediabot.basketball.basketball_game import BasketballGame
 
 logger = logging.getLogger(__name__)
 
@@ -15,27 +11,33 @@ _NUMERIC_ABSENT = {None, "", "-"}
 
 
 def to_int(value) -> int:
+    """Coerce a stat value to int. Absent (None/""/"-") → 0; anything else
+    that's not numerically convertible RAISES — so a schema-drift bug
+    (e.g. a stat suddenly nested as `{"value": N}`) fails loudly instead of
+    silently zeroing a column for every player."""
     if value in _NUMERIC_ABSENT:
         return 0
     try:
         return int(value)
-    except (TypeError, ValueError):
-        # Unexpected non-numeric, non-absent value — log so a future schema
-        # drift (e.g. nested {"value": N}) is discoverable.
-        logger.debug("to_int got unexpected value %r (%s); defaulting to 0",
-                     value, type(value).__name__)
-        return 0
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"to_int got non-numeric value {value!r} ({type(value).__name__}); "
+            "this usually signals upstream schema drift"
+        ) from exc
 
 
 def to_int_or_none(value) -> int | None:
+    """Like to_int but returns None for absent values. Same fail-loud behavior
+    on truly malformed (non-numeric, non-absent) inputs."""
     if value in _NUMERIC_ABSENT:
         return None
     try:
         return int(value)
-    except (TypeError, ValueError):
-        logger.debug("to_int_or_none got unexpected value %r (%s); returning None",
-                     value, type(value).__name__)
-        return None
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"to_int_or_none got non-numeric value {value!r} ({type(value).__name__}); "
+            "this usually signals upstream schema drift"
+        ) from exc
 
 
 def season_from_date(d: datetime) -> str:
@@ -44,12 +46,3 @@ def season_from_date(d: datetime) -> str:
     if d.month >= 9:
         return f"{year}/{(year + 1) % 100:02d}"
     return f"{year - 1}/{year % 100:02d}"
-
-
-def write_results(games: list[BasketballGame], output_path: Path) -> None:
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(
-        json.dumps([game.model_dump(mode="json") for game in games], ensure_ascii=False),
-        encoding="utf-8",
-    )
-    logger.info("Wrote %d games to %s", len(games), output_path)

@@ -120,7 +120,10 @@ def parse_game_page(next_data: dict, meta: EuroleagueGameMeta) -> BasketballGame
         away_team_score=meta.away_team_score,
         game_url=[meta.scrape_url],
         arena=venue_name,
-        crowd=raw.get("audience"),
+        # Euroleague reports audience=0 when attendance is unavailable (e.g. behind-closed-doors
+        # games, or preliminary data before a venue count is published). Treat 0 as "unknown" so
+        # the wiki field renders empty instead of a misleading literal zero.
+        crowd=raw.get("audience") or None,
         referee=main_referee,
         referee_assistants=assistant_referees,
         maccabi_coach=maccabi_coach,

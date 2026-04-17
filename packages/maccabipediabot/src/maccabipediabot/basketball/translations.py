@@ -170,6 +170,11 @@ _PERSON_NAMES: dict[str, str] = {
     "Armando Bacot Jr": "ארמנדו בקוט",
     "Metecan Birsen": "מצ'אן בירסן",
     "Wade Baldwin Iv": "ווייד בולדווין",
+    "Julius Thomas": "ג'וליוס תומאס",
+    "Pablo Laso": "פבלו לאסו",
+    "Eduard Udyanskyy": "אדוארד אודיאנסקי",
+    "Yam Madar": "ים מדר",
+    "O'Shae J Brissett": "אושיי בריסט",
     "Nicolo Melli": "ניקולו מלי",
     "Talen Horton Tucker": "טיילן הורטון-טאקר",
     "Brandon Boston Jr": "ברנדון בוסטון",
@@ -401,6 +406,7 @@ _PERSON_NAMES: dict[str, str] = {
 
 _STADIUM_NAMES: dict[str, str] = {
     "PAIS ARENA JERUSALEM": "פיס ארנה",
+    "SALLE GASTON MEDECIN": "סאל גסטון מדסין",
     "MENORA MIVTACHIM ARENA": "היכל מנורה מבטחים",
     "ZALGIRIO ARENA": "ז'לגיריס ארנה",
     "ALEKSANDAR NIKOLIC HALL": "היכל פיוניר",

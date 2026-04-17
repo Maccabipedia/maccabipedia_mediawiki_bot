@@ -51,7 +51,6 @@ def parse_game_page(html: str, meta: GameDiscoveryMeta) -> BasketballGame:
 
     Extracts: header (fixture, stadium, referees, crowd), per-quarter scores,
     box-score (coach + player stats per team).
-    Mirrors basketball_game_uploader/src/services/game-parser/basket/basket-game-parser.service.ts.
     """
     soup = BeautifulSoup(html, "html.parser")
 
@@ -147,11 +146,8 @@ def _parse_header(soup: BeautifulSoup) -> dict:
 
 
 def _parse_quarter_scores(soup: BeautifulSoup, is_maccabi_home: bool) -> dict:
-    """Extract per-quarter and per-OT scores from `table.stats_tbl.categories`.
-
-    Returns {maccabi: list, opponent: list}, each list 8 entries
-    [Q1,Q2,Q3,Q4,OT1,OT2,OT3,OT4] with None for absent periods.
-    """
+    """Returns {maccabi: list, opponent: list}; each list is 8 entries
+    [Q1,Q2,Q3,Q4,OT1,OT2,OT3,OT4] with None for absent periods."""
     cats = soup.select("table.stats_tbl.categories")
     if not cats:
         raise RuntimeError("game-zone page missing table.stats_tbl.categories")
@@ -181,7 +177,6 @@ def _parse_quarter_scores(soup: BeautifulSoup, is_maccabi_home: bool) -> dict:
 
 
 def _parse_box_score(soup: BeautifulSoup, is_maccabi_home: bool) -> dict:
-    """Extract coaches and player stats from the per-team `table.stats_tbl` tables."""
     tables = soup.select("table.stats_tbl")
     if len(tables) < 4:
         raise RuntimeError(
@@ -221,11 +216,8 @@ def _coach_from_table(table: Tag) -> str:
 
 
 def _parse_player_rows(table: Tag) -> list[PlayerSummary]:
-    """Parse player rows from one team's box-score table.
-
-    Layout: header rows first, then `<tr class="row">` per player. The first
-    `tr.row` is the column header; players start at the second.
-    """
+    """Layout: header rows first, then `<tr class="row">` per player. The first
+    `tr.row` is the column header; players start at the second."""
     rows = table.select("tr")
     if not rows:
         return []
@@ -293,10 +285,7 @@ def _parse_player_rows(table: Tag) -> list[PlayerSummary]:
 
 
 async def enrich_game(session: ClientSession, game: BasketballGame) -> None:
-    """Fetch the per-game page and fill in the rest of the BasketballGame fields.
-
-    Backed by parse_game_page (sync) for parity with the latest-season crawler.
-    """
+    """Fetch the per-game page and fill in the rest of the BasketballGame fields."""
     url = game.game_url[0] if isinstance(game.game_url, list) else game.game_url
     async with session.get(url) as response:
         logging.info("Fetching per-game data: %s", url)
@@ -321,7 +310,6 @@ async def enrich_game(session: ClientSession, game: BasketballGame) -> None:
     )
     parsed = parse_game_page(content, meta)
 
-    # Merge parsed fields into the existing game (preserve discovery-set fields)
     game.arena = parsed.arena
     game.crowd = parsed.crowd
     game.referee = parsed.referee

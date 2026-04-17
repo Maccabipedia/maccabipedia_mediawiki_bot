@@ -1,10 +1,10 @@
 """Unified normalization for basketball data flowing into MaccabiPedia.
 
 Contains:
-- EN→HE translations for teams, people, stadiums (used by the live crawlers).
+- EN→HE translations for teams, people, stadiums.
 - HE→HE player-name normalization (e.g. stripping nicknames).
 - basket.co.il game_type code → Hebrew competition name.
-- Year-aware HE→HE legacy team-name canonicalization (canonical_team_name, Task 3).
+- Year-aware HE→HE legacy team-name canonicalization (canonical_team_name).
 """
 from datetime import datetime
 from typing import Optional
@@ -431,27 +431,22 @@ _BASKET_GAME_TYPE: dict[int, str] = {
 
 
 def team_name_to_hebrew(name: str) -> str:
-    """Translate an English team name to Hebrew. Pass through if unknown."""
     return _TEAM_NAMES.get(name, name)
 
 
 def person_name_to_hebrew(name: str) -> str:
-    """Translate an English person name to Hebrew. Pass through if unknown."""
     return _PERSON_NAMES.get(name, name)
 
 
 def stadium_name_to_hebrew(name: str) -> str:
-    """Translate an English stadium name to Hebrew. Pass through if unknown."""
     return _STADIUM_NAMES.get(name, name)
 
 
 def normalize_player_name(name: str) -> str:
-    """Normalize a Hebrew player name (e.g. strip nickname). Pass through if unknown."""
     return _PLAYER_NAME_NORMALIZE.get(name, name)
 
 
 def basket_co_il_competition_name(game_type_code: int) -> Optional[str]:
-    """Return the Hebrew competition name for a basket.co.il game_type code, or None if unknown."""
     return _BASKET_GAME_TYPE.get(game_type_code)
 
 
@@ -498,11 +493,7 @@ _TEAM_RENAMES: dict[str, list[tuple[str, int, int]]] = {
 
 
 def canonical_team_name(name: str, game_date: datetime) -> str:
-    """Year-aware canonical Hebrew team name.
-
-    If `name` is in the legacy-rename registry, return the variant whose
-    year range covers `game_date.year`. Otherwise return `name` unchanged.
-    """
+    """Year-aware canonical Hebrew team name (handles legacy team renames over time)."""
     rules = _TEAM_RENAMES.get(name)
     if not rules:
         return name

@@ -1,7 +1,7 @@
 """Crawler for euroleaguebasketball.net.
 
 Parses the server-injected __NEXT_DATA__ JSON on each page; no DOM scraping
-or headless browser. Mirrors basketball_game_uploader's euroleague parser.
+or headless browser.
 """
 import argparse
 import json
@@ -60,7 +60,6 @@ class EuroleagueGameMeta:
 
 
 def extract_next_data(html: str) -> dict[str, Any]:
-    """Pull and parse the <script id="__NEXT_DATA__"> JSON blob from a Euroleague page."""
     soup = BeautifulSoup(html, "html.parser")
     script = soup.select_one("script#__NEXT_DATA__")
     if not script:
@@ -151,7 +150,6 @@ def parse_game_page(next_data: dict, meta: EuroleagueGameMeta) -> BasketballGame
 
 
 def _parse_referees(referees: list[dict]) -> tuple[str, list[str]]:
-    """Return (main_referee_he, assistant_referees_he) from the referees list."""
     names_he = [person_name_to_hebrew(_flip_name(r.get("name") or "")) for r in referees if r.get("name")]
     if not names_he:
         return "", []
@@ -280,7 +278,6 @@ def page_title_for(meta: EuroleagueGameMeta) -> str:
 
 
 def discover_games_latest_season(limit: int | None = None) -> list[EuroleagueGameMeta]:
-    """Fetch the team-results page and discover Maccabi's finished Euroleague games."""
     return discover_games_from_html(fetch_html(TEAM_RESULTS_URL), limit=limit)
 
 

@@ -84,7 +84,7 @@ def batch_check_existence(site, page_titles: list[str]) -> set[str]:
     """Return the subset of page_titles that already exist on the wiki.
 
     Uses pywikibot's PreloadingGenerator to batch the existence check into
-    one round-trip (mirrors the TS uploader's getExistencePredicate).
+    one round-trip (one API call for N pages).
     """
     from pywikibot import pagegenerators
     pages = [pw.Page(site, title) for title in page_titles]
@@ -177,8 +177,7 @@ def __get_football_game_template_with_maccabistats_game_value(game: BasketballGa
 def render_basketball_game_to_wiki(game: BasketballGame) -> str:
     """Build the {{משחק כדורסל ...}} wiki template text from a BasketballGame.
 
-    Pure function: no I/O, no pywikibot. Used by handle_new_page and tested
-    in isolation.
+    Pure function: no I/O, no pywikibot.
     """
     template = Template(basketball_games_template_name)
     for arg_name, arg_value in __get_football_game_template_with_maccabistats_game_value(game).items():

@@ -53,3 +53,24 @@ def test_basket_co_il_competition_name_super_cup():
 
 def test_basket_co_il_competition_name_unknown_returns_none():
     assert basket_co_il_competition_name(999) is None
+
+
+def test_canonical_team_name_simple_rename():
+    assert canonical_team_name("מכבי אלקטרה", datetime(2010, 5, 1)) == "מכבי תל אביב"
+
+
+def test_canonical_team_name_no_rename_known_pass_through():
+    assert canonical_team_name("הפועל ירושלים", datetime(2024, 1, 1)) == "הפועל ירושלים"
+
+
+def test_canonical_team_name_year_range_pre_2005():
+    # מכבי רמת עמידר → "מכבי רמת עמידר" (1957–2005) then "הכח עמידר רמת גן" (2005+)
+    assert canonical_team_name("מכבי רמת עמידר", datetime(2000, 6, 1)) == "מכבי רמת עמידר"
+
+
+def test_canonical_team_name_year_range_post_2005():
+    assert canonical_team_name("מכבי רמת עמידר", datetime(2010, 6, 1)) == "הכח עמידר רמת גן"
+
+
+def test_canonical_team_name_unknown_passes_through():
+    assert canonical_team_name("שם לא ידוע", datetime(2024, 1, 1)) == "שם לא ידוע"

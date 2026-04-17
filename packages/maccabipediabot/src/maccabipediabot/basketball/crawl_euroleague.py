@@ -267,25 +267,8 @@ def discover_games_latest_season(limit: int | None = None) -> list[BasketballGam
 def _run_latest_season(limit: int | None) -> list[BasketballGame]:
     discovered = discover_games_latest_season(limit=limit)
     logger.info("Discovered %d Euroleague games", len(discovered))
-    out: list[BasketballGame] = []
-    failures: list[tuple[str, str]] = []
-    for partial_game in discovered:
-        url = partial_game.game_url[0]
-        try:
-            out.append(parse_game_page(extract_next_data(fetch_html(url)), partial_game))
-        except Exception as exc:
-            logger.exception("Failed to parse %s (date=%s opp=%s)",
-                             url, partial_game.game_date.date(), partial_game.opponent_name)
-            failures.append((url, repr(exc)))
-    if discovered and not out:
-        raise RuntimeError(
-            f"All {len(discovered)} discovered Euroleague games failed to parse — "
-            f"likely schema drift. First error: {failures[0][1]}"
-        )
-    if failures:
-        logger.warning("euroleague: parsed %d/%d games (%d failed)",
-                       len(out), len(discovered), len(failures))
-    return out
+    return [parse_game_page(extract_next_data(fetch_html(partial_game.game_url[0])), partial_game)
+            for partial_game in discovered]
 
 
 def main() -> None:

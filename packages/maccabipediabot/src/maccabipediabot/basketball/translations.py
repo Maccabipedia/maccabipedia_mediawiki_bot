@@ -443,6 +443,10 @@ _BASKET_GAME_TYPE: dict[int, str] = {
     34: "הסופרקאפ הישראלי",
 }
 
+# Generic stripper: basket.co.il includes "ג'וניור" in HE player names; wiki
+# convention drops it. Catches Jr suffix without per-player map entries.
+_JR_SUFFIX_RE = re.compile(r"\s+ג['׳]וניור\s*$")
+
 
 def team_name_to_hebrew(name: str) -> str:
     return _TEAM_NAMES.get(name, name)
@@ -454,9 +458,6 @@ def person_name_to_hebrew(name: str) -> str:
 
 def stadium_name_to_hebrew(name: str) -> str:
     return _STADIUM_NAMES.get(name, name)
-
-
-_JR_SUFFIX_RE = re.compile(r"\s+ג['׳]וניור\s*$")
 
 
 def normalize_player_name(name: str) -> str:

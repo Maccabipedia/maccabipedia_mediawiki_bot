@@ -364,24 +364,8 @@ async def extract_games_links_from_seasons_pages(session: ClientSession, season:
         BASKET_CO_IL_SITE_MACCABI_BASE_PAGE.format(team_id=team_id),
         season)
 
-    enriched = 0
-    failures: list[str] = []
     for game in season_games:
-        try:
-            await enrich_game(session, game)
-            enriched += 1
-        except Exception as exc:
-            logging.exception("Could not enrich game: %s", game.game_url)
-            failures.append(f"{game.game_url}: {exc!r}")
-
-    if season_games and enriched == 0:
-        raise RuntimeError(
-            f"All {len(season_games)} games for season {season} failed to enrich. "
-            f"First error: {failures[0]}"
-        )
-    if failures:
-        logging.warning("season %s: enriched %d/%d games (%d failed)",
-                        season, enriched, len(season_games), len(failures))
+        await enrich_game(session, game)
     return season_games
 
 
@@ -491,25 +475,8 @@ def fetch_game_html(scrape_url: str) -> str:
 def _run_latest_season(limit: int | None) -> list[BasketballGame]:
     discovered = discover_games_latest_season(limit=limit)
     logging.info("Discovered %d Maccabi games for latest season", len(discovered))
-    out: list[BasketballGame] = []
-    failures: list[tuple[str, str]] = []
-    for partial_game in discovered:
-        url = partial_game.game_url[0]
-        try:
-            out.append(parse_game_page(fetch_game_html(url), partial_game))
-        except Exception as exc:
-            logging.exception("Failed to parse %s (date=%s opp=%s)",
-                              url, partial_game.game_date.date(), partial_game.opponent_name)
-            failures.append((url, repr(exc)))
-    if discovered and not out:
-        raise RuntimeError(
-            f"All {len(discovered)} discovered basket.co.il games failed to parse — "
-            f"likely schema drift. First error: {failures[0][1]}"
-        )
-    if failures:
-        logging.warning("basket.co.il: parsed %d/%d games (%d failed)",
-                        len(out), len(discovered), len(failures))
-    return out
+    return [parse_game_page(fetch_game_html(partial_game.game_url[0]), partial_game)
+            for partial_game in discovered]
 
 
 def main() -> None:

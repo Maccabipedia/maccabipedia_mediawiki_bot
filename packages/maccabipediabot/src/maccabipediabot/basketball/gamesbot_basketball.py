@@ -176,26 +176,18 @@ def render_basketball_game_to_wikitext(game: BasketballGame) -> str:
     return str(template)
 
 
-def handle_game(game: BasketballGame, site, *, skip_existing: bool, dry_run: bool) -> None:
-    page_name = generate_page_name_from_game(game)
-    page = pw.Page(site, page_name)
-
-    if page.exists():
-        if skip_existing:
-            logging.info("SKIP exists: %s", page_name)
-            return
-        logging.info("OVERWRITE existing page: %s", page_name)
-
+def upload_game_to_page(page, game: BasketballGame, *, dry_run: bool) -> None:
+    """Render the game wikitext into `page` and save (unless dry_run / SHOULD_SAVE off)."""
     page.text = render_basketball_game_to_wikitext(game)
 
     if dry_run or not SHOULD_SAVE:
-        logging.info("DRY-RUN: not saving %s", page_name)
+        logging.info("DRY-RUN: not saving %s", page.title())
         return
 
-    logging.info("Saving %s", page_name)
+    logging.info("Saving %s", page.title())
     page.save(summary="MaccabiBot - Uploading basketball games")
 
-    logging.info("Prettifying %s", page_name)
+    logging.info("Prettifying %s", page.title())
     prettify_game_page_main_template(page)
 
 
@@ -205,7 +197,14 @@ def upload_basketball_games_to_maccabipedia(games: list[BasketballGame], *,
     if not dry_run:
         logging.warning("LIVE MODE: pages will be written to MaccabiPedia")
     for game in games:
-        handle_game(game, site, skip_existing=skip_existing, dry_run=dry_run)
+        page_name = generate_page_name_from_game(game)
+        page = pw.Page(site, page_name)
+        if page.exists():
+            if skip_existing:
+                logging.info("SKIP exists: %s", page_name)
+                continue
+            logging.info("OVERWRITE existing page: %s", page_name)
+        upload_game_to_page(page, game, dry_run=dry_run)
 
 
 def main() -> None:

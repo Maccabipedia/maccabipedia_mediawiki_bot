@@ -14,6 +14,12 @@ from typing import Any
 import requests
 from bs4 import BeautifulSoup
 
+from maccabipediabot.basketball._crawler_utils import (
+    season_from_date,
+    to_int,
+    to_int_or_none,
+    write_results,
+)
 from maccabipediabot.basketball.basketball_game import BasketballGame, PlayerSummary
 from maccabipediabot.basketball.translations import (
     person_name_to_hebrew,
@@ -140,7 +146,7 @@ def parse_game_page(next_data: dict, meta: EuroleagueGameMeta) -> BasketballGame
         second_overtime_opponent_points=opponent_q.get("ot2"),
         third_overtime_opponent_points=opponent_q.get("ot3"),
         fourth_overtime_opponent_points=opponent_q.get("ot4"),
-        season=_season_from_date(meta.game_date),
+        season=season_from_date(meta.game_date),
     )
 
 
@@ -158,25 +164,25 @@ def _to_player(p: dict) -> PlayerSummary:
     name = person_name_to_hebrew(_flip_name(raw_name))
     return PlayerSummary(
         name=name,
-        number=_to_int_or_none(p.get("dorsal")),
+        number=to_int_or_none(p.get("dorsal")),
         is_starting_five=bool(p.get("startFive")),
         minutes_played=_seconds_to_minutes(stats.get("timePlayed")),
-        total_points=_to_int(stats.get("points")),
-        field_goals_attempts=_to_int(stats.get("fieldGoalsAttempted2")),
-        field_goals_scored=_to_int(stats.get("fieldGoalsMade2")),
-        three_scores_attempts=_to_int(stats.get("fieldGoalsAttempted3")),
-        three_scores_scored=_to_int(stats.get("fieldGoalsMade3")),
-        free_throws_attempts=_to_int(stats.get("freeThrowsAttempted")),
-        free_throws_scored=_to_int(stats.get("freeThrowsMade")),
-        defensive_rebounds=_to_int(stats.get("defensiveRebounds")),
-        offensive_rebounds=_to_int(stats.get("offensiveRebounds")),
-        total_rebounds=_to_int(stats.get("totalRebounds")),
-        assists=_to_int(stats.get("assists")),
-        steals=_to_int(stats.get("steals")),
-        turnovers=_to_int(stats.get("turnovers")),
-        blocks=_to_int(stats.get("blocksFavour")),
+        total_points=to_int(stats.get("points")),
+        field_goals_attempts=to_int(stats.get("fieldGoalsAttempted2")),
+        field_goals_scored=to_int(stats.get("fieldGoalsMade2")),
+        three_scores_attempts=to_int(stats.get("fieldGoalsAttempted3")),
+        three_scores_scored=to_int(stats.get("fieldGoalsMade3")),
+        free_throws_attempts=to_int(stats.get("freeThrowsAttempted")),
+        free_throws_scored=to_int(stats.get("freeThrowsMade")),
+        defensive_rebounds=to_int(stats.get("defensiveRebounds")),
+        offensive_rebounds=to_int(stats.get("offensiveRebounds")),
+        total_rebounds=to_int(stats.get("totalRebounds")),
+        assists=to_int(stats.get("assists")),
+        steals=to_int(stats.get("steals")),
+        turnovers=to_int(stats.get("turnovers")),
+        blocks=to_int(stats.get("blocksFavour")),
         # Euroleague stat key has a typo; tolerate either spelling.
-        personal_total_fouls=_to_int(stats.get("foulsCommited") or stats.get("foulsCommitted")),
+        personal_total_fouls=to_int(stats.get("foulsCommited") or stats.get("foulsCommitted")),
     )
 
 
@@ -191,27 +197,6 @@ def _seconds_to_minutes(seconds) -> int | None:
     if s <= 0:
         return 0
     return s // 60 + (1 if s % 60 else 0)
-
-
-def _to_int(value) -> int:
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return 0
-
-
-def _to_int_or_none(value) -> int | None:
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return None
-
-
-def _season_from_date(d: datetime) -> str:
-    year = d.year
-    if d.month >= 9:
-        return f"{year}/{(year + 1) % 100:02d}"
-    return f"{year - 1}/{year % 100:02d}"
 
 
 def discover_games_from_html(html: str, limit: int | None = None) -> list[EuroleagueGameMeta]:
@@ -242,8 +227,8 @@ def discover_games_from_html(html: str, limit: int | None = None) -> list[Eurole
             continue
 
         home, away = r.get("home") or {}, r.get("away") or {}
-        home_score = _to_int_or_none(home.get("score"))
-        away_score = _to_int_or_none(away.get("score"))
+        home_score = to_int_or_none(home.get("score"))
+        away_score = to_int_or_none(away.get("score"))
         if home_score is None or away_score is None:
             dropped["missing_score"] += 1
             continue
@@ -263,7 +248,7 @@ def discover_games_from_html(html: str, limit: int | None = None) -> list[Eurole
         scrape_url = url_path if url_path.startswith("http") else f"{GAME_URL_PREFIX}{url_path}"
 
         round_obj = r.get("round") or {}
-        fixture_round = _to_int_or_none(round_obj.get("round"))
+        fixture_round = to_int_or_none(round_obj.get("round"))
 
         metas.append(EuroleagueGameMeta(
             scrape_url=scrape_url,
@@ -299,15 +284,6 @@ def discover_games_latest_season(limit: int | None = None) -> list[EuroleagueGam
     return discover_games_from_html(fetch_html(TEAM_RESULTS_URL), limit=limit)
 
 
-def _write_results(games: list[BasketballGame], output_path: Path) -> None:
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(
-        json.dumps([g.model_dump(mode="json") for g in games], ensure_ascii=False),
-        encoding="utf-8",
-    )
-    logger.info("Wrote %d games to %s", len(games), output_path)
-
-
 def _run_latest_season(limit: int | None) -> list[BasketballGame]:
     metas = discover_games_latest_season(limit=limit)
     logger.info("Discovered %d Euroleague games", len(metas))
@@ -340,7 +316,7 @@ def main() -> None:
     args = parser.parse_args()
 
     games = _run_latest_season(args.limit)
-    _write_results(games, args.output)
+    write_results(games, args.output)
 
 
 if __name__ == "__main__":

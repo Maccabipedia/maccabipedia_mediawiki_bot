@@ -7,6 +7,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Tuple
 
+from maccabipediabot.basketball._crawler_utils import (
+    season_from_date,
+    write_results,
+)
 from maccabipediabot.basketball.basketball_game import BasketballGame, PlayerSummary
 from maccabipediabot.basketball.translations import normalize_player_name
 
@@ -88,7 +92,7 @@ def parse_game_page(html: str, meta: GameDiscoveryMeta) -> BasketballGame:
         opponent_coach=box_score["opponent_coach"],
         maccabi_players=box_score["maccabi_players"],
         opponent_players=box_score["opponent_players"],
-        season=_season_from_date(meta.game_date),
+        season=season_from_date(meta.game_date),
     )
 
 
@@ -286,12 +290,6 @@ def _parse_player_rows(table: Tag) -> list[PlayerSummary]:
     return players
 
 
-def _season_from_date(d: datetime) -> str:
-    """Return season string like '2024/25'. Israeli basketball season runs Sep–Jun."""
-    year = d.year
-    if d.month >= 9:
-        return f"{year}/{(year + 1) % 100:02d}"
-    return f"{year - 1}/{year % 100:02d}"
 
 
 async def enrich_game(session: ClientSession, game: BasketballGame) -> None:
@@ -571,15 +569,6 @@ def page_title_for(meta: GameDiscoveryMeta) -> str:
     return f"כדורסל:{date} {home} נגד {away} - {meta.competition}"
 
 
-def _write_results(games: list[BasketballGame], output_path: Path) -> None:
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(
-        json.dumps([g.model_dump(mode="json") for g in games], ensure_ascii=False),
-        encoding="utf-8",
-    )
-    logging.info("Wrote %d games to %s", len(games), output_path)
-
-
 def _run_latest_season(limit: int | None) -> list[BasketballGame]:
     metas = discover_games_latest_season(limit=limit)
     logging.info("Discovered %d Maccabi games for latest season", len(metas))
@@ -628,7 +617,7 @@ def main() -> None:
             return [g for season in results_per_season for g in season]
         games = asyncio.run(_run_all())
 
-    _write_results(games, args.output)
+    write_results(games, args.output)
 
 
 if __name__ == "__main__":

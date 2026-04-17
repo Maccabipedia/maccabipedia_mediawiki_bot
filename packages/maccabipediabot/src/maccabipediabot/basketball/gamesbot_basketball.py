@@ -1,6 +1,5 @@
 import argparse
 import logging
-from functools import lru_cache
 from pathlib import Path
 
 import pywikibot as pw
@@ -9,18 +8,21 @@ from mwparserfromhell.nodes.template import Template
 from pydantic import TypeAdapter
 
 from maccabipediabot.basketball.basketball_game import BasketballGame, PlayerSummary
+from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 from maccabipediabot.common.wiki_login import get_site
 
+# === Page metadata ===
+BASKETBALL_GAMES_TEMPLATE_NAME = "משחק כדורסל"
+BASKETBALL_GAMES_PAGE_PREFIX = "כדורסל"
+SHOULD_SAVE = True  # safety global; --dry-run is the public per-run override
 
-@lru_cache(maxsize=1)
-def _site() -> pw.Site:
-    """Lazy pywikibot site/login. Avoids logging in at module import time."""
-    return get_site()
+# === Source URL → Hebrew label for the כתבה1 reference field ===
+_SOURCE_LABELS = {
+    "basket.co.il": "מנהלת ליגת העל בכדורסל",
+    "euroleaguebasketball.net": "היורוליג",
+}
 
-basketball_games_template_name = "משחק כדורסל"
-basketball_games_prefix = "כדורסל"
-
-# Legend games templates args consts:s
+# === Wiki template parameter names (HE) ===
 GAME_DATE = "תאריך המשחק"
 GAME_HOUR = "שעת המשחק"
 SEASON = "עונה"
@@ -45,78 +47,64 @@ GAME_SUMMARY = "סיכום משחק"
 IS_OVERTIME = "הארכה"
 ARTICLE1 = "כתבה1"
 ARTICLE2 = "כתבה2"
-MACCABI_PLAYERS = 'שחקנים מכבי'
-OPPONENT_PLAYERS = 'שחקנים יריבה'
-FIRST_QUARTER_MACCABI_POINTS = 'נקודות מכבי רבע1'
-SECOND_QUARTER_MACCABI_POINTS = 'נקודות מכבי רבע2'
-THIRD_QUARTER_MACCABI_POINTS = 'נקודות מכבי רבע3'
-FOURTH_QUARTER_MACCABI_POINTS = 'נקודות מכבי רבע4'
-FIRST_OVERTIME_MACCABI_POINTS = 'נקודות מכבי הארכה1'
-SECOND_OVERTIME_MACCABI_POINTS = 'נקודות מכבי הארכה2'
-THIRD_OVERTIME_MACCABI_POINTS = 'נקודות מכבי הארכה3'
-FOURTH_OVERTIME_MACCABI_POINTS = 'נקודות מכבי הארכה4'
-FIRST_QUARTER_OPPONENT_POINTS = 'נקודות יריבה רבע1'
-SECOND_QUARTER_OPPONENT_POINTS = 'נקודות יריבה רבע2'
-THIRD_QUARTER_OPPONENT_POINTS = 'נקודות יריבה רבע3'
-FOURTH_QUARTER_OPPONENT_POINTS = 'נקודות יריבה רבע4'
-FIRST_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה1'
-SECOND_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה2'
-THIRD_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה3'
-FOURTH_OVERTIME_OPPONENT_POINTS = 'נקודות יריבה הארכה4'
-FIRST_HALF_MACCABI_POINTS = 'נקודות מכבי חצי1'
-SECOND_HALF_MACCABI_POINTS = 'נקודות מכבי חצי2'
-FIRST_HALF_OPPONENT_POINTS = 'נקודות יריבה חצי1'
-SECOND_HALF_OPPONENT_POINTS = 'נקודות יריבה חצי2'
+MACCABI_PLAYERS = "שחקנים מכבי"
+OPPONENT_PLAYERS = "שחקנים יריבה"
+FIRST_QUARTER_MACCABI_POINTS = "נקודות מכבי רבע1"
+SECOND_QUARTER_MACCABI_POINTS = "נקודות מכבי רבע2"
+THIRD_QUARTER_MACCABI_POINTS = "נקודות מכבי רבע3"
+FOURTH_QUARTER_MACCABI_POINTS = "נקודות מכבי רבע4"
+FIRST_OVERTIME_MACCABI_POINTS = "נקודות מכבי הארכה1"
+SECOND_OVERTIME_MACCABI_POINTS = "נקודות מכבי הארכה2"
+THIRD_OVERTIME_MACCABI_POINTS = "נקודות מכבי הארכה3"
+FOURTH_OVERTIME_MACCABI_POINTS = "נקודות מכבי הארכה4"
+FIRST_QUARTER_OPPONENT_POINTS = "נקודות יריבה רבע1"
+SECOND_QUARTER_OPPONENT_POINTS = "נקודות יריבה רבע2"
+THIRD_QUARTER_OPPONENT_POINTS = "נקודות יריבה רבע3"
+FOURTH_QUARTER_OPPONENT_POINTS = "נקודות יריבה רבע4"
+FIRST_OVERTIME_OPPONENT_POINTS = "נקודות יריבה הארכה1"
+SECOND_OVERTIME_OPPONENT_POINTS = "נקודות יריבה הארכה2"
+THIRD_OVERTIME_OPPONENT_POINTS = "נקודות יריבה הארכה3"
+FOURTH_OVERTIME_OPPONENT_POINTS = "נקודות יריבה הארכה4"
+FIRST_HALF_MACCABI_POINTS = "נקודות מכבי חצי1"
+SECOND_HALF_MACCABI_POINTS = "נקודות מכבי חצי2"
+FIRST_HALF_OPPONENT_POINTS = "נקודות יריבה חצי1"
+SECOND_HALF_OPPONENT_POINTS = "נקודות יריבה חצי2"
+
+# Optional period scores: skip if None so unused OT / half slots don't litter
+# the page source with empty placeholders.
+_OPTIONAL_PERIOD_KEYS = frozenset([
+    FIRST_OVERTIME_MACCABI_POINTS, SECOND_OVERTIME_MACCABI_POINTS,
+    THIRD_OVERTIME_MACCABI_POINTS, FOURTH_OVERTIME_MACCABI_POINTS,
+    FIRST_OVERTIME_OPPONENT_POINTS, SECOND_OVERTIME_OPPONENT_POINTS,
+    THIRD_OVERTIME_OPPONENT_POINTS, FOURTH_OVERTIME_OPPONENT_POINTS,
+    FIRST_HALF_MACCABI_POINTS, SECOND_HALF_MACCABI_POINTS,
+    FIRST_HALF_OPPONENT_POINTS, SECOND_HALF_OPPONENT_POINTS,
+])
 
 
 def load_basketball_games(input_path: Path) -> list[BasketballGame]:
-    games_text = input_path.read_text(encoding='utf-8')
-    games = TypeAdapter(list[BasketballGame]).validate_json(games_text)
-    return games
-
-
-def batch_check_existence(site, page_titles: list[str]) -> set[str]:
-    """Return the subset of page_titles that already exist on the wiki.
-
-    Uses pywikibot's PreloadingGenerator to batch the existence check into
-    one round-trip (one API call for N pages).
-    """
-    from pywikibot import pagegenerators
-    pages = [pw.Page(site, title) for title in page_titles]
-    existing: set[str] = set()
-    for page in pagegenerators.PreloadingGenerator(pages):
-        if page.exists():
-            existing.add(page.title())
-    return existing
+    return TypeAdapter(list[BasketballGame]).validate_json(
+        input_path.read_text(encoding="utf-8")
+    )
 
 
 def generate_page_name_from_game(game: BasketballGame) -> str:
-    page_name = "{prefix}:{date} {home_team} נגד {away_team} - {competition}".format(prefix=basketball_games_prefix,
-                                                                                     date=game.game_date.strftime(
-                                                                                         '%d-%m-%Y'),
-                                                                                     home_team=game.home_team_name,
-                                                                                     away_team=game.away_team_name,
-                                                                                     competition=game.competition)
-
-    return page_name
+    date = game.game_date.strftime("%d-%m-%Y")
+    return (f"{BASKETBALL_GAMES_PAGE_PREFIX}:{date} "
+            f"{game.home_team_name} נגד {game.away_team_name} - {game.competition}")
 
 
 def get_players_events_for_template(players_summary: list[PlayerSummary]) -> str:
-    return ",\n".join(player_summary.__maccabipedia__() for player_summary in players_summary).rstrip()
-
-_SOURCE_LABELS = {
-    "basket.co.il": "מנהלת ליגת העל בכדורסל",
-    "euroleaguebasketball.net": "היורוליג",
-}
+    return ",\n".join(player.__maccabipedia__() for player in players_summary).rstrip()
 
 
 def format_url(game_url: str) -> str:
     extracted = tldextract.extract(game_url)
-    netloc = extracted.top_domain_under_public_suffix
-    label = _SOURCE_LABELS.get(netloc, extracted.domain)
+    label = _SOURCE_LABELS.get(extracted.top_domain_under_public_suffix, extracted.domain)
     return f"[{game_url} עמוד המשחק באתר {label}]"
 
-def __get_football_game_template_with_maccabistats_game_value(game: BasketballGame) -> dict[str, str]:
+
+def _get_basketball_template_arguments(game: BasketballGame) -> dict[str, str]:
     template_arguments = {
         GAME_DATE: str(game.game_date.strftime("%d-%m-%Y")),
         # Emit full HH:MM. Skip the field for midnight (unknown game time).
@@ -125,7 +113,7 @@ def __get_football_game_template_with_maccabistats_game_value(game: BasketballGa
         COMPETITION: game.competition,
         FIXTURE: game.fixture,
         OPPONENT_NAME: game.opponent_name,
-        HOME_OR_AWAY: 'בית' if game.is_home_game else 'חוץ',
+        HOME_OR_AWAY: "בית" if game.is_home_game else "חוץ",
         ARENA: game.arena,
         FIRST_QUARTER_MACCABI_POINTS: game.first_quarter_maccabi_points,
         SECOND_QUARTER_MACCABI_POINTS: game.second_quarter_maccabi_points,
@@ -159,7 +147,7 @@ def __get_football_game_template_with_maccabistats_game_value(game: BasketballGa
         FULL_GAME_VIDEO: "",
         FULL_GAME_VIDEO2: "",
         BROADCAST: "",
-        GAME_SUMMARY: ""
+        GAME_SUMMARY: "",
     }
 
     if game.has_overtime:
@@ -177,92 +165,47 @@ def __get_football_game_template_with_maccabistats_game_value(game: BasketballGa
     return template_arguments
 
 
-# Optional period scores: skip if None so unused OT / half slots don't litter
-# the page source with empty placeholders.
-_OPTIONAL_PERIOD_KEYS = frozenset([
-    FIRST_OVERTIME_MACCABI_POINTS, SECOND_OVERTIME_MACCABI_POINTS,
-    THIRD_OVERTIME_MACCABI_POINTS, FOURTH_OVERTIME_MACCABI_POINTS,
-    FIRST_OVERTIME_OPPONENT_POINTS, SECOND_OVERTIME_OPPONENT_POINTS,
-    THIRD_OVERTIME_OPPONENT_POINTS, FOURTH_OVERTIME_OPPONENT_POINTS,
-    FIRST_HALF_MACCABI_POINTS, SECOND_HALF_MACCABI_POINTS,
-    FIRST_HALF_OPPONENT_POINTS, SECOND_HALF_OPPONENT_POINTS,
-])
-
-
-def render_basketball_game_to_wiki(game: BasketballGame) -> str:
+def render_basketball_game_to_wikitext(game: BasketballGame) -> str:
     """Build the {{משחק כדורסל ...}} wiki template text from a BasketballGame.
-
-    Pure function: no I/O, no pywikibot.
-    """
-    template = Template(basketball_games_template_name)
-    for arg_name, arg_value in __get_football_game_template_with_maccabistats_game_value(game).items():
+    Pure function: no I/O, no pywikibot."""
+    template = Template(BASKETBALL_GAMES_TEMPLATE_NAME)
+    for arg_name, arg_value in _get_basketball_template_arguments(game).items():
         if arg_name in _OPTIONAL_PERIOD_KEYS and arg_value in (None, ""):
             continue
         template.add(arg_name, arg_value)
     return str(template)
 
 
-def handle_new_page(game_page: pw.page.Page, game: BasketballGame):
-    game_page.text = render_basketball_game_to_wiki(game)
-
-
-def handle_game(game: BasketballGame, site, *, skip_existing: bool,
-                existing_titles: set[str], dry_run: bool) -> None:
+def handle_game(game: BasketballGame, site, *, skip_existing: bool, dry_run: bool) -> None:
     page_name = generate_page_name_from_game(game)
-    if skip_existing and page_name in existing_titles:
-        logging.info("SKIP exists: %s", page_name)
-        return
+    page = pw.Page(site, page_name)
 
-    game_page = pw.Page(site, page_name)
-    if game_page.exists() and not skip_existing:
+    if page.exists():
+        if skip_existing:
+            logging.info("SKIP exists: %s", page_name)
+            return
         logging.info("OVERWRITE existing page: %s", page_name)
 
-    handle_new_page(game_page, game)
+    page.text = render_basketball_game_to_wikitext(game)
 
-    if dry_run:
-        logging.info("DRY-RUN: not saving %s", game_page.title())
+    if dry_run or not SHOULD_SAVE:
+        logging.info("DRY-RUN: not saving %s", page_name)
         return
 
-    logging.info("Saving %s", game_page.title())
-    game_page.save(summary="MaccabiBot - Uploading basketball games")
+    logging.info("Saving %s", page_name)
+    page.save(summary="MaccabiBot - Uploading basketball games")
 
-    # Lazy import: prettify_games_pages does a wiki login at module load.
-    from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
-
-    try:
-        logging.info("Prettifying %s", game_page.title())
-        prettify_game_page_main_template(game_page)
-    except Exception:
-        # Save already succeeded — log the prettify failure but don't reraise,
-        # otherwise the next upload would be blocked and this game would be
-        # marked as existing on retry, leaving it permanently un-prettified.
-        logging.exception("Prettify failed for %s (page already saved)", game_page.title())
+    logging.info("Prettifying %s", page_name)
+    prettify_game_page_main_template(page)
 
 
 def upload_basketball_games_to_maccabipedia(games: list[BasketballGame], *,
                                             skip_existing: bool, dry_run: bool) -> None:
-    site = _site()
-    page_names = [generate_page_name_from_game(game) for game in games]
-    existing = batch_check_existence(site, page_names) if skip_existing else set()
-
+    site = get_site()
     if not dry_run:
         logging.warning("LIVE MODE: pages will be written to MaccabiPedia")
-
-    failures: list[tuple[str, str]] = []
     for game in games:
-        page_name = generate_page_name_from_game(game)
-        try:
-            handle_game(game, site=site, skip_existing=skip_existing,
-                        existing_titles=existing, dry_run=dry_run)
-        except Exception as exc:
-            logging.exception("Failed to upload %s", page_name)
-            failures.append((page_name, repr(exc)))
-
-    if failures:
-        details = "\n".join(f"  - {name}: {err}" for name, err in failures)
-        raise RuntimeError(
-            f"{len(failures)}/{len(games)} basketball games failed to upload:\n{details}"
-        )
+        handle_game(game, site, skip_existing=skip_existing, dry_run=dry_run)
 
 
 def main() -> None:
@@ -275,7 +218,7 @@ def main() -> None:
     parser.add_argument("--skip-existing", action="store_true",
                         help="Skip games whose wiki page already exists. Default: overwrite.")
     parser.add_argument("--dry-run", action="store_true",
-                        help="Build wiki text and report what would happen, but don't save to MaccabiPedia.")
+                        help="Build wiki text but don't save to MaccabiPedia.")
     args = parser.parse_args()
 
     logging.info("Loading games from %s (skip_existing=%s, dry_run=%s)",

@@ -11,33 +11,20 @@ _NUMERIC_ABSENT = {None, "", "-"}
 
 
 def to_int(value) -> int:
-    """Coerce a stat value to int. Absent (None/""/"-") → 0; anything else
-    that's not numerically convertible RAISES — so a schema-drift bug
-    (e.g. a stat suddenly nested as `{"value": N}`) fails loudly instead of
+    """Coerce a stat value to int. Absent (None / "" / "-") → 0; anything
+    else just goes through int() and propagates its own TypeError/ValueError
+    on truly malformed input — so a schema-drift bug fails loudly instead of
     silently zeroing a column for every player."""
     if value in _NUMERIC_ABSENT:
         return 0
-    try:
-        return int(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(
-            f"to_int got non-numeric value {value!r} ({type(value).__name__}); "
-            "this usually signals upstream schema drift"
-        ) from exc
+    return int(value)
 
 
 def to_int_or_none(value) -> int | None:
-    """Like to_int but returns None for absent values. Same fail-loud behavior
-    on truly malformed (non-numeric, non-absent) inputs."""
+    """Like to_int but returns None for absent values."""
     if value in _NUMERIC_ABSENT:
         return None
-    try:
-        return int(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(
-            f"to_int_or_none got non-numeric value {value!r} ({type(value).__name__}); "
-            "this usually signals upstream schema drift"
-        ) from exc
+    return int(value)
 
 
 def season_from_date(d: datetime) -> str:

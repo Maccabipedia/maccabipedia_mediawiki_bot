@@ -74,3 +74,12 @@ def test_canonical_team_name_year_range_post_2005():
 
 def test_canonical_team_name_unknown_passes_through():
     assert canonical_team_name("שם לא ידוע", datetime(2024, 1, 1)) == "שם לא ידוע"
+
+
+def test_person_lookup_handles_trailing_space_in_source_dict():
+    """Some TS-source map keys had trailing spaces (e.g. "Sergio Llull "). Lookups
+    using a trimmed or doubly-spaced name must still resolve."""
+    assert person_name_to_hebrew("Sergio Llull") == "סרחיו יוי"
+    assert person_name_to_hebrew("  Sergio   Llull  ") == "סרחיו יוי"
+    assert person_name_to_hebrew("Andres Feliz") != "Andres Feliz"  # was "Andres Feliz " in source
+    assert person_name_to_hebrew("Alex Len") != "Alex Len"

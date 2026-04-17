@@ -102,6 +102,71 @@ def test_parse_game_page_raises_when_box_score_tables_missing():
         parse_game_page(minimal, _meta())
 
 
+# ---------------------------------------------------------------------------
+# Discovery filtering — pure logic, exercised via _is_finished's fixture
+# inputs. No HTTP; just import the function and feed it dicts.
+# ---------------------------------------------------------------------------
+
+import pytest
+
+
+def _games_payload(*games):
+    """Wrap a list of game dicts in the games_all.json envelope shape."""
+    return [{"games": list(games)}]
+
+
+def _stub_feed(monkeypatch, payload):
+    import json
+    class _Resp:
+        status_code = 200
+        headers = {"Content-Type": "text/html"}
+        @property
+        def content(self):
+            return json.dumps(payload).encode("utf-8")
+        text = "stub"
+    from maccabipediabot.basketball import crawl_basket_co_il
+    monkeypatch.setattr(crawl_basket_co_il.requests, "get", lambda *a, **kw: _Resp())
+
+
+def _maccabi_game(**overrides):
+    base = {
+        "id": 1, "team_name_eng_1": "Maccabi Tel-Aviv", "team_name_eng_2": "Hapoel Tel-Aviv",
+        "score_team1": 90, "score_team2": 80, "game_date_txt": "01/01/2026",
+        "game_time": "20:30", "game_type": 5,
+    }
+    return {**base, **overrides}
+
+
+def test_discover_drops_zero_zero_unplayed_placeholder(monkeypatch):
+    from maccabipediabot.basketball.crawl_basket_co_il import discover_games_latest_season
+    _stub_feed(monkeypatch, _games_payload(
+        _maccabi_game(id=1, score_team1=0, score_team2=0),
+        _maccabi_game(id=2, score_team1=90, score_team2=80),
+    ))
+    metas = discover_games_latest_season()
+    assert {m.game_id for m in metas} == {2}
+
+
+def test_discover_keeps_zero_for_one_team(monkeypatch):
+    """A 0-N forfeit IS finished and must be kept — we only filter true 0-0 placeholders."""
+    from maccabipediabot.basketball.crawl_basket_co_il import discover_games_latest_season
+    _stub_feed(monkeypatch, _games_payload(
+        _maccabi_game(id=1, score_team1=0, score_team2=20),
+    ))
+    metas = discover_games_latest_season()
+    assert len(metas) == 1
+    assert metas[0].home_team_score == 0
+
+
+def test_discover_raises_on_unknown_game_type(monkeypatch):
+    from maccabipediabot.basketball.crawl_basket_co_il import discover_games_latest_season
+    _stub_feed(monkeypatch, _games_payload(
+        _maccabi_game(id=1, game_type=999),  # unknown competition code
+    ))
+    with pytest.raises(RuntimeError, match="unknown game_type"):
+        discover_games_latest_season()
+
+
 def test_parse_game_page_sets_team_names():
     game = parse_game_page(_read_fixture(), _meta())
     assert game.home_team_name == "הפועל חולון"

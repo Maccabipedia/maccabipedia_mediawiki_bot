@@ -75,3 +75,131 @@ def test_render_includes_arena_and_crowd():
     text = render_basketball_game_to_wiki(_game())
     assert "אולם=היכל מנורה מבטחים" in text
     assert "כמות קהל=11000" in text
+
+
+# ---------------------------------------------------------------------------
+# Upload pipeline — exercise CLI / dry-run / failure-isolation contracts
+# without touching pywikibot or the network.
+# ---------------------------------------------------------------------------
+
+class _FakePage:
+    """Minimal pywikibot.Page stand-in for upload tests."""
+    def __init__(self, title: str, exists: bool = False, save_raises: bool = False):
+        self._title = title
+        self._exists = exists
+        self._save_raises = save_raises
+        self.text = ""
+        self.saved = False
+
+    def title(self) -> str:
+        return self._title
+
+    def exists(self) -> bool:
+        return self._exists
+
+    def save(self, summary: str = "") -> None:
+        if self._save_raises:
+            raise RuntimeError("simulated edit conflict")
+        self.saved = True
+
+
+class _FakeSite:
+    """Minimal site stand-in. Returns _FakePage instances and supplies preloadpages."""
+    def __init__(self, pages: dict[str, _FakePage] | None = None):
+        self._pages = pages or {}
+
+    def get(self, title: str) -> _FakePage:
+        return self._pages.setdefault(title, _FakePage(title))
+
+
+def _patch_pwpage(monkeypatch, site: _FakeSite):
+    """pywikibot.Page(site, title) is the constructor the gamesbot uses."""
+    from maccabipediabot.basketball import gamesbot_basketball
+    monkeypatch.setattr(gamesbot_basketball.pw, "Page", lambda s, t: s.get(t))
+
+
+def _patch_site(monkeypatch, site: _FakeSite):
+    from maccabipediabot.basketball import gamesbot_basketball
+    monkeypatch.setattr(gamesbot_basketball, "_site", lambda: site)
+
+
+def _patch_no_existing(monkeypatch):
+    from maccabipediabot.basketball import gamesbot_basketball
+    monkeypatch.setattr(gamesbot_basketball, "batch_check_existence", lambda site, titles: set())
+
+
+def _patch_skip_prettify(monkeypatch):
+    """Stub the lazy prettify import inside handle_game so we don't trigger pywikibot."""
+    import sys, types
+    mod = types.ModuleType("maccabipediabot.common.prettify_games_pages")
+    mod.prettify_game_page_main_template = lambda page: None
+    sys.modules["maccabipediabot.common.prettify_games_pages"] = mod
+
+
+def test_dry_run_does_not_save_pages(monkeypatch):
+    from maccabipediabot.basketball.gamesbot_basketball import (
+        upload_basketball_games_to_maccabipedia,
+    )
+    site = _FakeSite()
+    _patch_site(monkeypatch, site)
+    _patch_pwpage(monkeypatch, site)
+    _patch_no_existing(monkeypatch)
+    _patch_skip_prettify(monkeypatch)
+
+    upload_basketball_games_to_maccabipedia([_game()], skip_existing=False, dry_run=True)
+
+    pages = list(site._pages.values())
+    assert len(pages) == 1
+    assert pages[0].saved is False, "dry_run must not call .save()"
+
+
+def test_live_run_does_save_pages(monkeypatch):
+    from maccabipediabot.basketball.gamesbot_basketball import (
+        upload_basketball_games_to_maccabipedia,
+    )
+    site = _FakeSite()
+    _patch_site(monkeypatch, site)
+    _patch_pwpage(monkeypatch, site)
+    _patch_no_existing(monkeypatch)
+    _patch_skip_prettify(monkeypatch)
+
+    upload_basketball_games_to_maccabipedia([_game()], skip_existing=False, dry_run=False)
+
+    pages = list(site._pages.values())
+    assert pages[0].saved is True
+
+
+def test_per_game_failure_isolated_and_aggregated_at_end(monkeypatch):
+    """Failure on one game does not block subsequent uploads, and the function
+    raises at the end with the failure list."""
+    import pytest
+
+    from maccabipediabot.basketball.gamesbot_basketball import (
+        upload_basketball_games_to_maccabipedia,
+        generate_page_name_from_game,
+    )
+
+    bad_game = _game()
+    good_game = _game()
+    # Distinguish by changing the date so they generate different page titles
+    from datetime import datetime as _dt
+    object.__setattr__(good_game, "game_date", _dt(2025, 2, 16, 20, 30))
+
+    bad_title = generate_page_name_from_game(bad_game)
+    good_title = generate_page_name_from_game(good_game)
+    site = _FakeSite({
+        bad_title: _FakePage(bad_title, save_raises=True),
+        good_title: _FakePage(good_title),
+    })
+    _patch_site(monkeypatch, site)
+    _patch_pwpage(monkeypatch, site)
+    _patch_no_existing(monkeypatch)
+    _patch_skip_prettify(monkeypatch)
+
+    with pytest.raises(RuntimeError, match="1/2 basketball games failed"):
+        upload_basketball_games_to_maccabipedia(
+            [bad_game, good_game], skip_existing=False, dry_run=False,
+        )
+
+    # The good game must still have saved despite the bad game's failure
+    assert site._pages[good_title].saved is True

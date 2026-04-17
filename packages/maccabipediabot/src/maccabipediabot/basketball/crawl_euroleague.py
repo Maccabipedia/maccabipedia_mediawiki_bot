@@ -318,12 +318,23 @@ def _run_latest_season(limit: int | None) -> list[BasketballGame]:
     metas = discover_games_latest_season(limit=limit)
     logger.info("Discovered %d Euroleague games", len(metas))
     out: list[BasketballGame] = []
+    failures: list[tuple[str, str]] = []
     for meta in metas:
         try:
             html = fetch_html(meta.scrape_url)
             out.append(parse_game_page(extract_next_data(html), meta))
-        except Exception:
-            logger.exception("Failed to parse %s", meta.scrape_url)
+        except Exception as exc:
+            logger.exception("Failed to parse %s (date=%s opp=%s)",
+                             meta.scrape_url, meta.game_date.date(), meta.opponent_name_eng)
+            failures.append((meta.scrape_url, repr(exc)))
+    if metas and not out:
+        raise RuntimeError(
+            f"All {len(metas)} discovered Euroleague games failed to parse — "
+            f"likely schema drift. First error: {failures[0][1]}"
+        )
+    if failures:
+        logger.warning("euroleague: parsed %d/%d games (%d failed)",
+                       len(out), len(metas), len(failures))
     return out
 
 

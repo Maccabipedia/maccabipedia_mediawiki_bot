@@ -178,12 +178,10 @@ def _parse_box_score(soup: BeautifulSoup, is_maccabi_home: bool) -> dict:
     """Extract coaches and player stats from the per-team `table.stats_tbl` tables."""
     tables = soup.select("table.stats_tbl")
     if len(tables) < 4:
-        return {
-            "maccabi_coach": "",
-            "opponent_coach": "",
-            "maccabi_players": [],
-            "opponent_players": [],
-        }
+        raise RuntimeError(
+            f"game-zone page has fewer than 4 stats_tbl tables (got {len(tables)}); "
+            "site layout likely changed"
+        )
     home_table, away_table = tables[2], tables[3]
 
     home_coach = _coach_from_table(home_table)
@@ -569,12 +567,23 @@ def _run_latest_season(limit: int | None) -> list[BasketballGame]:
     metas = discover_games_latest_season(limit=limit)
     logging.info("Discovered %d Maccabi games for latest season", len(metas))
     out: list[BasketballGame] = []
+    failures: list[tuple[str, str]] = []
     for meta in metas:
         try:
             html = fetch_game_html(meta.scrape_url)
             out.append(parse_game_page(html, meta))
-        except Exception:
-            logging.exception("Failed to parse %s", meta.scrape_url)
+        except Exception as exc:
+            logging.exception("Failed to parse %s (date=%s opp=%s)",
+                              meta.scrape_url, meta.game_date.date(), meta.opponent_name)
+            failures.append((meta.scrape_url, repr(exc)))
+    if metas and not out:
+        raise RuntimeError(
+            f"All {len(metas)} discovered basket.co.il games failed to parse — "
+            f"likely schema drift. First error: {failures[0][1]}"
+        )
+    if failures:
+        logging.warning("basket.co.il: parsed %d/%d games (%d failed)",
+                        len(out), len(metas), len(failures))
     return out
 
 

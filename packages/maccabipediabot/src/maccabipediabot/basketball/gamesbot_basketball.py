@@ -111,8 +111,9 @@ _SOURCE_LABELS = {
 
 
 def format_url(game_url: str) -> str:
-    netloc = tldextract.extract(game_url).registered_domain
-    label = _SOURCE_LABELS.get(netloc, tldextract.extract(game_url).domain)
+    extracted = tldextract.extract(game_url)
+    netloc = extracted.top_domain_under_public_suffix
+    label = _SOURCE_LABELS.get(netloc, extracted.domain)
     return f"[{game_url} עמוד המשחק באתר {label}]"
 
 def __get_football_game_template_with_maccabistats_game_value(game: BasketballGame) -> dict[str, str]:

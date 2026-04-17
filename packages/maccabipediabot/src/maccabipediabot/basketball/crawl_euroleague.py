@@ -209,3 +209,122 @@ def _season_from_date(d: datetime) -> str:
     if d.month >= 9:
         return f"{year}/{(year + 1) % 100:02d}"
     return f"{year - 1}/{year % 100:02d}"
+
+
+def discover_games_from_html(html: str, limit: int | None = None) -> list[EuroleagueGameMeta]:
+    """Parse the team-results page HTML and return discovery metas for finished games.
+
+    Sorted descending by date; optionally capped at N most-recent.
+    """
+    data = extract_next_data(html)
+    results = data["props"]["pageProps"]["results"]["results"]
+
+    metas: list[EuroleagueGameMeta] = []
+    for r in results:
+        # Only finished games. Status "result" is what the team-results page returns for past games.
+        status = (r.get("status") or "").lower()
+        if status not in {"result", "finished"} and not r.get("isPreviousGame"):
+            continue
+
+        date_str = r.get("date") or ""
+        if not date_str:
+            continue
+        try:
+            game_dt = datetime.fromisoformat(date_str.replace("Z", "+00:00")).replace(tzinfo=None)
+        except ValueError:
+            continue
+
+        home, away = r.get("home") or {}, r.get("away") or {}
+        home_score = _to_int_or_none(home.get("score"))
+        away_score = _to_int_or_none(away.get("score"))
+        if home_score is None or away_score is None:
+            continue
+
+        home_name = (home.get("name") or "").strip()
+        is_maccabi_home = home_name == MACCABI_TEAM_NAME_ENG
+        opponent_name_eng = (away.get("name") if is_maccabi_home else home.get("name") or "").strip()
+
+        url_path = r.get("url") or ""
+        if not url_path:
+            continue
+        scrape_url = url_path if url_path.startswith("http") else f"{GAME_URL_PREFIX}{url_path}"
+
+        round_obj = r.get("round") or {}
+        fixture = str(round_obj.get("round") or "")
+
+        metas.append(EuroleagueGameMeta(
+            scrape_url=scrape_url,
+            page_title="",  # filled in below using translated team names
+            game_date=game_dt,
+            is_maccabi_home=is_maccabi_home,
+            opponent_name_eng=opponent_name_eng,
+            home_team_score=home_score,
+            away_team_score=away_score,
+            fixture=fixture,
+        ))
+
+    metas.sort(key=lambda m: m.game_date, reverse=True)
+    if limit:
+        metas = metas[:limit]
+
+    finalized: list[EuroleagueGameMeta] = []
+    for m in metas:
+        opponent_he = team_name_to_hebrew(m.opponent_name_eng)
+        home_he = "מכבי תל אביב" if m.is_maccabi_home else opponent_he
+        away_he = opponent_he if m.is_maccabi_home else "מכבי תל אביב"
+        date = m.game_date.strftime("%d-%m-%Y")
+        title = f"כדורסל:{date} {home_he} נגד {away_he} - {COMPETITION_NAME_HE}"
+        finalized.append(EuroleagueGameMeta(
+            scrape_url=m.scrape_url,
+            page_title=title,
+            game_date=m.game_date,
+            is_maccabi_home=m.is_maccabi_home,
+            opponent_name_eng=m.opponent_name_eng,
+            home_team_score=m.home_team_score,
+            away_team_score=m.away_team_score,
+            fixture=m.fixture,
+        ))
+    return finalized
+
+
+def discover_games_latest_season(limit: int | None = None) -> list[EuroleagueGameMeta]:
+    """Fetch the team-results page and discover Maccabi's finished Euroleague games."""
+    return discover_games_from_html(fetch_html(TEAM_RESULTS_URL), limit=limit)
+
+
+def _write_results(games: list[BasketballGame], output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps([g.model_dump(mode="json") for g in games], ensure_ascii=False),
+        encoding="utf-8",
+    )
+    logger.info("Wrote %d games to %s", len(games), output_path)
+
+
+def _run_latest_season(limit: int | None) -> list[BasketballGame]:
+    metas = discover_games_latest_season(limit=limit)
+    logger.info("Discovered %d Euroleague games", len(metas))
+    out: list[BasketballGame] = []
+    for meta in metas:
+        try:
+            html = fetch_html(meta.scrape_url)
+            out.append(parse_game_page(extract_next_data(html), meta))
+        except Exception:
+            logger.exception("Failed to parse %s", meta.scrape_url)
+    return out
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Crawl euroleaguebasketball.net for Maccabi games.")
+    parser.add_argument("--season", choices=("latest",), default="latest")
+    parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+
+    games = _run_latest_season(args.limit)
+    _write_results(games, args.output)
+
+
+if __name__ == "__main__":
+    logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
+    main()

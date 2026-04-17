@@ -79,3 +79,35 @@ def test_parse_game_page_extracts_referee():
 def test_parse_game_page_sets_fixture_round_prefix():
     game = parse_game_page(extract_next_data(GAME_HTML), _meta())
     assert game.fixture == "מחזור 1"
+
+
+# ---------------------------------------------------------------------------
+# Discovery (fixture-based)
+# ---------------------------------------------------------------------------
+
+def test_discover_games_from_team_results_returns_metas():
+    from maccabipediabot.basketball.crawl_euroleague import discover_games_from_html
+
+    html = (FIXTURES / "euroleague_team_results.html").read_bytes().decode("utf-8")
+    metas = discover_games_from_html(html, limit=3)
+    assert 1 <= len(metas) <= 3
+    for m in metas:
+        assert m.scrape_url.startswith("https://www.euroleaguebasketball.net/")
+        assert m.opponent_name_eng
+
+
+def test_discover_games_from_team_results_no_limit():
+    from maccabipediabot.basketball.crawl_euroleague import discover_games_from_html
+
+    html = (FIXTURES / "euroleague_team_results.html").read_bytes().decode("utf-8")
+    metas = discover_games_from_html(html, limit=None)
+    assert len(metas) >= 30  # team-results fixture had 38 finished games
+
+
+def test_discover_games_sorted_desc_by_date():
+    from maccabipediabot.basketball.crawl_euroleague import discover_games_from_html
+
+    html = (FIXTURES / "euroleague_team_results.html").read_bytes().decode("utf-8")
+    metas = discover_games_from_html(html, limit=5)
+    for earlier, later in zip(metas[1:], metas[:-1]):
+        assert later.game_date >= earlier.game_date

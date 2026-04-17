@@ -72,17 +72,28 @@ FIRST_HALF_OPPONENT_POINTS = 'נקודות יריבה חצי1'
 SECOND_HALF_OPPONENT_POINTS = 'נקודות יריבה חצי2'
 
 
-REFRESH_PAGES = False
-JUST_EVENTS = True
 SHOULD_SAVE = True
-SHOULD_SHOW_DIFF = True
-SHOULD_CHECK_FOR_UPDATE_IN_EXISTING_PAGES = False
 
 
-def load_basketball_games() -> list[BasketballGame]:
-    games_text = EXAMPLE_GAMES_FILE_PATH.read_text(encoding='utf-8')
+def load_basketball_games(input_path: Path) -> list[BasketballGame]:
+    games_text = input_path.read_text(encoding='utf-8')
     games = TypeAdapter(list[BasketballGame]).validate_json(games_text)
     return games
+
+
+def batch_check_existence(site, page_titles: list[str]) -> set[str]:
+    """Return the subset of page_titles that already exist on the wiki.
+
+    Uses pywikibot's PreloadingGenerator to batch the existence check into
+    one round-trip (mirrors the TS uploader's getExistencePredicate).
+    """
+    from pywikibot import pagegenerators
+    pages = [pw.Page(site, title) for title in page_titles]
+    existing: set[str] = set()
+    for page in pagegenerators.PreloadingGenerator(pages):
+        if page.exists():
+            existing.add(page.title())
+    return existing
 
 
 def generate_page_name_from_game(game: BasketballGame) -> str:
@@ -164,40 +175,6 @@ def __get_football_game_template_with_maccabistats_game_value(game: BasketballGa
     return template_arguments
 
 
-def handle_existing_page(game_page: pw.page.Page, game: BasketballGame):
-    if JUST_EVENTS:
-        parsed_mw_text = mwparserfromhell.parse(game_page.text)
-        football_game_template = parsed_mw_text.filter_templates(football_games_template_name)[0]
-
-        arguments = __get_football_game_template_with_maccabistats_game_value(game)
-
-        football_game_template.add(PLAYERS_EVENTS, arguments[PLAYERS_EVENTS])
-
-        game_page.text = parsed_mw_text
-
-    else:
-        parsed_mw_text = mwparserfromhell.parse(game_page.text)
-        football_game_template = parsed_mw_text.filter_templates(football_games_template_name)[0]
-
-        arguments = __get_football_game_template_with_maccabistats_game_value(game)
-
-        for argument_name, argument_value in arguments.items():
-            if str(argument_value) != football_game_template.get(argument_name).value and SHOULD_SHOW_DIFF:
-                logging.info("Found diff between arguments on this argument_name: {arg_name}\n"
-                             "existing value: {existing_value}\nnew_value: {new_value}".
-                             format(arg_name=argument_name,
-                                    existing_value=football_game_template.get(argument_name).value,
-                                    new_value=argument_value))
-
-                football_game_template.add(argument_name, argument_value)
-
-        game_page.text = parsed_mw_text
-
-        if REFRESH_PAGES:
-            from random import randint
-            game_page.text += "<!--{num}-->".format(num=randint(0, 10000))
-
-
 def render_basketball_game_to_wiki(game: BasketballGame) -> str:
     """Build the {{משחק כדורסל ...}} wiki template text from a BasketballGame.
 
@@ -214,43 +191,55 @@ def handle_new_page(game_page: pw.page.Page, game: BasketballGame):
     game_page.text = render_basketball_game_to_wiki(game)
 
 
-def handle_game(game: BasketballGame, overwrite_existing_pages: bool = True):
-    logging.info(f"Checking game : {game.game_date}")
-
+def handle_game(game: BasketballGame, site, skip_existing: bool, existing_titles: set[str]) -> None:
     page_name = generate_page_name_from_game(game)
-    game_page = pw.Page(_site(), page_name)
-    page_exists = game_page.exists()
-
-    if page_exists and not overwrite_existing_pages:
-        logging.info(f"Don't edit existing pages, skipping: {page_name}")
-        #game_page.delete(reason="MaccabiBot - Deleting basketball game page")
+    if skip_existing and page_name in existing_titles:
+        logging.info("SKIP exists: %s", page_name)
         return
 
-    if page_exists:
-        logging.info(f"Page {page_name} already exists, checking for updates...")
-        handle_existing_page(game_page, game)
-    else:
-        logging.info(f"Page {page_name} does not exist, creating...")
-        handle_new_page(game_page, game)
+    game_page = pw.Page(site, page_name)
+    if game_page.exists() and not skip_existing:
+        logging.info("OVERWRITE existing page: %s", page_name)
+
+    handle_new_page(game_page, game)
 
     if not SHOULD_SAVE:
-        logging.info(f"Not saving {game_page.title()}, just showing diff")
+        logging.info("Not saving %s, just showing diff", game_page.title())
         return
 
-    logging.info(f"Saving {game_page.title()}")
+    logging.info("Saving %s", game_page.title())
     game_page.save(summary="MaccabiBot - Uploading basketball games")
 
-    logging.info(f"Prettifying {game_page.title()}")
+    logging.info("Prettifying %s", game_page.title())
     prettify_game_page_main_template(game_page)
 
 
-def upload_basketball_games_to_maccabipedia(games: list[BasketballGame]):
+def upload_basketball_games_to_maccabipedia(games: list[BasketballGame], skip_existing: bool) -> None:
+    site = _site()
+    page_names = [generate_page_name_from_game(g) for g in games]
+    existing = batch_check_existence(site, page_names) if skip_existing else set()
     for game in games:
-        handle_game(game, overwrite_existing_pages=False)
+        handle_game(game, site=site, skip_existing=skip_existing, existing_titles=existing)
 
 
-if __name__ == '__main__':
-    logging.info(f"Should save? : {SHOULD_SAVE}, should show diff?: {SHOULD_SHOW_DIFF}")
-    games = load_basketball_games()
-    upload_basketball_games_to_maccabipedia(games[5:10] + games[100:105])
-    logging.info("Finish to upload basketball games to Maccabipedia")
+def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Upload basketball games from a JSON file to MaccabiPedia.",
+    )
+    parser.add_argument("--input", type=Path, required=True,
+                        help="Path to a JSON file produced by crawl_basket_co_il / crawl_euroleague.")
+    parser.add_argument("--skip-existing", action="store_true",
+                        help="Skip games whose wiki page already exists. Default: overwrite.")
+    args = parser.parse_args()
+
+    logging.info("Loading games from %s (skip_existing=%s)", args.input, args.skip_existing)
+    games = load_basketball_games(args.input)
+    logging.info("Uploading %d games", len(games))
+    upload_basketball_games_to_maccabipedia(games, skip_existing=args.skip_existing)
+    logging.info("Finished uploading basketball games")
+
+
+if __name__ == "__main__":
+    main()

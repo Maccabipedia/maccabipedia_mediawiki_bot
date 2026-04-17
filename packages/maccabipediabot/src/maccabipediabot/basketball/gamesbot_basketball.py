@@ -212,16 +212,35 @@ def handle_game(game: BasketballGame, site, skip_existing: bool, existing_titles
     # Lazy import: prettify_games_pages does a wiki login at module load.
     from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 
-    logging.info("Prettifying %s", game_page.title())
-    prettify_game_page_main_template(game_page)
+    try:
+        logging.info("Prettifying %s", game_page.title())
+        prettify_game_page_main_template(game_page)
+    except Exception:
+        # Save already succeeded — log the prettify failure but don't reraise,
+        # otherwise the next upload would be blocked and this game would be
+        # marked as existing on retry, leaving it permanently un-prettified.
+        logging.exception("Prettify failed for %s (page already saved)", game_page.title())
 
 
 def upload_basketball_games_to_maccabipedia(games: list[BasketballGame], skip_existing: bool) -> None:
     site = _site()
     page_names = [generate_page_name_from_game(g) for g in games]
     existing = batch_check_existence(site, page_names) if skip_existing else set()
+
+    failures: list[tuple[str, str]] = []
     for game in games:
-        handle_game(game, site=site, skip_existing=skip_existing, existing_titles=existing)
+        page_name = generate_page_name_from_game(game)
+        try:
+            handle_game(game, site=site, skip_existing=skip_existing, existing_titles=existing)
+        except Exception as exc:
+            logging.exception("Failed to upload %s", page_name)
+            failures.append((page_name, repr(exc)))
+
+    if failures:
+        details = "\n".join(f"  - {name}: {err}" for name, err in failures)
+        raise RuntimeError(
+            f"{len(failures)}/{len(games)} basketball games failed to upload:\n{details}"
+        )
 
 
 def main() -> None:

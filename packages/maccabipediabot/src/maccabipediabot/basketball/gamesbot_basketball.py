@@ -1,17 +1,15 @@
+import argparse
 import logging
 from functools import lru_cache
 from pathlib import Path
 
+import pywikibot as pw
+import tldextract
+from mwparserfromhell.nodes.template import Template
 from pydantic import TypeAdapter
 
 from maccabipediabot.basketball.basketball_game import BasketballGame, PlayerSummary
 from maccabipediabot.common.wiki_login import get_site
-
-import tldextract
-import pywikibot as pw
-from mwparserfromhell.nodes.template import Template
-
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
 @lru_cache(maxsize=1)
@@ -69,9 +67,6 @@ FIRST_HALF_MACCABI_POINTS = 'נקודות מכבי חצי1'
 SECOND_HALF_MACCABI_POINTS = 'נקודות מכבי חצי2'
 FIRST_HALF_OPPONENT_POINTS = 'נקודות יריבה חצי1'
 SECOND_HALF_OPPONENT_POINTS = 'נקודות יריבה חצי2'
-
-
-SHOULD_SAVE = True
 
 
 def load_basketball_games(input_path: Path) -> list[BasketballGame]:
@@ -189,7 +184,8 @@ def handle_new_page(game_page: pw.page.Page, game: BasketballGame):
     game_page.text = render_basketball_game_to_wiki(game)
 
 
-def handle_game(game: BasketballGame, site, skip_existing: bool, existing_titles: set[str]) -> None:
+def handle_game(game: BasketballGame, site, *, skip_existing: bool,
+                existing_titles: set[str], dry_run: bool) -> None:
     page_name = generate_page_name_from_game(game)
     if skip_existing and page_name in existing_titles:
         logging.info("SKIP exists: %s", page_name)
@@ -201,8 +197,8 @@ def handle_game(game: BasketballGame, site, skip_existing: bool, existing_titles
 
     handle_new_page(game_page, game)
 
-    if not SHOULD_SAVE:
-        logging.info("Not saving %s, just showing diff", game_page.title())
+    if dry_run:
+        logging.info("DRY-RUN: not saving %s", game_page.title())
         return
 
     logging.info("Saving %s", game_page.title())
@@ -221,16 +217,21 @@ def handle_game(game: BasketballGame, site, skip_existing: bool, existing_titles
         logging.exception("Prettify failed for %s (page already saved)", game_page.title())
 
 
-def upload_basketball_games_to_maccabipedia(games: list[BasketballGame], skip_existing: bool) -> None:
+def upload_basketball_games_to_maccabipedia(games: list[BasketballGame], *,
+                                            skip_existing: bool, dry_run: bool) -> None:
     site = _site()
     page_names = [generate_page_name_from_game(g) for g in games]
     existing = batch_check_existence(site, page_names) if skip_existing else set()
+
+    if not dry_run:
+        logging.warning("LIVE MODE: pages will be written to MaccabiPedia")
 
     failures: list[tuple[str, str]] = []
     for game in games:
         page_name = generate_page_name_from_game(game)
         try:
-            handle_game(game, site=site, skip_existing=skip_existing, existing_titles=existing)
+            handle_game(game, site=site, skip_existing=skip_existing,
+                        existing_titles=existing, dry_run=dry_run)
         except Exception as exc:
             logging.exception("Failed to upload %s", page_name)
             failures.append((page_name, repr(exc)))
@@ -243,8 +244,7 @@ def upload_basketball_games_to_maccabipedia(games: list[BasketballGame], skip_ex
 
 
 def main() -> None:
-    import argparse
-
+    logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
     parser = argparse.ArgumentParser(
         description="Upload basketball games from a JSON file to MaccabiPedia.",
     )
@@ -252,12 +252,17 @@ def main() -> None:
                         help="Path to a JSON file produced by crawl_basket_co_il / crawl_euroleague.")
     parser.add_argument("--skip-existing", action="store_true",
                         help="Skip games whose wiki page already exists. Default: overwrite.")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Build wiki text and report what would happen, but don't save to MaccabiPedia.")
     args = parser.parse_args()
 
-    logging.info("Loading games from %s (skip_existing=%s)", args.input, args.skip_existing)
+    logging.info("Loading games from %s (skip_existing=%s, dry_run=%s)",
+                 args.input, args.skip_existing, args.dry_run)
     games = load_basketball_games(args.input)
     logging.info("Uploading %d games", len(games))
-    upload_basketball_games_to_maccabipedia(games, skip_existing=args.skip_existing)
+    upload_basketball_games_to_maccabipedia(
+        games, skip_existing=args.skip_existing, dry_run=args.dry_run,
+    )
     logging.info("Finished uploading basketball games")
 
 

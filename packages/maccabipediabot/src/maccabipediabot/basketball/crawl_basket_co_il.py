@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import json
 import logging
@@ -5,22 +6,24 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Tuple
+
+import aiohttp
+import requests
+from aiohttp import ClientSession
+from bs4 import BeautifulSoup, Tag
 
 from maccabipediabot.basketball._crawler_utils import (
     season_from_date,
     write_results,
 )
 from maccabipediabot.basketball.basketball_game import BasketballGame, PlayerSummary
-from maccabipediabot.basketball.translations import normalize_player_name
+from maccabipediabot.basketball.translations import (
+    basket_co_il_competition_name,
+    normalize_player_name,
+    team_name_to_hebrew,
+)
 
-import aiohttp
-import bs4
-from aiohttp import ClientSession
-from bs4 import BeautifulSoup, Tag
-from pydantic.json import pydantic_encoder
-
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 SEASON_23_24_TEAM_ID = 1096
 BASKET_CO_IL_SITE_MACCABI_BASE_PAGE = "https://basket.co.il/team.asp?TeamId={team_id}"
@@ -448,15 +451,6 @@ async def get_team_ids_for_all_seasons(session: ClientSession) -> dict[str, str]
         return seasons_to_team_ids
 
 
-import argparse
-
-import requests
-
-from maccabipediabot.basketball.translations import (
-    basket_co_il_competition_name,
-    team_name_to_hebrew,
-)
-
 GAMES_ALL_FEED_URL = "https://basket.co.il/pbp/json/games_all.json"
 MACCABI_TEAM_NAME_ENG = "Maccabi Tel-Aviv"
 GAME_PAGE_URL_TEMPLATE = "https://basket.co.il/game-zone.asp?GameId={game_id}"
@@ -582,6 +576,7 @@ def _run_latest_season(limit: int | None) -> list[BasketballGame]:
 
 
 def main() -> None:
+    logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
     parser = argparse.ArgumentParser(description="Crawl basket.co.il for Maccabi games.")
     parser.add_argument("--season", choices=("latest", "all"), default="latest")
     parser.add_argument("--limit", type=int, default=None,

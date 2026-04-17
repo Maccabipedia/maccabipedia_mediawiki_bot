@@ -430,20 +430,38 @@ _BASKET_GAME_TYPE: dict[int, str] = {
 }
 
 
+# Some TS-source keys had trailing/double spaces (e.g. "Sergio Llull ").
+# Strip + collapse runs of whitespace in keys so lookups don't silently miss.
+def _normalize_keys(d: dict[str, str]) -> dict[str, str]:
+    import re
+    return {re.sub(r"\s+", " ", k).strip(): v for k, v in d.items()}
+
+
+_TEAM_NAMES = _normalize_keys(_TEAM_NAMES)
+_PERSON_NAMES = _normalize_keys(_PERSON_NAMES)
+_STADIUM_NAMES = _normalize_keys(_STADIUM_NAMES)
+_PLAYER_NAME_NORMALIZE = _normalize_keys(_PLAYER_NAME_NORMALIZE)
+
+
+def _normalize_lookup(name: str) -> str:
+    import re
+    return re.sub(r"\s+", " ", name).strip() if name else name
+
+
 def team_name_to_hebrew(name: str) -> str:
-    return _TEAM_NAMES.get(name, name)
+    return _TEAM_NAMES.get(_normalize_lookup(name), name)
 
 
 def person_name_to_hebrew(name: str) -> str:
-    return _PERSON_NAMES.get(name, name)
+    return _PERSON_NAMES.get(_normalize_lookup(name), name)
 
 
 def stadium_name_to_hebrew(name: str) -> str:
-    return _STADIUM_NAMES.get(name, name)
+    return _STADIUM_NAMES.get(_normalize_lookup(name), name)
 
 
 def normalize_player_name(name: str) -> str:
-    return _PLAYER_NAME_NORMALIZE.get(name, name)
+    return _PLAYER_NAME_NORMALIZE.get(_normalize_lookup(name), name)
 
 
 def basket_co_il_competition_name(game_type_code: int) -> Optional[str]:

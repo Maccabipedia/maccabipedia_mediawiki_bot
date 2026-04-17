@@ -491,7 +491,13 @@ def discover_games_latest_season(limit: int | None = None) -> list[GameDiscovery
     maccabi_games = [g for g in games
                      if g.get("team_name_eng_1") == MACCABI_TEAM_NAME_ENG
                      or g.get("team_name_eng_2") == MACCABI_TEAM_NAME_ENG]
-    finished = [g for g in maccabi_games if g.get("score_team1") and g.get("score_team2")]
+
+    def _is_finished(g: dict) -> bool:
+        # Both scores must be present (not None and not empty string). 0 is a valid score.
+        s1, s2 = g.get("score_team1"), g.get("score_team2")
+        return s1 not in (None, "") and s2 not in (None, "")
+
+    finished = [g for g in maccabi_games if _is_finished(g)]
 
     def _sort_key(game: dict) -> datetime:
         d, m, y = game["game_date_txt"].split("/")
@@ -502,6 +508,7 @@ def discover_games_latest_season(limit: int | None = None) -> list[GameDiscovery
         finished = finished[:limit]
 
     metas: list[GameDiscoveryMeta] = []
+    unknown_competition_games: list[dict] = []
     for g in finished:
         d, m, y = g["game_date_txt"].split("/")
         time_str = g.get("game_time") or "00:00"
@@ -515,8 +522,10 @@ def discover_games_latest_season(limit: int | None = None) -> list[GameDiscovery
 
         competition = basket_co_il_competition_name(g["game_type"])
         if not competition:
-            logging.warning("unknown basket.co.il game_type %s for game %s, skipping",
-                            g["game_type"], g.get("id"))
+            unknown_competition_games.append(
+                {"id": g.get("id"), "game_type": g.get("game_type"),
+                 "date": g.get("game_date_txt"), "opp": opponent}
+            )
             continue
 
         metas.append(GameDiscoveryMeta(
@@ -530,6 +539,12 @@ def discover_games_latest_season(limit: int | None = None) -> list[GameDiscovery
             away_team_score=int(g["score_team2"]),
             competition=competition,
         ))
+    if unknown_competition_games:
+        raise RuntimeError(
+            "basket.co.il discovery encountered games with unknown game_type codes; "
+            "extend translations._BASKET_GAME_TYPE before re-running. "
+            f"Affected games: {unknown_competition_games}"
+        )
     return metas
 
 

@@ -219,33 +219,43 @@ def discover_games_from_html(html: str, limit: int | None = None) -> list[Eurole
     data = extract_next_data(html)
     results = data["props"]["pageProps"]["results"]["results"]
 
+    dropped = {"non_final": 0, "bad_date": 0, "missing_score": 0, "missing_team_name": 0, "no_url": 0}
     metas: list[EuroleagueGameMeta] = []
     for r in results:
         # Only finished games. Status "result" is what the team-results page returns for past games.
         status = (r.get("status") or "").lower()
         if status not in {"result", "finished"} and not r.get("isPreviousGame"):
+            dropped["non_final"] += 1
             continue
 
         date_str = r.get("date") or ""
         if not date_str:
+            dropped["bad_date"] += 1
             continue
         try:
             game_dt = datetime.fromisoformat(date_str.replace("Z", "+00:00")).replace(tzinfo=None)
         except ValueError:
+            dropped["bad_date"] += 1
             continue
 
         home, away = r.get("home") or {}, r.get("away") or {}
         home_score = _to_int_or_none(home.get("score"))
         away_score = _to_int_or_none(away.get("score"))
         if home_score is None or away_score is None:
+            dropped["missing_score"] += 1
             continue
 
         home_name = (home.get("name") or "").strip()
+        away_name = (away.get("name") or "").strip()
+        if not home_name or not away_name:
+            dropped["missing_team_name"] += 1
+            continue
         is_maccabi_home = home_name == MACCABI_TEAM_NAME_ENG
-        opponent_name_eng = (away.get("name") if is_maccabi_home else home.get("name") or "").strip()
+        opponent_name_eng = away_name if is_maccabi_home else home_name
 
         url_path = r.get("url") or ""
         if not url_path:
+            dropped["no_url"] += 1
             continue
         scrape_url = url_path if url_path.startswith("http") else f"{GAME_URL_PREFIX}{url_path}"
 
@@ -266,6 +276,9 @@ def discover_games_from_html(html: str, limit: int | None = None) -> list[Eurole
     metas.sort(key=lambda m: m.game_date, reverse=True)
     if limit:
         metas = metas[:limit]
+
+    if any(dropped.values()):
+        logger.info("Euroleague discovery: kept=%d dropped=%r", len(metas), dropped)
 
     finalized: list[EuroleagueGameMeta] = []
     for m in metas:

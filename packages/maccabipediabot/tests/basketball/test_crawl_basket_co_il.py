@@ -74,6 +74,35 @@ def test_parse_game_page_starting_five_matches_star_only():
     assert len(starters) == 5, f"expected exactly 5 starters, got {len(starters)}"
 
 
+def test_parse_game_page_raises_when_header_missing():
+    """A page without #wrap_inner_3 should raise — silent stub-uploads are unacceptable."""
+    import pytest
+    with pytest.raises(RuntimeError, match="#wrap_inner_3"):
+        parse_game_page("<html><body>maintenance page</body></html>", _meta())
+
+
+def test_parse_game_page_raises_when_box_score_tables_missing():
+    """A page with header + scores but missing player tables should raise, not return empties."""
+    import pytest
+    minimal = """
+    <div id="wrap_inner_3">
+      <h4></h4>
+      <h5>אולם, עיר</h5>
+      <h6>שופטים: ראשי</h6>
+    </div>
+    <table class="stats_tbl categories">
+      <tr><td></td><td>1</td><td>2</td><td>3</td><td>4</td></tr>
+      <tr><td>home</td><td>20</td><td>20</td><td>20</td><td>20</td></tr>
+      <tr><td>away</td><td>20</td><td>20</td><td>20</td><td>20</td></tr>
+    </table>
+    <table class="stats_tbl categories">
+      <tr><td>filler</td></tr>
+    </table>
+    """
+    with pytest.raises(RuntimeError, match="fewer than 4 stats_tbl"):
+        parse_game_page(minimal, _meta())
+
+
 def test_parse_game_page_sets_team_names():
     game = parse_game_page(_read_fixture(), _meta())
     assert game.home_team_name == "הפועל חולון"

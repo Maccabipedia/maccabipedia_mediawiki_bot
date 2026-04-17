@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 from maccabipediabot.basketball.crawl_euroleague import (
+    MACCABI_TEAM_NAME_ENG,
     EuroleagueGameMeta,
     extract_next_data,
     parse_game_page,
@@ -30,6 +31,12 @@ def test_extract_next_data_returns_dict():
     data = extract_next_data(GAME_HTML)
     assert isinstance(data, dict)
     assert "props" in data
+
+
+def test_extract_next_data_raises_when_script_missing():
+    import pytest
+    with pytest.raises(RuntimeError, match="missing __NEXT_DATA__"):
+        extract_next_data("<html><body>no script here</body></html>")
 
 
 def test_parse_game_page_extracts_player_lists():
@@ -111,3 +118,96 @@ def test_discover_games_sorted_desc_by_date():
     metas = discover_games_from_html(html, limit=5)
     for earlier, later in zip(metas[1:], metas[:-1]):
         assert later.game_date >= earlier.game_date
+
+
+# ---------------------------------------------------------------------------
+# Home/away swap + overtime — synthetic fixtures so we don't depend on the
+# real fixture happening to have an overtime Maccabi-home game.
+# ---------------------------------------------------------------------------
+
+def _synthetic_next_data(
+    *,
+    home_quarters: dict,
+    away_quarters: dict,
+    home_team_name: str = MACCABI_TEAM_NAME_ENG,
+    away_team_name: str = "Olympiacos Piraeus",
+    home_coach: str = "KATTASH, ODED",
+    away_coach: str = "BARTZOKAS, GEORGIOS",
+) -> dict:
+    """Build a minimal __NEXT_DATA__-shaped dict for parse_game_page."""
+    return {
+        "props": {"pageProps": {"mappedData": {"rawGameInfo": {
+            "venue": {"name": "MENORA MIVTACHIM ARENA"},
+            "audience": 11000,
+            "referees": [{"name": "JAVOR, DAMIR"}, {"name": "ALIAGA, JORDI"}],
+            "home": {
+                "name": home_team_name,
+                "coach": {"name": home_coach},
+                "quarters": home_quarters,
+                "players": [
+                    {"name": "BRODY, TAL", "dorsal": "5", "startFive": True,
+                     "stats": {"timePlayed": 1800, "points": 22}},
+                ],
+            },
+            "away": {
+                "name": away_team_name,
+                "coach": {"name": away_coach},
+                "quarters": away_quarters,
+                "players": [
+                    {"name": "SPIEGLER, MOTI", "dorsal": "9", "startFive": True,
+                     "stats": {"timePlayed": 1700, "points": 18}},
+                ],
+            },
+        }}}},
+    }
+
+
+def _maccabi_home_meta() -> EuroleagueGameMeta:
+    return EuroleagueGameMeta(
+        scrape_url="https://www.euroleaguebasketball.net/test-game/",
+        page_title="",
+        game_date=datetime(2025, 11, 1, 20, 30),
+        is_maccabi_home=True,
+        opponent_name_eng="Olympiacos Piraeus",
+        home_team_score=85,
+        away_team_score=80,
+        fixture="7",
+    )
+
+
+def test_parse_game_page_maccabi_home_assigns_home_data_to_maccabi():
+    """Regression guard: when Maccabi is home, home_* fields must map to maccabi_*."""
+    next_data = _synthetic_next_data(
+        home_quarters={"q1": 22, "q2": 21, "q3": 20, "q4": 22,
+                       "ot1": None, "ot2": None, "ot3": None, "ot4": None, "ot5": None},
+        away_quarters={"q1": 18, "q2": 19, "q3": 22, "q4": 21,
+                       "ot1": None, "ot2": None, "ot3": None, "ot4": None, "ot5": None},
+    )
+    game = parse_game_page(next_data, _maccabi_home_meta())
+    assert game.home_team_name == "מכבי תל אביב"
+    assert game.first_quarter_maccabi_points == 22  # home values
+    assert game.first_quarter_opponent_points == 18  # away values
+    # Players + coach should also follow the home/away swap.
+    # The synthetic home player has dorsal=5 (Tal Brody), away has dorsal=9 (Spiegler).
+    assert any(p.number == 5 for p in game.maccabi_players)
+    assert any(p.number == 9 for p in game.opponent_players)
+    assert game.maccabi_coach == "עודד קטש"
+
+
+def test_parse_game_page_overtime_periods_populate_correctly():
+    """Regression guard: ot1..ot4 fields must wire through to first/.../fourth_overtime_*_points."""
+    next_data = _synthetic_next_data(
+        home_quarters={"q1": 25, "q2": 22, "q3": 18, "q4": 20,
+                       "ot1": 12, "ot2": 8, "ot3": None, "ot4": None, "ot5": None},
+        away_quarters={"q1": 24, "q2": 23, "q3": 19, "q4": 19,
+                       "ot1": 10, "ot2": 9, "ot3": None, "ot4": None, "ot5": None},
+    )
+    game = parse_game_page(next_data, _maccabi_home_meta())
+    # Maccabi (home) overtime points
+    assert game.first_overtime_maccabi_points == 12
+    assert game.second_overtime_maccabi_points == 8
+    assert game.third_overtime_maccabi_points is None
+    # Opponent (away) overtime points
+    assert game.first_overtime_opponent_points == 10
+    assert game.second_overtime_opponent_points == 9
+    assert game.third_overtime_opponent_points is None

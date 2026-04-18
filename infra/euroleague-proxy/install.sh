@@ -27,10 +27,11 @@ if [ ! -f /etc/tinyproxy/maccabipedia.conf ]; then
 fi
 
 if [ ! -f /etc/euroleague-proxy.env ]; then
-    read -rp "Enter TELEGRAM_BOT_TOKEN: " telegram_token
-    read -rp "Enter EUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID: " telegram_chat_id
+    : "${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN env var required}"
+    : "${EUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID:?EUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID env var required}"
     printf 'TELEGRAM_BOT_TOKEN=%s\nEUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID=%s\n' \
-        "$telegram_token" "$telegram_chat_id" > /etc/euroleague-proxy.env
+        "$TELEGRAM_BOT_TOKEN" "$EUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID" \
+        > /etc/euroleague-proxy.env
     chmod 600 /etc/euroleague-proxy.env
 fi
 

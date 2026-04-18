@@ -6,6 +6,7 @@ or headless browser.
 import argparse
 import json
 import logging
+import os
 import time
 from datetime import datetime
 from pathlib import Path
@@ -53,6 +54,7 @@ HTTP_HEADERS = {
 }
 _FETCH_RETRY_STATUSES = {429, 502, 503, 504}
 _FETCH_MAX_ATTEMPTS = 4
+_SCRAPINGBEE_API_URL = "https://app.scrapingbee.com/api/v1/"
 COMPETITION_NAME_HE = "יורוליג"
 MACCABI_TEAM_NAME_ENG = "Maccabi Rapyd Tel Aviv"
 GAME_URL_PREFIX = "https://www.euroleaguebasketball.net"
@@ -68,11 +70,23 @@ def extract_next_data(html: str) -> dict[str, Any]:
 
 
 def fetch_html(url: str) -> str:
-    """GET `url` with browser-like headers and retry on 429/5xx.
+    """GET `url`, routing through ScrapingBee when SCRAPINGBEE_API_KEY is set.
 
-    Vercel's bot detection sometimes greets cloud IPs (incl. GitHub Actions) with
-    429s; a few retries with backoff usually clears it. Respects Retry-After.
+    Vercel's bot wall fires a JS challenge for any datacenter IP (GitHub Actions,
+    cloud, etc.), so cloud runs must go through a residential-IP proxy. Locally
+    (residential IP) the env var is unset and we fetch direct, with retry on
+    429/5xx as a safety net.
     """
+    api_key = os.environ.get("SCRAPINGBEE_API_KEY")
+    if api_key:
+        resp = requests.get(
+            _SCRAPINGBEE_API_URL,
+            params={"api_key": api_key, "url": url},
+            timeout=60,
+        )
+        resp.raise_for_status()
+        return resp.text
+
     last_resp: requests.Response | None = None
     for attempt in range(1, _FETCH_MAX_ATTEMPTS + 1):
         resp = requests.get(url, headers=HTTP_HEADERS, timeout=30)

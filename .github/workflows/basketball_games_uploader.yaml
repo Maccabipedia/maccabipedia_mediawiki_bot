@@ -23,6 +23,8 @@ jobs:
             --season latest --limit 1 --output /tmp/basket.json
 
       - name: Crawl Euroleague (latest 1 game)
+        env:
+          SCRAPINGBEE_API_KEY: ${{ secrets.SCRAPINGBEE_API_KEY }}
         run: |
           uv run python -m maccabipediabot.basketball.crawl_euroleague \
             --season latest --limit 1 --output /tmp/euroleague.json

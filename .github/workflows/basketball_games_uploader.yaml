@@ -1,5 +1,7 @@
 name: Upload Basketball Games To MaccabiPedia
 on:
+  schedule:
+    - cron: '0 10,15,21 * * *'  # 1pm, 6pm, midnight IDT (UTC+3)
   workflow_dispatch:
   repository_dispatch:
     types: [zapier_trigger_basketball_upload_game]

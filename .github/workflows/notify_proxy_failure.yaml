@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Telegram message
-        run: |
-          curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d "chat_id=${{ secrets.EUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID }}" \
-            -d "text=⚠️ euroleague-proxy: ${{ inputs.service }} failed on $(hostname)"
+        uses: appleboy/telegram-action@v1.0.1
+        with:
+          to: ${{ secrets.EUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: "⚠️ euroleague-proxy: ${{ inputs.service }} failed"

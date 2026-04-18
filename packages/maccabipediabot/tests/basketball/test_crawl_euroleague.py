@@ -1,7 +1,6 @@
 """Parser tests for crawl_euroleague."""
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -133,49 +132,3 @@ def test_discover_games_from_team_results_returns_finished_games_sorted_desc():
         assert "מכבי תל אביב" in (game.home_team_name, game.away_team_name)
     for earlier, later in zip(discovered[1:], discovered[:-1]):
         assert later.game_date >= earlier.game_date
-
-
-# ---------------------------------------------------------------------------
-# fetch_html proxy support
-# ---------------------------------------------------------------------------
-
-def _mock_response(text: str = "<html/>") -> MagicMock:
-    m = MagicMock()
-    m.text = text
-    m.raise_for_status = MagicMock()
-    return m
-
-
-def test_fetch_html_rewrites_url_and_adds_auth_when_proxy_set(monkeypatch):
-    monkeypatch.setenv("EUROLEAGUE_PROXY_URL", "https://proxy.example.com")
-    monkeypatch.setenv("EUROLEAGUE_PROXY_TOKEN", "tok123")
-    captured: dict = {}
-
-    def fake_get(url, headers, timeout):
-        captured["url"] = url
-        captured["headers"] = headers
-        return _mock_response()
-
-    with patch("maccabipediabot.basketball.crawl_euroleague.requests.get", fake_get):
-        from maccabipediabot.basketball.crawl_euroleague import fetch_html
-        fetch_html("https://www.euroleaguebasketball.net/en/euroleague/teams/maccabi/games/tel/")
-
-    assert captured["url"] == "https://proxy.example.com/proxy/en/euroleague/teams/maccabi/games/tel/"
-    assert captured["headers"]["Authorization"] == "Bearer tok123"
-
-
-def test_fetch_html_hits_euroleague_directly_when_no_proxy(monkeypatch):
-    monkeypatch.delenv("EUROLEAGUE_PROXY_URL", raising=False)
-    captured: dict = {}
-
-    def fake_get(url, headers, timeout):
-        captured["url"] = url
-        captured["headers"] = headers
-        return _mock_response()
-
-    with patch("maccabipediabot.basketball.crawl_euroleague.requests.get", fake_get):
-        from maccabipediabot.basketball.crawl_euroleague import fetch_html
-        fetch_html("https://www.euroleaguebasketball.net/en/euroleague/teams/maccabi/games/tel/")
-
-    assert captured["url"] == "https://www.euroleaguebasketball.net/en/euroleague/teams/maccabi/games/tel/"
-    assert "Authorization" not in captured["headers"]

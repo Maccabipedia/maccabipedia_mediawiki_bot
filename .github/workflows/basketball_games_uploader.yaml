@@ -33,8 +33,7 @@ jobs:
 
       - name: Crawl Euroleague (via residential proxy)
         env:
-          EUROLEAGUE_PROXY_URL: ${{ secrets.EUROLEAGUE_PROXY_URL }}
-          EUROLEAGUE_PROXY_TOKEN: ${{ secrets.EUROLEAGUE_PROXY_TOKEN }}
+          HTTPS_PROXY: ${{ secrets.EUROLEAGUE_HTTPS_PROXY }}
         run: |
           uv run python -m maccabipediabot.basketball.crawl_euroleague \
             --season latest --limit 1 --output /tmp/euroleague.json

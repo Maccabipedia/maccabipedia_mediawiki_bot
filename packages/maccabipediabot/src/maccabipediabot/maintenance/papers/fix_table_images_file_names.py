@@ -1,7 +1,7 @@
-from pathlib import Path
+from maccabipediabot.common.paths import papers_root
 
 if __name__ == '__main__':
-    base = Path(r'C:\code\maccabipedia_mediawikibot\games_papers_to_upload\from_drive\מעריב\טבלאות 84-85')
+    base = papers_root() / 'מעריב' / 'טבלאות 84-85'
 
     for table in base.iterdir():
         try:

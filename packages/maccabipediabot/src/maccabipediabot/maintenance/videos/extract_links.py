@@ -3,6 +3,8 @@ from itertools import product
 from collections import defaultdict
 import json
 
+from maccabipediabot.common.paths import videos_dir
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -89,10 +91,10 @@ def extract(file_name):
                     elif full_game_text not in str(current_sheet[cell].value):
                         logger.warning(f"Could not find all the required text for highlights inside this cell value: {current_sheet[cell].value}")
 
-    with open(r"C:\maccabipedia\videos\full_games.json", 'w') as p:
+    with open(videos_dir() / 'full_games.json', 'w') as p:
         json.dump(full_games_links, p)
 
-    with open(r"C:\maccabipedia\videos\highlights.json", 'w') as p:
+    with open(videos_dir() / 'highlights.json', 'w') as p:
         json.dump(highlights_links, p)
 
 

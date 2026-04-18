@@ -43,7 +43,8 @@ site = get_site()
 API_URL = 'https://www.maccabipedia.co.il/api.php'
 
 # Configuration
-TICKETS_BASE_FOLDER = Path(r"C:\maccabipedia\automations\basketball_tickets-03-2026")
+from maccabipediabot.common.paths import basketball_tickets_root
+TICKETS_BASE_FOLDER = basketball_tickets_root()
 SHOULD_SAVE = True
 
 TEMPLATE_NAME = "תיוג כרטיס משחק כדורסל"

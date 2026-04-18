@@ -6,8 +6,8 @@ from maccabipediabot.common.logging_setup import setup_logging
 setup_logging(level=logging.INFO)
 
 _PAPER_NAME = "למרחב"
-BASE_PAPER_FOLDER_PATH = Path(
-    r"C:\code\maccabipedia_mediawikibot\games_papers_to_upload\from_drive\למרחב\למרחב 70-71")
+from maccabipediabot.common.paths import papers_root
+BASE_PAPER_FOLDER_PATH = papers_root() / 'למרחב' / 'למרחב 70-71'
 
 
 def rename_file(old_file: Path, new_file: Path, reason: str = "") -> Path:

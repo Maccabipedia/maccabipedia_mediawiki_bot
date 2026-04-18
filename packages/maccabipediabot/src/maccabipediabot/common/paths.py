@@ -1,17 +1,12 @@
 import os
 from pathlib import Path
 
-_DEFAULTS = {
-    'MACCABIPEDIA_BASKETBALL_GAMES_FILE': r'C:\maccabi\basketball\games_for_upload.json',
-    'MACCABIPEDIA_VOLLEYBALL_ROOT': r'D:\maccabipedia_google_drive\מכביפדיה_ראשי\כדורעף\משחקים מהעיתונות',
-    'MACCABIPEDIA_VIDEOS_DIR': r'C:\maccabipedia\videos',
-    'MACCABIPEDIA_PAPERS_ROOT': r'C:\code\maccabipedia_mediawikibot\games_papers_to_upload\from_drive',
-    'MACCABIPEDIA_BASKETBALL_TICKETS_ROOT': r'C:\maccabipedia\automations\basketball_tickets-03-2026',
-}
-
 
 def _path_from_env(var_name: str) -> Path:
-    return Path(os.environ.get(var_name, _DEFAULTS[var_name]))
+    value = os.environ.get(var_name)
+    if value is None:
+        raise RuntimeError(f"Environment variable {var_name} is not set")
+    return Path(value)
 
 
 def basketball_games_file() -> Path:

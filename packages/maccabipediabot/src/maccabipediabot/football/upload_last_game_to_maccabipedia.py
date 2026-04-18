@@ -3,7 +3,8 @@ import logging
 from maccabistats import load_from_maccabisite_source
 
 # We need to log before we run any of our code
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+from maccabipediabot.common.logging_setup import setup_logging
+setup_logging(level=logging.DEBUG)
 
 from maccabipediabot.football.gamesbot import upload_games_to_maccabipedia
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats

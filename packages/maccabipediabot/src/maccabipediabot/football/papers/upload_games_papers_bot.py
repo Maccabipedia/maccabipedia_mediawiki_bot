@@ -16,7 +16,8 @@ from maccabistats import load_from_maccabipedia_source
 from maccabistats.models.game_data import GameData
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+from maccabipediabot.common.logging_setup import setup_logging
+setup_logging(level=logging.INFO)
 
 # Paper name format:
 # {שם_עיתון}_{תאריך_המשחק}_{שם_היריבה}_{מספר_עיתון_אם_יש_כמה}_({תאריך_פרסום_העיתון})

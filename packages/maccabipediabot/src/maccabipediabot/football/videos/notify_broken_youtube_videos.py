@@ -11,7 +11,8 @@ site = get_site()
 from maccabistats.parse.maccabipedia.maccabipedia_cargo_chunks_crawler import MaccabiPediaCargoChunksCrawler
 import logging
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+from maccabipediabot.common.logging_setup import setup_logging
+setup_logging(level=logging.INFO)
 
 _API = os.environ['YOUTUBE_API_KEY']
 

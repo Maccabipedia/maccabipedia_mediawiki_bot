@@ -7,7 +7,8 @@ from pywikibot import pagegenerators
 
 from maccabipediabot.common.maccabistats_player_event import PlayerEvent, SQUAD, CARDS_AND_SUBS, GOALS_INVOLVED
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+from maccabipediabot.common.logging_setup import setup_logging
+setup_logging(level=logging.DEBUG)
 
 site = get_site()
 

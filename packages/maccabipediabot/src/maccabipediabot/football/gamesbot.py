@@ -1,7 +1,7 @@
 import logging
 import re
 from datetime import timedelta
-from typing import AnyStr, List
+from typing import List
 
 from maccabipediabot.common.wiki_login import get_site
 
@@ -16,11 +16,12 @@ site = get_site()
 from maccabistats import get_maccabi_stats_as_newest_wrapper
 from maccabistats.models.player_game_events import GameEventTypes
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
+from maccabipediabot.common.logging_setup import setup_logging
 from maccabipediabot.common.maccabistats_player_event import PlayerEvent
 from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 from maccabipediabot.football.sort_players_events import sort_player_events_in_games_page
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+setup_logging(level=logging.INFO)
 
 football_games_prefix = "משחק"
 football_games_template_name = "קטלוג משחקים"

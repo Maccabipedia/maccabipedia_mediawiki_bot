@@ -25,7 +25,8 @@ if [ ! -f /etc/tinyproxy/maccabipedia.conf ]; then
 fi
 
 cp "$SCRIPT_DIR/maccabipedia.filter" /etc/tinyproxy/maccabipedia.filter
-cp "$SCRIPT_DIR/notify-failure@.service" /etc/systemd/system/
+REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)
+sed "s|REAL_USER_HOME|$REAL_HOME|" "$SCRIPT_DIR/notify-failure@.service" > /etc/systemd/system/notify-failure@.service
 
 mkdir -p /etc/systemd/system/tinyproxy.service.d
 echo '[Unit]' > /etc/systemd/system/tinyproxy.service.d/notify.conf

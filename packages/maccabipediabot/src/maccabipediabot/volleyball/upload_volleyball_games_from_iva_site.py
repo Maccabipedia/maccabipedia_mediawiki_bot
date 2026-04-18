@@ -1,7 +1,8 @@
 import logging
 import re
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+from maccabipediabot.common.logging_setup import setup_logging
+setup_logging(level=logging.DEBUG)
 
 from datetime import datetime
 from typing import List

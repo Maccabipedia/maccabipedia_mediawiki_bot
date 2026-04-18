@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 
 from pydantic import TypeAdapter
 
@@ -14,11 +13,13 @@ from mwparserfromhell.nodes.template import Template
 
 site = get_site()
 
+from maccabipediabot.common.logging_setup import setup_logging
+from maccabipediabot.common.paths import basketball_games_file
 from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+setup_logging(level=logging.INFO)
 
-EXAMPLE_GAMES_FILE_PATH = Path(r"C:\maccabi\basketball\games_for_upload.json")
+EXAMPLE_GAMES_FILE_PATH = basketball_games_file()
 
 basketball_games_template_name = "משחק כדורסל"
 basketball_games_prefix = "כדורסל"

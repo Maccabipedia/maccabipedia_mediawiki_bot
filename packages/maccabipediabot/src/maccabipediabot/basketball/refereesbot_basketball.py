@@ -23,7 +23,8 @@ import requests
 
 from maccabipediabot.common.wiki_login import get_site
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+from maccabipediabot.common.logging_setup import setup_logging
+setup_logging(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 CARGO_EXPORT_URL = (

@@ -11,7 +11,8 @@ from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 from pydantic.json import pydantic_encoder
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+from maccabipediabot.common.logging_setup import setup_logging
+setup_logging(level=logging.DEBUG)
 
 BASKETBALL_BASE_FOLDER = Path("C:\\") / "maccabi" / "basketball"
 RESULTS_FILE = BASKETBALL_BASE_FOLDER / 'results.json'

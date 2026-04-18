@@ -8,7 +8,8 @@ from pydantic import TypeAdapter
 from maccabipediabot.basketball.basketball_game import BasketballGame
 from maccabipediabot.basketball.teams_names_changer import teams_names_changer
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+from maccabipediabot.common.logging_setup import setup_logging
+setup_logging(level=logging.DEBUG)
 
 BASKETBALL_BASE_FOLDER = Path("C:\\") / "maccabi" / "basketball"
 ALL_JSONS_FOLDER = BASKETBALL_BASE_FOLDER / 'all_results'

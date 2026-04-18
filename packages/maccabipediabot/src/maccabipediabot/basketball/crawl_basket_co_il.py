@@ -14,7 +14,8 @@ from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 from pydantic.json import pydantic_encoder
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+from maccabipediabot.common.logging_setup import setup_logging
+setup_logging(level=logging.DEBUG)
 
 SEASON_23_24_TEAM_ID = 1096
 BASKET_CO_IL_SITE_MACCABI_BASE_PAGE = "https://basket.co.il/team.asp?TeamId={team_id}"

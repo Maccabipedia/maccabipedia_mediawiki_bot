@@ -7,7 +7,7 @@ from maccabipediabot.common.wiki_login import get_site
 
 
 from maccabipediabot.common.logging_setup import setup_logging
-from maccabipediabot.common.page_names import build_game_page_name
+from maccabipediabot.common.page_names import build_volleyball_game_page_name
 from maccabipediabot.common.paths import volleyball_root
 from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 from maccabipediabot.volleyball.volleyball_game import VolleyballGame
@@ -121,8 +121,7 @@ def get_volleyball_games() -> List[VolleyballGame]:
 
 
 def generate_page_name_from_game(volleyball_game: VolleyballGame):
-    return build_game_page_name(
-        prefix=volleyball_games_prefix,
+    return build_volleyball_game_page_name(
         game_date=volleyball_game.date,
         home_team=volleyball_game.home_team,
         away_team=volleyball_game.away_team,

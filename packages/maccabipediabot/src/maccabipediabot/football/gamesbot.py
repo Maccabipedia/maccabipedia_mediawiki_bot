@@ -17,7 +17,7 @@ from maccabistats import get_maccabi_stats_as_newest_wrapper
 from maccabistats.models.player_game_events import GameEventTypes
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
 from maccabipediabot.common.logging_setup import setup_logging
-from maccabipediabot.common.page_names import build_game_page_name
+from maccabipediabot.common.page_names import build_football_game_page_name
 from maccabipediabot.common.maccabistats_player_event import PlayerEvent
 from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 from maccabipediabot.football.sort_players_events import sort_player_events_in_games_page
@@ -82,8 +82,7 @@ def generate_page_name_from_game(game):
     :type game: maccabistats.models.game_data.GameData
     :rtype: str
     """
-    return build_game_page_name(
-        prefix=football_games_prefix,
+    return build_football_game_page_name(
         game_date=game.date,
         home_team=game.home_team.name,
         away_team=game.away_team.name,

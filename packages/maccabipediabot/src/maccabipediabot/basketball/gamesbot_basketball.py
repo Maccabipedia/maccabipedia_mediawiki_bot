@@ -8,7 +8,7 @@ from mwparserfromhell.nodes.template import Template
 from pydantic import TypeAdapter
 
 from maccabipediabot.basketball.basketball_game import BasketballGame, PlayerSummary
-from maccabipediabot.common.page_names import build_game_page_name
+from maccabipediabot.common.page_names import build_basketball_game_page_name
 from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 from maccabipediabot.common.wiki_login import get_site
 
@@ -90,8 +90,7 @@ def load_basketball_games(input_path: Path) -> list[BasketballGame]:
 
 
 def generate_page_name_from_game(game: BasketballGame) -> str:
-    return build_game_page_name(
-        prefix=BASKETBALL_GAMES_PAGE_PREFIX,
+    return build_basketball_game_page_name(
         game_date=game.game_date,
         home_team=game.home_team_name,
         away_team=game.away_team_name,

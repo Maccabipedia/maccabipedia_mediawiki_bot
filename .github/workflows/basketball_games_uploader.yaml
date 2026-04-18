@@ -1,0 +1,46 @@
+name: Upload Basketball Games To MaccabiPedia
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [zapier_trigger_basketball_upload_game]
+
+jobs:
+  upload-basketball-games:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+          architecture: x64
+      - uses: astral-sh/setup-uv@v6
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Crawl basket.co.il (latest 1 game)
+        run: |
+          uv run python -m maccabipediabot.basketball.crawl_basket_co_il \
+            --season latest --limit 1 --output /tmp/basket.json
+
+      - name: Crawl Euroleague (latest 1 game)
+        run: |
+          uv run python -m maccabipediabot.basketball.crawl_euroleague \
+            --season latest --limit 1 --output /tmp/euroleague.json
+
+      - name: Upload basket.co.il games
+        env:
+          PYWIKIBOT_DIR: packages/maccabipediabot/src/maccabipediabot/pywikibot_configs/
+          MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
+          MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
+        run: |
+          uv run python -m maccabipediabot.basketball.gamesbot_basketball \
+            --input /tmp/basket.json --skip-existing
+
+      - name: Upload Euroleague games
+        env:
+          PYWIKIBOT_DIR: packages/maccabipediabot/src/maccabipediabot/pywikibot_configs/
+          MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
+          MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
+        run: |
+          uv run python -m maccabipediabot.basketball.gamesbot_basketball \
+            --input /tmp/euroleague.json --skip-existing

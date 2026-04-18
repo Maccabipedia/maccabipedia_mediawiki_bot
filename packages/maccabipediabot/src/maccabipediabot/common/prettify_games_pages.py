@@ -1,4 +1,6 @@
 import logging
+from functools import lru_cache
+
 from maccabipediabot.common.logging_setup import setup_logging
 from maccabipediabot.common.wiki_login import get_site
 
@@ -9,7 +11,13 @@ from pywikibot import pagegenerators
 
 setup_logging(level=logging.INFO)
 
-site = get_site()
+
+@lru_cache(maxsize=1)
+def _site():
+    """Lazy: avoid wiki login at module import time so this module can be
+    imported by other code (and by tests) without credentials."""
+    return get_site()
+
 
 games_page_prefix = "משחק:"
 games_template_name = "קטלוג משחקים"
@@ -24,7 +32,7 @@ def iterate_games_pages():
     """
     :rtype: list of pywikibot.page.Page
     """
-    games_template_page = pw.Page(site, games_template_name, ns="תבנית")
+    games_template_page = pw.Page(_site(), games_template_name, ns="תבנית")
     for game_page in pagegenerators.ReferringPageGenerator(games_template_page):
         if not game_page.title().startswith(games_page_prefix):
             logging.debug(f"Skipping ({game_page.title()} with uses '{games_template_name}' but does not start with '{games_page_prefix}' prefix")

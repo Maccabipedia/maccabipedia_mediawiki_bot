@@ -31,7 +31,8 @@ _TABLE_STATUS_KEY = 'טבלה'
 
 IVA_LEAGUE_TABLE_URL = 'https://iva.org.il/league/?LeagueId=7505&cYear=2026'
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+from maccabipediabot.common.logging_setup import setup_logging
+setup_logging(level=logging.DEBUG)
 
 # We need to log before we run any of our maccabipedia (pywikibot or it's import) related code
 site = get_site()

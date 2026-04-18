@@ -29,7 +29,8 @@ LINKS_TO_FETCH_LEAGUE_TABLE_FROM = [
     "https://prod-cdn-public-api.livescore.com/v1/api/app/stage/basketball/israel/super-league/2"
 ]
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+from maccabipediabot.common.logging_setup import setup_logging
+setup_logging(level=logging.DEBUG)
 
 # We need to log before we run any of our maccabipedia (pywikibot or it's import) related code
 site = get_site()

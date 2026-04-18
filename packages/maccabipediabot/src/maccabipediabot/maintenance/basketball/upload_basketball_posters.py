@@ -30,11 +30,12 @@ from pathlib import Path
 from datetime import datetime
 import contextlib
 
+from maccabipediabot.common.logging_setup import setup_logging
 from maccabipediabot.common.wiki_login import get_site
 import pywikibot as pw
 from pywikibot.comms import http as pw_http
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+setup_logging(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Connect to maccabipedia

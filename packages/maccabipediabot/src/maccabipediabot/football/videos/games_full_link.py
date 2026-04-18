@@ -1,6 +1,7 @@
 import json
 import logging
 import sys
+from maccabipediabot.common.paths import videos_dir
 from maccabipediabot.common.wiki_login import get_site
 
 import pywikibot as pw
@@ -57,12 +58,12 @@ def find_game_by_season_and_fixture(g, unformatted_season, fixture):
 
 
 def get_full_game_links_json():
-    with open(r"C:\maccabipedia\videos\full_games.json") as f:
+    with open(videos_dir() / 'full_games.json') as f:
         return json.load(f)
 
 
 def get_highlights_links_json():
-    with open(r"C:\maccabipedia\videos\highlights.json") as f:
+    with open(videos_dir() / 'highlights.json') as f:
         return json.load(f)
 
 

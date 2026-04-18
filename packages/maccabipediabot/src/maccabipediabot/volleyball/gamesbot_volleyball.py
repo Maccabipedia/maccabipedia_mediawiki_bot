@@ -6,6 +6,9 @@ from typing import List
 from maccabipediabot.common.wiki_login import get_site
 
 
+from maccabipediabot.common.logging_setup import setup_logging
+from maccabipediabot.common.page_names import build_volleyball_game_page_name
+from maccabipediabot.common.paths import volleyball_root
 from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 from maccabipediabot.volleyball.volleyball_game import VolleyballGame
 
@@ -14,9 +17,9 @@ from mwparserfromhell.nodes.template import Template
 
 site = get_site()
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+setup_logging(level=logging.INFO)
 
-VOLLEYBALL_ROOT_FOLDER = Path(r'D:\maccabipedia_google_drive\מכביפדיה_ראשי\כדורעף\משחקים מהעיתונות')
+VOLLEYBALL_ROOT_FOLDER = volleyball_root()
 ALLOWED_SEASONS = ['1999-00']
 
 volleyball_games_prefix = "כדורעף"
@@ -118,14 +121,12 @@ def get_volleyball_games() -> List[VolleyballGame]:
 
 
 def generate_page_name_from_game(volleyball_game: VolleyballGame):
-    page_name = "{prefix}:{date} {home_team} נגד {away_team} - {competition}".format(prefix=volleyball_games_prefix,
-                                                                                     date=volleyball_game.date.strftime(
-                                                                                         '%d-%m-%Y'),
-                                                                                     home_team=volleyball_game.home_team,
-                                                                                     away_team=volleyball_game.away_team,
-                                                                                     competition=volleyball_game.competition)
-
-    return page_name
+    return build_volleyball_game_page_name(
+        game_date=volleyball_game.date,
+        home_team=volleyball_game.home_team,
+        away_team=volleyball_game.away_team,
+        competition=volleyball_game.competition,
+    )
 
 
 def get_value_if_not_none_or_empty_string(value):

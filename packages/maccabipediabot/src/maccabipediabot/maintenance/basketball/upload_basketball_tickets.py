@@ -29,11 +29,12 @@ from pathlib import Path
 from datetime import datetime
 import contextlib
 
+from maccabipediabot.common.logging_setup import setup_logging
 from maccabipediabot.common.wiki_login import get_site
 import pywikibot as pw
 from pywikibot.comms import http as pw_http
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+setup_logging(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Connect to maccabipedia
@@ -42,7 +43,8 @@ site = get_site()
 API_URL = 'https://www.maccabipedia.co.il/api.php'
 
 # Configuration
-TICKETS_BASE_FOLDER = Path(r"C:\maccabipedia\automations\basketball_tickets-03-2026")
+from maccabipediabot.common.paths import basketball_tickets_root
+TICKETS_BASE_FOLDER = basketball_tickets_root()
 SHOULD_SAVE = True
 
 TEMPLATE_NAME = "תיוג כרטיס משחק כדורסל"

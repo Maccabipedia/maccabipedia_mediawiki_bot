@@ -1,3 +1,7 @@
+## Version 2.64 ##
+
+    Remove stale debug logging block in parse.general_fixes (TODO: delete me).
+
 ## Version 2.63 ##
 
     Add HEADER_ASSIST to AssistTypes and map MaccabiPedia subtype 47 (בישול-נגיחה) to it.

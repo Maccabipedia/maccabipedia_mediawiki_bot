@@ -218,7 +218,8 @@ def remove_broken_links(broken: list[BrokenVideo]) -> list[BrokenVideo]:
 
 
 def main() -> None:
-    logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=logging.INFO)
+    from maccabipediabot.common.logging_setup import setup_logging
+    setup_logging(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
     broken = asyncio.run(_find_broken_videos())
     if not broken:
         return

@@ -4,7 +4,8 @@ import os
 from maccabistats import run_maccabitlv_site_source
 from maccabistats.config import MaccabiStatsConfigSingleton
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+from maccabipediabot.common.logging_setup import setup_logging
+setup_logging(level=logging.DEBUG)
 
 
 def fetch_games_from_maccabi_tlv_site() -> None:

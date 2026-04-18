@@ -1,12 +1,13 @@
 import logging
 from dataclasses import dataclass
 from typing import Dict, Optional
+from maccabipediabot.common.logging_setup import setup_logging
 from maccabipediabot.common.wiki_login import get_site
 
 import mwparserfromhell as mw
 import pywikibot as pw
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+setup_logging(level=logging.DEBUG)
 
 site = get_site()
 

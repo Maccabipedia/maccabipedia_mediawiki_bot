@@ -1,7 +1,7 @@
 import logging
 import re
 from datetime import timedelta
-from typing import AnyStr, List
+from typing import List
 
 from maccabipediabot.common.wiki_login import get_site
 
@@ -16,11 +16,13 @@ site = get_site()
 from maccabistats import get_maccabi_stats_as_newest_wrapper
 from maccabistats.models.player_game_events import GameEventTypes
 from maccabistats.stats.maccabi_games_stats import MaccabiGamesStats
+from maccabipediabot.common.logging_setup import setup_logging
+from maccabipediabot.common.page_names import build_football_game_page_name
 from maccabipediabot.common.maccabistats_player_event import PlayerEvent
 from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 from maccabipediabot.football.sort_players_events import sort_player_events_in_games_page
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+setup_logging(level=logging.INFO)
 
 football_games_prefix = "משחק"
 football_games_template_name = "קטלוג משחקים"
@@ -80,15 +82,12 @@ def generate_page_name_from_game(game):
     :type game: maccabistats.models.game_data.GameData
     :rtype: str
     """
-
-    page_name = "{prefix}:{date} {home_team} נגד {away_team} - {competition}".format(prefix=football_games_prefix,
-                                                                                     date=game.date.strftime(
-                                                                                         '%d-%m-%Y'),
-                                                                                     home_team=game.home_team.name,
-                                                                                     away_team=game.away_team.name,
-                                                                                     competition=game.competition)
-
-    return page_name
+    return build_football_game_page_name(
+        game_date=game.date,
+        home_team=game.home_team.name,
+        away_team=game.away_team.name,
+        competition=game.competition,
+    )
 
 
 def get_players_events_for_template(game):
@@ -354,10 +353,10 @@ def upload_games_to_maccabipedia(maccabi_games_to_add: MaccabiGamesStats):
     # Collect pages to purge across all games
     all_pages_to_purge = set()
 
-    for g in maccabi_games_to_add:
-        was_saved = create_or_update_game_page(g, overwrite_existing_pages=False)
+    for game in maccabi_games_to_add:
+        was_saved = create_or_update_game_page(game, overwrite_existing_pages=False)
         if was_saved:
-            pages_from_game = collect_related_pages_from_game(g)
+            pages_from_game = collect_related_pages_from_game(game)
             all_pages_to_purge.update(pages_from_game)
 
     logging.info("Finished adding new games.")

@@ -1,5 +1,6 @@
 import logging
 from typing import List
+from maccabipediabot.common.logging_setup import setup_logging
 from maccabipediabot.common.wiki_login import get_site
 
 import mwparserfromhell as mw
@@ -7,7 +8,7 @@ import pywikibot as pw
 import pywikibot.page
 from pywikibot import pagegenerators, Category
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+setup_logging(level=logging.DEBUG)
 
 site = get_site()
 

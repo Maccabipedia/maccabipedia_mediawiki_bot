@@ -30,6 +30,9 @@ cp "$SCRIPT_DIR/notify-failure@.service" /etc/systemd/system/
 mkdir -p /etc/systemd/system/tinyproxy.service.d
 echo '[Unit]' > /etc/systemd/system/tinyproxy.service.d/notify.conf
 echo 'OnFailure=notify-failure@%n.service' >> /etc/systemd/system/tinyproxy.service.d/notify.conf
+echo '[Service]' > /etc/systemd/system/tinyproxy.service.d/config.conf
+echo 'ExecStart=' >> /etc/systemd/system/tinyproxy.service.d/config.conf
+echo 'ExecStart=/usr/bin/tinyproxy -d -c /etc/tinyproxy/maccabipedia.conf' >> /etc/systemd/system/tinyproxy.service.d/config.conf
 
 mkdir -p /etc/systemd/system/tailscaled.service.d
 echo '[Unit]' > /etc/systemd/system/tailscaled.service.d/notify.conf

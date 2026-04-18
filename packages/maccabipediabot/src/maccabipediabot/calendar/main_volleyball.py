@@ -219,5 +219,6 @@ def entry_point() -> None:
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    from maccabipediabot.common.logging_setup import setup_logging
+    setup_logging(level=logging.INFO)
     entry_point()

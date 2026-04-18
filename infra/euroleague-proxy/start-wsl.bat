@@ -1,1 +1,2 @@
-wsl.exe --exec /usr/bin/true
+@echo off
+wsl -u root -e bash -c "systemctl start tinyproxy tailscaled"

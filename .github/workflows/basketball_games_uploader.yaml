@@ -31,6 +31,11 @@ jobs:
           uv run python -m maccabipediabot.basketball.gamesbot_basketball \
             --input /tmp/basket.json --skip-existing
 
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
       - name: Crawl Euroleague (via residential proxy)
         env:
           HTTPS_PROXY: ${{ secrets.EUROLEAGUE_HTTPS_PROXY }}

@@ -3,6 +3,7 @@ Description=Telegram failure notification for %i
 
 [Service]
 Type=oneshot
+Environment=HOME=/home/roee
 ExecStart=/usr/bin/gh workflow run notify_proxy_failure.yaml \
   --repo Maccabipedia/maccabipedia_mediawiki_bot \
   --field service=%i

@@ -5,11 +5,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 apt-get install -y tinyproxy
 
-if ! command -v cloudflared >/dev/null 2>&1; then
-    echo "Installing cloudflared..."
-    curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
-        -o /tmp/cloudflared
-    install -m755 /tmp/cloudflared /usr/local/bin/cloudflared
+if ! command -v tailscale >/dev/null 2>&1; then
+    echo "Installing Tailscale..."
+    curl -fsSL https://tailscale.com/install.sh | sh
 fi
 
 if ! command -v gh >/dev/null 2>&1; then
@@ -26,19 +24,24 @@ if [ ! -f /etc/tinyproxy/maccabipedia.conf ]; then
     chmod 600 /etc/tinyproxy/maccabipedia.conf
 fi
 
-
-mkdir -p /opt/euroleague-proxy
 cp "$SCRIPT_DIR/maccabipedia.filter" /etc/tinyproxy/maccabipedia.filter
-cp "$SCRIPT_DIR/start-tunnel.sh" /opt/euroleague-proxy/start-tunnel.sh
-chmod +x /opt/euroleague-proxy/start-tunnel.sh
-cp "$SCRIPT_DIR/cloudflared.service" /etc/systemd/system/
 cp "$SCRIPT_DIR/notify-failure@.service" /etc/systemd/system/
 
+mkdir -p /etc/systemd/system/tinyproxy.service.d
+echo '[Unit]' > /etc/systemd/system/tinyproxy.service.d/notify.conf
+echo 'OnFailure=notify-failure@%n.service' >> /etc/systemd/system/tinyproxy.service.d/notify.conf
+
+mkdir -p /etc/systemd/system/tailscaled.service.d
+echo '[Unit]' > /etc/systemd/system/tailscaled.service.d/notify.conf
+echo 'OnFailure=notify-failure@%n.service' >> /etc/systemd/system/tailscaled.service.d/notify.conf
+
 systemctl daemon-reload
-systemctl enable --now tinyproxy cloudflared
+systemctl enable --now tinyproxy tailscaled
 
 echo ""
 echo "=== Done ==="
-echo "On each reboot, the Cloudflare Quick Tunnel URL is captured and"
-echo "EUROLEAGUE_HTTPS_PROXY in GitHub secrets is updated automatically."
-echo "Check tunnel status: journalctl -u cloudflared -f"
+echo "Next: run 'tailscale up' to authenticate (one-time, browser will open)."
+echo "Then get your stable Tailscale IP: tailscale ip -4"
+echo "Set GitHub secrets:"
+echo "  TAILSCALE_AUTHKEY — create at https://login.tailscale.com/admin/settings/keys (ephemeral, reusable)"
+echo "  EUROLEAGUE_HTTPS_PROXY — http://<proxy-user>:<proxy-pass>@<tailscale-ip>:8787"

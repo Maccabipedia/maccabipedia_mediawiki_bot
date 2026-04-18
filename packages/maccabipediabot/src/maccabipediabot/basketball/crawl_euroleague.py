@@ -176,96 +176,96 @@ def _seconds_to_minutes(seconds) -> int | None:
 
 
 def discover_games_from_html(html: str, limit: int | None = None) -> list[BasketballGame]:
-    """Parse the team-results page HTML and return discovery metas for finished games.
+    """Parse the team-results page HTML and return finished Maccabi games.
 
-    Sorted descending by date; optionally capped at N most-recent.
+    The page is a Next.js render with the team-results data embedded as JSON
+    in <script id="__NEXT_DATA__">. We navigate:
+
+        props.pageProps.results.results: list[result]
+
+    Each `result` looks like:
+        {
+          "status": "result",            # we keep "result" / "finished"; everything else is unplayed
+          "date": "2026-04-16T18:05:00Z", # ISO UTC; converted to Israel local time
+          "url":  "/en/euroleague/game-center/...",
+          "round": {"round": 38, ...},
+          "home":  {"name": "Maccabi Rapyd Tel Aviv", "score": 85},
+          "away":  {"name": "Virtus Bologna",         "score": 89},
+        }
+
+    Returns games sorted by date descending; optionally capped at the most-recent N.
     """
     data = extract_next_data(html)
     results = data["props"]["pageProps"]["results"]["results"]
 
-    dropped = {"non_final": 0, "bad_date": 0, "missing_score": 0, "zero_zero": 0,
-               "missing_team_name": 0, "no_url": 0}
-    discovered: list[BasketballGame] = []
-    for result in results:
-        # Only finished games. Status "result" is what the team-results page returns for past games.
-        status = (result.get("status") or "").lower()
-        if status not in {"result", "finished"} and not result.get("isPreviousGame"):
-            dropped["non_final"] += 1
-            continue
-
-        date_str = result.get("date") or ""
-        if not date_str:
-            dropped["bad_date"] += 1
-            continue
-        try:
-            # Euroleague feed timestamps are in UTC. Convert to Israel local time
-            # (matches the wiki convention) and drop tzinfo for the BasketballGame model.
-            game_dt = (
-                datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-                .astimezone(ISRAEL_TZ)
-                .replace(tzinfo=None)
-            )
-        except ValueError:
-            dropped["bad_date"] += 1
-            continue
-
-        home, away = result.get("home") or {}, result.get("away") or {}
-        home_score = to_int_or_none(home.get("score"))
-        away_score = to_int_or_none(away.get("score"))
-        if home_score is None or away_score is None:
-            dropped["missing_score"] += 1
-            continue
-        # Defense in depth: a real basketball game can't end 0-0. status="result"
-        # *should* gate this, but guard anyway in case Euroleague ever ships
-        # a placeholder row that satisfies the status filter.
-        if home_score + away_score == 0:
-            dropped["zero_zero"] += 1
-            continue
-
-        home_name = (home.get("name") or "").strip()
-        away_name = (away.get("name") or "").strip()
-        if not home_name or not away_name:
-            dropped["missing_team_name"] += 1
-            continue
-        home_name_he = team_name_to_hebrew(home_name)
-        away_name_he = team_name_to_hebrew(away_name)
-
-        url_path = result.get("url") or ""
-        if not url_path:
-            dropped["no_url"] += 1
-            continue
-        scrape_url = url_path if url_path.startswith("http") else f"{GAME_URL_PREFIX}{url_path}"
-
-        round_obj = result.get("round") or {}
-        fixture_round = to_int_or_none(round_obj.get("round"))
-
-        discovered.append(BasketballGame(
-            home_team_name=home_name_he,
-            away_team_name=away_name_he,
-            competition=COMPETITION_NAME_HE,
-            fixture=f"מחזור {fixture_round}" if fixture_round is not None else "",
-            game_date=game_dt,
-            home_team_score=home_score,
-            away_team_score=away_score,
-            game_url=[scrape_url],
-        ))
-
+    discovered = [
+        game for result in results
+        if (game := _parse_team_results_entry(result)) is not None
+    ]
     discovered.sort(key=lambda game: game.game_date, reverse=True)
     if limit:
         discovered = discovered[:limit]
-
-    if any(dropped.values()):
-        logger.info("Euroleague discovery: kept=%d dropped=%r", len(discovered), dropped)
-
     return discovered
 
 
-def discover_games_latest_season(limit: int | None = None) -> list[BasketballGame]:
-    return discover_games_from_html(fetch_html(TEAM_RESULTS_URL), limit=limit)
+def _parse_team_results_entry(result: dict) -> BasketballGame | None:
+    """Parse one team-results entry into a partial BasketballGame.
+
+    Returns None for legitimately-skipped entries (games that haven't been
+    played yet). RAISES on schema-drift signals (missing scores / team names /
+    URL on what otherwise looks like a finished game) — those are bugs upstream,
+    not games to silently drop.
+    """
+    status = (result.get("status") or "").lower()
+    if status not in {"result", "finished"} and not result.get("isPreviousGame"):
+        return None  # not a finished game — silent drop
+
+    date_str = result.get("date") or ""
+    # Euroleague feed timestamps are in UTC. Convert to Israel local time
+    # (matches the wiki convention) and drop tzinfo for the BasketballGame model.
+    game_dt = (
+        datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+        .astimezone(ISRAEL_TZ)
+        .replace(tzinfo=None)
+    )
+
+    home, away = result.get("home") or {}, result.get("away") or {}
+    home_score = to_int_or_none(home.get("score"))
+    away_score = to_int_or_none(away.get("score"))
+    if home_score is None or away_score is None:
+        raise RuntimeError(f"Finished Euroleague game missing scores: {result!r}")
+    if home_score + away_score == 0:
+        # Defense in depth: a real basketball game can't end 0-0. status="result"
+        # *should* gate this, but raise loudly if Euroleague ever ships a
+        # placeholder row that satisfies the status filter.
+        raise RuntimeError(f"Finished Euroleague game has 0-0 score: {result!r}")
+
+    home_name = (home.get("name") or "").strip()
+    away_name = (away.get("name") or "").strip()
+    if not home_name or not away_name:
+        raise RuntimeError(f"Finished Euroleague game missing team name(s): {result!r}")
+
+    url_path = result.get("url") or ""
+    if not url_path:
+        raise RuntimeError(f"Finished Euroleague game missing URL: {result!r}")
+    scrape_url = url_path if url_path.startswith("http") else f"{GAME_URL_PREFIX}{url_path}"
+
+    fixture_round = to_int_or_none((result.get("round") or {}).get("round"))
+
+    return BasketballGame(
+        home_team_name=team_name_to_hebrew(home_name),
+        away_team_name=team_name_to_hebrew(away_name),
+        competition=COMPETITION_NAME_HE,
+        fixture=f"מחזור {fixture_round}" if fixture_round is not None else "",
+        game_date=game_dt,
+        home_team_score=home_score,
+        away_team_score=away_score,
+        game_url=[scrape_url],
+    )
 
 
 def _run_latest_season(limit: int | None) -> list[BasketballGame]:
-    discovered = discover_games_latest_season(limit=limit)
+    discovered = discover_games_from_html(fetch_html(TEAM_RESULTS_URL), limit=limit)
     logger.info("Discovered %d Euroleague games", len(discovered))
     return [parse_game_page(extract_next_data(fetch_html(partial_game.game_url[0])), partial_game)
             for partial_game in discovered]

@@ -479,6 +479,19 @@ def _run_latest_season(limit: int | None) -> list[BasketballGame]:
             for partial_game in discovered]
 
 
+async def _run_all_seasons() -> list[BasketballGame]:
+    connector = aiohttp.TCPConnector(limit=MAX_CONNECTIONS)
+    async with aiohttp.ClientSession(connector=connector) as session:
+        seasons_to_team_ids = await get_team_ids_for_all_seasons(session)
+        logging.info("Seasons to team ids: %s", seasons_to_team_ids)
+        season_tasks = [
+            extract_games_links_from_seasons_pages(session, season, team_id)
+            for season, team_id in seasons_to_team_ids.items()
+        ]
+        results_per_season = await asyncio.gather(*season_tasks)
+    return [game for season_games in results_per_season for game in season_games]
+
+
 def main() -> None:
     logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
     parser = argparse.ArgumentParser(description="Crawl basket.co.il for Maccabi games.")
@@ -491,18 +504,7 @@ def main() -> None:
     if args.season == "latest":
         games = _run_latest_season(args.limit)
     else:
-        async def _run_all() -> list[BasketballGame]:
-            connector = aiohttp.TCPConnector(limit=MAX_CONNECTIONS)
-            async with aiohttp.ClientSession(connector=connector) as session:
-                seasons_to_team_ids = await get_team_ids_for_all_seasons(session)
-                logging.info("Seasons to team ids: %s", seasons_to_team_ids)
-                season_tasks = [
-                    extract_games_links_from_seasons_pages(session, season, team_id)
-                    for season, team_id in seasons_to_team_ids.items()
-                ]
-                results_per_season = await asyncio.gather(*season_tasks)
-            return [game for season_games in results_per_season for game in season_games]
-        games = asyncio.run(_run_all())
+        games = asyncio.run(_run_all_seasons())
 
     write_pydantic_list_as_json(games, args.output)
 

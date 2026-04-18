@@ -6,6 +6,7 @@ or headless browser.
 import argparse
 import json
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -52,8 +53,18 @@ def extract_next_data(html: str) -> dict[str, Any]:
     return json.loads(script.text)
 
 
+_EUROLEAGUE_BASE = "https://www.euroleaguebasketball.net"
+
+
 def fetch_html(url: str) -> str:
-    resp = requests.get(url, headers=HTTP_HEADERS, timeout=30)
+    proxy_url = os.environ.get("EUROLEAGUE_PROXY_URL")
+    if proxy_url:
+        path = url.removeprefix(_EUROLEAGUE_BASE)
+        url = f"{proxy_url.rstrip('/')}/proxy{path}"
+        headers = {**HTTP_HEADERS, "Authorization": f"Bearer {os.environ['EUROLEAGUE_PROXY_TOKEN']}"}
+    else:
+        headers = HTTP_HEADERS
+    resp = requests.get(url, headers=headers, timeout=30)
     resp.raise_for_status()
     return resp.text
 

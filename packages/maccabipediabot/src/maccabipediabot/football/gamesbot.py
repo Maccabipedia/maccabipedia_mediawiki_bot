@@ -354,10 +354,10 @@ def upload_games_to_maccabipedia(maccabi_games_to_add: MaccabiGamesStats):
     # Collect pages to purge across all games
     all_pages_to_purge = set()
 
-    for g in maccabi_games_to_add:
-        was_saved = create_or_update_game_page(g, overwrite_existing_pages=False)
+    for game in maccabi_games_to_add:
+        was_saved = create_or_update_game_page(game, overwrite_existing_pages=False)
         if was_saved:
-            pages_from_game = collect_related_pages_from_game(g)
+            pages_from_game = collect_related_pages_from_game(game)
             all_pages_to_purge.update(pages_from_game)
 
     logging.info("Finished adding new games.")

@@ -26,11 +26,20 @@ if [ ! -f /etc/tinyproxy/maccabipedia.conf ]; then
     chmod 600 /etc/tinyproxy/maccabipedia.conf
 fi
 
+if [ ! -f /etc/euroleague-proxy.env ]; then
+    read -rp "Enter TELEGRAM_BOT_TOKEN: " telegram_token
+    read -rp "Enter EUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID: " telegram_chat_id
+    printf 'TELEGRAM_BOT_TOKEN=%s\nEUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID=%s\n' \
+        "$telegram_token" "$telegram_chat_id" > /etc/euroleague-proxy.env
+    chmod 600 /etc/euroleague-proxy.env
+fi
+
 mkdir -p /opt/euroleague-proxy
 cp "$SCRIPT_DIR/maccabipedia.filter" /etc/tinyproxy/maccabipedia.filter
 cp "$SCRIPT_DIR/start-tunnel.sh" /opt/euroleague-proxy/start-tunnel.sh
 chmod +x /opt/euroleague-proxy/start-tunnel.sh
 cp "$SCRIPT_DIR/cloudflared.service" /etc/systemd/system/
+cp "$SCRIPT_DIR/notify-failure@.service" /etc/systemd/system/
 
 systemctl daemon-reload
 systemctl enable --now tinyproxy cloudflared

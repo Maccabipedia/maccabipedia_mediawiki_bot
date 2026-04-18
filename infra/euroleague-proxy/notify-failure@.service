@@ -1,0 +1,10 @@
+[Unit]
+Description=Telegram failure notification for %i
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/euroleague-proxy.env
+ExecStart=/usr/bin/curl -s \
+  "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+  -d "chat_id=${EUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID}" \
+  -d "text=⚠️ euroleague-proxy: %i failed on %H"

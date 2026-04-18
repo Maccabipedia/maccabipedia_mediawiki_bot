@@ -1,6 +1,7 @@
 [Unit]
 Description=Cloudflare Quick Tunnel for Euroleague proxy
 After=network.target tinyproxy.service
+OnFailure=notify-failure@%n.service
 
 [Service]
 ExecStart=/opt/euroleague-proxy/start-tunnel.sh

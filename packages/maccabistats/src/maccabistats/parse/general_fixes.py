@@ -164,9 +164,6 @@ def __fix_maccabi_players_names(game):
                 player.name = 'טל בן חיים (החלוץ)'
                 break
             elif player.name in player_similar_names:
-                if 'טל' in player.name:  # TODO: delete me
-                    logger.info(f'Just for debugging remotely: {player.name} game: {game}')
-
                 logger.info("Changing player name from :{old}->{new}".format(old=player.name, new=player_best_name))
                 player.name = player_best_name
                 break

@@ -1,11 +1,11 @@
 [Unit]
-Description=Cloudflare Tunnel for Euroleague proxy
-After=network.target
+Description=Cloudflare Quick Tunnel for Euroleague proxy
+After=network.target tinyproxy.service
 
 [Service]
-ExecStart=/usr/local/bin/cloudflared tunnel run maccabipedia-euroleague
+ExecStart=/opt/euroleague-proxy/start-tunnel.sh
 Restart=always
-RestartSec=5
+RestartSec=10
 StandardOutput=journal
 StandardError=journal
 

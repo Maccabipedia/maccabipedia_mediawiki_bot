@@ -1,0 +1,14 @@
+[Unit]
+Description=Euroleague residential HTTP proxy
+After=network.target
+
+[Service]
+EnvironmentFile=/etc/euroleague-proxy.env
+ExecStart=/usr/bin/python3 /opt/euroleague-proxy/server.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

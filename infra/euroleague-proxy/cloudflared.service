@@ -1,0 +1,13 @@
+[Unit]
+Description=Cloudflare Tunnel for Euroleague proxy
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/cloudflared tunnel run maccabipedia-euroleague
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

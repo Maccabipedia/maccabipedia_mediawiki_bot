@@ -70,7 +70,18 @@ Any PR touching `packages/maccabistats/` must also include, before the PR is cre
 2. **Changelog entry** — prepend a new entry to `packages/maccabistats/CHANGELOG.md` with the new version and a short description
 3. **Commit both** on the feature branch (e.g. `bump: maccabistats 2.61`)
 
-## 6. Reference Files
+## 6. Context Window Hygiene
+
+Every tool call result stays in context forever. Keep all outputs small:
+
+- **Explore agents**: always instruct them to write findings to `.claude/tmp/explore_<topic>.md` and return only a 3–5 line summary. Never ask for "comprehensive" or "thorough" reports that return inline.
+- **Subagent results**: any Agent call should write its output to `.claude/tmp/` and return a brief summary — not the full analysis inline.
+- **Write vs Edit**: never use Write to modify an existing file — Edit sends only the diff. Only use Write for new files, and avoid writing files larger than ~100 lines in one shot; break them up.
+- **Bash outputs**: if a script produces more than ~50 lines, redirect verbose output to a temp file and print only the final result.
+- **Trello MCP**: never call `get_cards_by_list_id` — it returns full JSON for every card (~40K chars). Use `get_card` on specific card IDs only.
+- **Knowledge files** (`.claude/*.md`): never Read the whole file. Use Grep to find the relevant section, then Read only those lines.
+
+## 7. Reference Files
 - `.claude/maccabipedia_structure_knowledge.md` — Game pages, player pages, templates, Cargo API
 - `.claude/maccabipedia_research_sources.md` — External data sources: rosters, match results, historical records, photos, video
 - `.claude/maccabistats_knowledge.md` — maccabistats Python package API reference

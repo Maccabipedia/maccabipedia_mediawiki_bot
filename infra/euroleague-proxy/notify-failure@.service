@@ -3,8 +3,6 @@ Description=Telegram failure notification for %i
 
 [Service]
 Type=oneshot
-EnvironmentFile=/etc/euroleague-proxy.env
-ExecStart=/usr/bin/curl -s \
-  "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-  -d "chat_id=${EUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID}" \
-  -d "text=⚠️ euroleague-proxy: %i failed on %H"
+ExecStart=/usr/bin/gh workflow run notify_proxy_failure.yaml \
+  --repo Maccabipedia/maccabipedia_mediawiki_bot \
+  --field service=%i

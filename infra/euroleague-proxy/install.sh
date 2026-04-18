@@ -26,14 +26,6 @@ if [ ! -f /etc/tinyproxy/maccabipedia.conf ]; then
     chmod 600 /etc/tinyproxy/maccabipedia.conf
 fi
 
-if [ ! -f /etc/euroleague-proxy.env ]; then
-    : "${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN env var required}"
-    : "${EUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID:?EUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID env var required}"
-    printf 'TELEGRAM_BOT_TOKEN=%s\nEUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID=%s\n' \
-        "$TELEGRAM_BOT_TOKEN" "$EUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID" \
-        > /etc/euroleague-proxy.env
-    chmod 600 /etc/euroleague-proxy.env
-fi
 
 mkdir -p /opt/euroleague-proxy
 cp "$SCRIPT_DIR/maccabipedia.filter" /etc/tinyproxy/maccabipedia.filter

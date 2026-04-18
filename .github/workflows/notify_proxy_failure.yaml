@@ -1,0 +1,17 @@
+name: Notify Euroleague Proxy Failure
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: Which service failed
+        required: true
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Telegram message
+        run: |
+          curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d "chat_id=${{ secrets.EUROLEAGUE_PROXY_TELEGRAM_NOTIF_ABOUT_FAILURES_CHAT_ID }}" \
+            -d "text=⚠️ euroleague-proxy: ${{ inputs.service }} failed on $(hostname)"

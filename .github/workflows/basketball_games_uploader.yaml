@@ -22,11 +22,6 @@ jobs:
           uv run python -m maccabipediabot.basketball.crawl_basket_co_il \
             --season latest --limit 1 --output /tmp/basket.json
 
-      - name: Crawl Euroleague (latest 1 game)
-        run: |
-          uv run python -m maccabipediabot.basketball.crawl_euroleague \
-            --season latest --limit 1 --output /tmp/euroleague.json
-
       - name: Upload basket.co.il games
         env:
           PYWIKIBOT_DIR: packages/maccabipediabot/src/maccabipediabot/pywikibot_configs/
@@ -35,6 +30,18 @@ jobs:
         run: |
           uv run python -m maccabipediabot.basketball.gamesbot_basketball \
             --input /tmp/basket.json --skip-existing
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
+      - name: Crawl Euroleague (via residential proxy)
+        env:
+          HTTPS_PROXY: ${{ secrets.EUROLEAGUE_HTTPS_PROXY }}
+        run: |
+          uv run python -m maccabipediabot.basketball.crawl_euroleague \
+            --season latest --limit 1 --output /tmp/euroleague.json
 
       - name: Upload Euroleague games
         env:

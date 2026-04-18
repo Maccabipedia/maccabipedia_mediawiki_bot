@@ -6,6 +6,7 @@ or headless browser.
 import argparse
 import json
 import logging
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -34,10 +35,24 @@ TEAM_RESULTS_URL = (
 )
 HTTP_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+                  "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,"
+              "image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
     "Accept-Language": "en-US,en;q=0.9",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
+    "Sec-Ch-Ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+    "Sec-Ch-Ua-Mobile": "?0",
+    "Sec-Ch-Ua-Platform": '"Windows"',
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Upgrade-Insecure-Requests": "1",
 }
+_FETCH_RETRY_STATUSES = {429, 502, 503, 504}
+_FETCH_MAX_ATTEMPTS = 4
 COMPETITION_NAME_HE = "יורוליג"
 MACCABI_TEAM_NAME_ENG = "Maccabi Rapyd Tel Aviv"
 GAME_URL_PREFIX = "https://www.euroleaguebasketball.net"
@@ -53,9 +68,28 @@ def extract_next_data(html: str) -> dict[str, Any]:
 
 
 def fetch_html(url: str) -> str:
-    resp = requests.get(url, headers=HTTP_HEADERS, timeout=30)
-    resp.raise_for_status()
-    return resp.text
+    """GET `url` with browser-like headers and retry on 429/5xx.
+
+    Vercel's bot detection sometimes greets cloud IPs (incl. GitHub Actions) with
+    429s; a few retries with backoff usually clears it. Respects Retry-After.
+    """
+    last_resp: requests.Response | None = None
+    for attempt in range(1, _FETCH_MAX_ATTEMPTS + 1):
+        resp = requests.get(url, headers=HTTP_HEADERS, timeout=30)
+        if resp.status_code not in _FETCH_RETRY_STATUSES:
+            resp.raise_for_status()
+            return resp.text
+        last_resp = resp
+        if attempt == _FETCH_MAX_ATTEMPTS:
+            break
+        retry_after = resp.headers.get("Retry-After")
+        delay = float(retry_after) if retry_after and retry_after.isdigit() else 2 ** attempt
+        logger.warning("fetch %s returned %d; retrying in %.1fs (attempt %d/%d)",
+                       url, resp.status_code, delay, attempt, _FETCH_MAX_ATTEMPTS)
+        time.sleep(delay)
+    assert last_resp is not None
+    last_resp.raise_for_status()
+    return last_resp.text  # unreachable; raise_for_status above raises
 
 
 def _flip_name(name: str) -> str:

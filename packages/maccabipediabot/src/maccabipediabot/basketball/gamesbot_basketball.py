@@ -104,7 +104,7 @@ def format_url(game_url: str) -> str:
     main_domain = tldextract.extract(game_url).domain
     return f"[{game_url} עמוד המשחק באתר {main_domain}]"
 
-def __get_football_game_template_with_maccabistats_game_value(game: BasketballGame) -> dict[str, str]:
+def __get_basketball_game_template_with_maccabistats_game_value(game: BasketballGame) -> dict[str, str]:
     template_arguments = {
         GAME_DATE: str(game.game_date.strftime("%d-%m-%Y")),
         # We don't want to upload the hour if it's equal to zero (that an unknown time)
@@ -170,7 +170,7 @@ def handle_existing_page(game_page: pw.page.Page, game: BasketballGame):
         parsed_mw_text = mwparserfromhell.parse(game_page.text)
         football_game_template = parsed_mw_text.filter_templates(football_games_template_name)[0]
 
-        arguments = __get_football_game_template_with_maccabistats_game_value(game)
+        arguments = __get_basketball_game_template_with_maccabistats_game_value(game)
 
         football_game_template.add(PLAYERS_EVENTS, arguments[PLAYERS_EVENTS])
 
@@ -180,7 +180,7 @@ def handle_existing_page(game_page: pw.page.Page, game: BasketballGame):
         parsed_mw_text = mwparserfromhell.parse(game_page.text)
         football_game_template = parsed_mw_text.filter_templates(football_games_template_name)[0]
 
-        arguments = __get_football_game_template_with_maccabistats_game_value(game)
+        arguments = __get_basketball_game_template_with_maccabistats_game_value(game)
 
         for argument_name, argument_value in arguments.items():
             if str(argument_value) != football_game_template.get(argument_name).value and SHOULD_SHOW_DIFF:
@@ -202,7 +202,7 @@ def handle_existing_page(game_page: pw.page.Page, game: BasketballGame):
 def handle_new_page(game_page: pw.page.Page, game: BasketballGame):
     basketball_template = Template(basketball_games_template_name)
 
-    arguments = __get_football_game_template_with_maccabistats_game_value(game)
+    arguments = __get_basketball_game_template_with_maccabistats_game_value(game)
 
     for argument_name, argument_value in arguments.items():
         basketball_template.add(argument_name, argument_value)

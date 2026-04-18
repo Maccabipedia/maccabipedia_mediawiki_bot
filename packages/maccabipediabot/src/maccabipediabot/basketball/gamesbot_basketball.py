@@ -14,6 +14,7 @@ from mwparserfromhell.nodes.template import Template
 site = get_site()
 
 from maccabipediabot.common.logging_setup import setup_logging
+from maccabipediabot.common.page_names import build_game_page_name
 from maccabipediabot.common.paths import basketball_games_file
 from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 
@@ -87,14 +88,13 @@ def load_basketball_games() -> list[BasketballGame]:
 
 
 def generate_page_name_from_game(game: BasketballGame) -> str:
-    page_name = "{prefix}:{date} {home_team} נגד {away_team} - {competition}".format(prefix=basketball_games_prefix,
-                                                                                     date=game.game_date.strftime(
-                                                                                         '%d-%m-%Y'),
-                                                                                     home_team=game.home_team_name,
-                                                                                     away_team=game.away_team_name,
-                                                                                     competition=game.competition)
-
-    return page_name
+    return build_game_page_name(
+        prefix=basketball_games_prefix,
+        game_date=game.game_date,
+        home_team=game.home_team_name,
+        away_team=game.away_team_name,
+        competition=game.competition,
+    )
 
 
 def get_players_events_for_template(players_summary: list[PlayerSummary]) -> str:

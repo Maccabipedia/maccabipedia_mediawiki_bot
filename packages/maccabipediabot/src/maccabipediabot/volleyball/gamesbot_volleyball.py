@@ -7,6 +7,7 @@ from maccabipediabot.common.wiki_login import get_site
 
 
 from maccabipediabot.common.logging_setup import setup_logging
+from maccabipediabot.common.page_names import build_game_page_name
 from maccabipediabot.common.paths import volleyball_root
 from maccabipediabot.common.prettify_games_pages import prettify_game_page_main_template
 from maccabipediabot.volleyball.volleyball_game import VolleyballGame
@@ -120,14 +121,13 @@ def get_volleyball_games() -> List[VolleyballGame]:
 
 
 def generate_page_name_from_game(volleyball_game: VolleyballGame):
-    page_name = "{prefix}:{date} {home_team} נגד {away_team} - {competition}".format(prefix=volleyball_games_prefix,
-                                                                                     date=volleyball_game.date.strftime(
-                                                                                         '%d-%m-%Y'),
-                                                                                     home_team=volleyball_game.home_team,
-                                                                                     away_team=volleyball_game.away_team,
-                                                                                     competition=volleyball_game.competition)
-
-    return page_name
+    return build_game_page_name(
+        prefix=volleyball_games_prefix,
+        game_date=volleyball_game.date,
+        home_team=volleyball_game.home_team,
+        away_team=volleyball_game.away_team,
+        competition=volleyball_game.competition,
+    )
 
 
 def get_value_if_not_none_or_empty_string(value):

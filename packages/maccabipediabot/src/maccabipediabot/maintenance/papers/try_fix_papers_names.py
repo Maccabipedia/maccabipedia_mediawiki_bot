@@ -1,7 +1,9 @@
 import logging
 from pathlib import Path
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+from maccabipediabot.common.logging_setup import setup_logging
+
+setup_logging(level=logging.INFO)
 
 _PAPER_NAME = "למרחב"
 BASE_PAPER_FOLDER_PATH = Path(

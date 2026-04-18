@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 
+from maccabipediabot.common.logging_setup import setup_logging
 from maccabipediabot.common.wiki_login import get_site
 
 
@@ -8,7 +9,7 @@ import pywikibot as pw
 
 site = get_site()
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+setup_logging(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configuration

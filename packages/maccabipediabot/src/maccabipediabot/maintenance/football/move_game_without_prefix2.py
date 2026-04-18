@@ -4,9 +4,10 @@ import mwparserfromhell
 import requests
 from pywikibot import pagegenerators, Category
 
+from maccabipediabot.common.logging_setup import setup_logging
 from maccabipediabot.common.wiki_login import get_site
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+setup_logging(level=logging.DEBUG)
 
 # We need to log before we run any of our maccabipedia (pywikibot or it's import) related code
 site = get_site()

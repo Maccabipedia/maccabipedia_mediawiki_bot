@@ -1,5 +1,6 @@
 import logging
 
+from maccabipediabot.common.logging_setup import setup_logging
 from maccabipediabot.common.wiki_login import get_site
 
 
@@ -8,7 +9,7 @@ from mwparserfromhell.nodes.template import Template
 
 site = get_site()
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+setup_logging(level=logging.INFO)
 
 FOOTBALL_REFEREES = {"בורגר ",
 "ביטון ",

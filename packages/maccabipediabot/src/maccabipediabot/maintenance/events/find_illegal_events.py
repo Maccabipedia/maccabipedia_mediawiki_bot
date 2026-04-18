@@ -219,10 +219,8 @@ def main() -> None:
     3. Print the report to stdout (captured by the workflow, sent to Telegram
        only if non-empty)
     """
-    logging.basicConfig(
-        format="%(asctime)s %(levelname)s %(message)s",
-        level=logging.INFO,
-    )
+    from maccabipediabot.common.logging_setup import setup_logging
+    setup_logging(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
     from maccabipediabot.common.wiki_login import get_site
     pw.config.verbose_output = False

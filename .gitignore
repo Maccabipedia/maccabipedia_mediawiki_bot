@@ -127,5 +127,6 @@ pywikibot.lwp
 .claude/worktrees/
 .claude/scratch/
 .claude/research/
+.claude/tmp/
 .mcp.json
 docs/superpowers/

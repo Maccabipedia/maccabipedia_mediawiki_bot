@@ -1,3 +1,9 @@
+## Version 2.65 ##
+
+    Retry maccabi-tlv.co.il game page fetches on transient 5xx/connection errors;
+    raise GamePageUnavailableError only after 4 attempts so transient blips no longer
+    abort the season crawl (CI run 24640051609).
+
 ## Version 2.64 ##
 
     Remove stale debug logging block in parse.general_fixes (TODO: delete me).

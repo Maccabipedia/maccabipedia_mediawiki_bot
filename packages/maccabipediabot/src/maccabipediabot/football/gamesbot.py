@@ -267,7 +267,7 @@ def create_or_update_game_page(game, overwrite_existing_pages: bool = True) -> b
     return True
 
 
-def get_games_that_has_existing_pages(games: List[AnyStr]):
+def get_games_that_has_existing_pages(games: List[str]):
     existing_games = []
     existing_games_pages = get_all_football_games_category_pages()
     for game_page in existing_games_pages:

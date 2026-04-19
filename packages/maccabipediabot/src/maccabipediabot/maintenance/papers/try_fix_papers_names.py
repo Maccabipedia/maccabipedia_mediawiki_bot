@@ -2,12 +2,11 @@ import logging
 from pathlib import Path
 
 from maccabipediabot.common.logging_setup import setup_logging
+from maccabipediabot.common.paths import papers_root
 
 setup_logging(level=logging.INFO)
 
 _PAPER_NAME = "למרחב"
-from maccabipediabot.common.paths import papers_root
-BASE_PAPER_FOLDER_PATH = papers_root() / 'למרחב' / 'למרחב 70-71'
 
 
 def rename_file(old_file: Path, new_file: Path, reason: str = "") -> Path:
@@ -85,7 +84,7 @@ def show_papers_names(base_folder: Path) -> None:
 
 
 if __name__ == '__main__':
-    folder = BASE_PAPER_FOLDER_PATH
+    folder = papers_root() / 'למרחב' / 'למרחב 70-71'
 
     for current_paper in folder.iterdir():
         if not current_paper.is_file():

@@ -4,9 +4,25 @@ import os
 
 import requests
 from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
 from maccabistats.config import MaccabiStatsConfigSingleton
 
 logger = logging.getLogger(__name__)
+
+# maccabi-tlv.co.il intermittently returns 500 for valid pages (CI run 24640051609),
+# so retry transient errors instead of aborting the whole season crawl.
+_session = requests.Session()
+_session.mount("https://", HTTPAdapter(max_retries=Retry(
+    total=4, backoff_factor=2, status_forcelist=(500, 502, 503, 504), allowed_methods=("GET",))))
+
+
+def _get(url):
+    response = _session.get(url, timeout=30)
+    response.raise_for_status()
+    return response.content
+
 
 folder_to_save_games_events_html_files_pattern = os.path.join(
     MaccabiStatsConfigSingleton.maccabi_site.folder_to_save_games_html_files, "game+{game_date}+events")
@@ -63,7 +79,7 @@ def __does_game_events_bs_exists_on_disk(link):
 
 
 def __get_game_events_bs_from_internet(link):
-    return requests.get(link).content
+    return _get(link)
 
 
 def __download_game_events_page(link):
@@ -106,7 +122,7 @@ def __does_game_squads_bs_exists_on_disk(link):
 
 
 def __get_game_squads_bs_from_internet(link):
-    return requests.get(link + "teams").content
+    return _get(link + "teams")
 
 
 def __download_game_squads_page(link):

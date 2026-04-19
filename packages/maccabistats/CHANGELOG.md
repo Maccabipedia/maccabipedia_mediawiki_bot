@@ -1,3 +1,9 @@
+## Version 2.65 ##
+
+    Retry maccabi-tlv.co.il game page fetches on transient 5xx errors via a
+    requests.Session mounted with urllib3.Retry, so a single server hiccup no
+    longer aborts the whole season crawl (CI run 24640051609).
+
 ## Version 2.64 ##
 
     Remove stale debug logging block in parse.general_fixes (TODO: delete me).

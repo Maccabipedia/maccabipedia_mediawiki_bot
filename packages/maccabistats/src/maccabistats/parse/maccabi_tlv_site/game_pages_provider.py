@@ -1,55 +1,27 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-import time
 
 import requests
 from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
 from maccabistats.config import MaccabiStatsConfigSingleton
 
 logger = logging.getLogger(__name__)
 
-
-class GamePageUnavailableError(Exception):
-    """Raised when a game's page on maccabi-tlv.co.il still fails after retries."""
-
-
-_MAX_FETCH_ATTEMPTS = 4
-_FETCH_BACKOFF_SECONDS = 2
-_REQUEST_TIMEOUT_SECONDS = 30
+# maccabi-tlv.co.il intermittently returns 500 for valid pages (CI run 24640051609),
+# so retry transient errors instead of aborting the whole season crawl.
+_session = requests.Session()
+_session.mount("https://", HTTPAdapter(max_retries=Retry(
+    total=4, backoff_factor=2, status_forcelist=(500, 502, 503, 504), allowed_methods=("GET",))))
 
 
-def _fetch_ok(url):
-    """Fetch a URL with retries on 5xx / transient network errors.
-
-    The maccabi-tlv.co.il site intermittently returns 500 for valid game pages
-    (observed in CI run 24640051609), so a single failed request is not a signal
-    to give up. We retry a handful of times and raise GamePageUnavailableError
-    only if the page is still unreachable — it is better to fail the job loudly
-    than to silently drop a game from the parse.
-    """
-    last_detail = "no attempts"
-    for attempt in range(1, _MAX_FETCH_ATTEMPTS + 1):
-        try:
-            response = requests.get(url, timeout=_REQUEST_TIMEOUT_SECONDS)
-        except requests.exceptions.RequestException as exc:
-            last_detail = f"{type(exc).__name__}: {exc}"
-            logger.warning("Fetch attempt %d/%d for %s failed: %s",
-                           attempt, _MAX_FETCH_ATTEMPTS, url, last_detail)
-        else:
-            if response.status_code == 200:
-                return response.content
-            last_detail = f"HTTP {response.status_code}"
-            if not 500 <= response.status_code < 600:
-                raise GamePageUnavailableError(f"{last_detail} for {url}")
-            logger.warning("Fetch attempt %d/%d for %s got %s",
-                           attempt, _MAX_FETCH_ATTEMPTS, url, last_detail)
-
-        if attempt < _MAX_FETCH_ATTEMPTS:
-            time.sleep(_FETCH_BACKOFF_SECONDS * attempt)
-
-    raise GamePageUnavailableError(
-        f"{last_detail} after {_MAX_FETCH_ATTEMPTS} attempts for {url}")
+def _get(url):
+    response = _session.get(url, timeout=30)
+    response.raise_for_status()
+    return response.content
 
 
 folder_to_save_games_events_html_files_pattern = os.path.join(
@@ -107,7 +79,7 @@ def __does_game_events_bs_exists_on_disk(link):
 
 
 def __get_game_events_bs_from_internet(link):
-    return _fetch_ok(link)
+    return _get(link)
 
 
 def __download_game_events_page(link):
@@ -150,7 +122,7 @@ def __does_game_squads_bs_exists_on_disk(link):
 
 
 def __get_game_squads_bs_from_internet(link):
-    return _fetch_ok(link + "teams")
+    return _get(link + "teams")
 
 
 def __download_game_squads_page(link):

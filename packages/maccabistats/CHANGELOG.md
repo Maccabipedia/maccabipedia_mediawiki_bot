@@ -1,8 +1,8 @@
 ## Version 2.65 ##
 
-    Retry maccabi-tlv.co.il game page fetches on transient 5xx/connection errors;
-    raise GamePageUnavailableError only after 4 attempts so transient blips no longer
-    abort the season crawl (CI run 24640051609).
+    Retry maccabi-tlv.co.il game page fetches on transient 5xx errors via a
+    requests.Session mounted with urllib3.Retry, so a single server hiccup no
+    longer aborts the whole season crawl (CI run 24640051609).
 
 ## Version 2.64 ##
 

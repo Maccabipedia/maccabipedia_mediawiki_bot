@@ -26,7 +26,7 @@ One playlist per season: `מכביפדיה | עונת YYYY/YY` (e.g. `מכביפ
 
 ## Google Drive Video Backup Structure
 
-All paths below are relative to `$MACCABIPEDIA_GOOGLE_DRIVE_ROOT/מכביפדיה_ראשי/וידאו/` (the mapped drive root — `/mnt/d/maccabipedia_google_drive` on Roee's WSL machine, but operator-specific).
+All paths below are relative to `$MACCABIPEDIA_GOOGLE_DRIVE_ROOT/מכביפדיה_ראשי/וידאו/`.
 
 ### Football (כדורגל)
 ```

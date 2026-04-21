@@ -1,3 +1,9 @@
+## Version 2.66 ##
+
+    Retry MaccabiPedia Cargo Export requests on transient 5xx/4xx (415, 429, 500-504) via
+    a requests.Session with urllib3.Retry, so daily jobs survive the brief openresty blips
+    that take the site off-nginx (CI runs 24473693887 and 24685264058).
+
 ## Version 2.65 ##
 
     Retry maccabi-tlv.co.il game page fetches on transient 5xx errors via a

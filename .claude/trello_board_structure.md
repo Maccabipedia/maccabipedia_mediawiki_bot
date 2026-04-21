@@ -83,3 +83,23 @@ When told to take a card:
 7. **When PR is merged:** move card to **Done**, add a summary comment with PR/commit link and any key decisions not already commented
 
 **Commenting rule:** Minor decisions → summarize in the final Done comment. Major direction changes → comment immediately when they happen.
+
+## Cards with physical artifacts (trello_tasks/ folder convention)
+
+When a card involves files the user needs to act on (rename, triage, upload, verify, crop, decide), stage them into a dedicated folder instead of leaving the user to re-derive which files belong to the task.
+
+**Location:** `$MACCABIPEDIA_DRIVE_ROOT/מכביפדיה_ראשי/trello_tasks/<short-id>_<hebrew_slug>/` (env var defined in `.claude/settings.local.json`, required — fail if unset, never hardcode the value)
+
+- `<short-id>` is the Trello card's `idShort` (visible as `#530` on the card, also in the short URL `https://trello.com/c/.../530-...`). Prefix lets the user cross-reference folder ↔ card at a glance.
+- `<hebrew_slug>` uses underscores, no spaces — e.g. `530_שם_המשחק_השלמת_העלאה`.
+- Create the card first, then rename/create the folder with the returned `idShort`.
+
+**Folder conventions inside:**
+- Numbered Hebrew subfolders for distinct work buckets (e.g. `01_נובמבר_2003_סריקות_גולמיות/`, `02_שינוי_שם_IMG/`). Number-prefix for ordering.
+- **Copy, don't move** — originals stay in place.
+- Include `README.md` (Hebrew, brief) and any interactive HTML guide.
+- Skip files explicitly marked "don't upload" at the source — don't even copy them.
+
+**Card description convention:** reference the Windows-style path so Google Drive Desktop opens it in Explorer when the user clicks. Build it from `$MACCABIPEDIA_DRIVE_ROOT` at write time (convert the WSL mount prefix to its Windows drive letter and flip slashes) — never write the absolute path into durable source/docs.
+
+**Template script:** `.claude/tmp/stage_trello_task.py` from card #530 (branch `check-shem`) is the reference implementation.

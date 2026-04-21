@@ -4,13 +4,16 @@
   2. Add the new video to its season playlist (creating the playlist if missing).
   3. Update the matching field on the wiki game page to point at the new URL.
 
+Game metadata (season, competition, stage, opponent, scores) is read directly from
+the wiki page template — the wiki is the single source of truth. The operator only
+supplies the backup file, the wiki page title, and the video type.
+
 Pre-flight: the target wiki field must be empty. If it's already filled we abort
 before touching YouTube (don't clobber a working link).
 
-If upload succeeds but the wiki step fails, the video ID is logged loudly so the
-operator can run `update_wiki_video_field` separately to finish the job. There is no
-rollback: YouTube uploads cost 1,600 quota units and the daily cap is 10,000, so
-re-uploading on every retry would burn through the quota fast.
+If upload succeeds but the wiki step fails, the video URL is logged loudly with the
+exact recovery command. There is no rollback: YouTube uploads cost 1,600 quota units
+and the daily cap is 10,000, so re-uploading on every retry would burn through fast.
 
 Scope: football only. Basketball/volleyball use different wiki templates and Cargo
 tables; a ball-sports variant can reuse the youtube/ helpers if needed.
@@ -18,6 +21,7 @@ tables; a ball-sports variant can reuse the youtube/ helpers if needed.
 import argparse
 import logging
 import urllib.parse
+from dataclasses import dataclass
 from pathlib import Path
 
 import mwparserfromhell as mw
@@ -51,9 +55,56 @@ CLI_VIDEO_TYPE_TO_INTERNAL: dict[str, VideoType] = {
 }
 
 
+@dataclass(frozen=True)
+class GameMetadata:
+    season: str  # normalized to "YYYY-YY" (dash form, matching channel title convention)
+    competition: str
+    stage: str
+    opponent: str
+    maccabi_score: int
+    opponent_score: int
+
+
 def wiki_page_url(wiki_page_title: str) -> str:
     """URL-encode the title so YouTube's auto-linkifier treats the description as clickable."""
     return "https://www.maccabipedia.co.il/" + urllib.parse.quote(wiki_page_title.replace(" ", "_"), safe=":")
+
+
+def _game_template(wikitext: str, page_title_hint: str) -> mw.nodes.Template:
+    parsed = mw.parse(wikitext)
+    templates = parsed.filter_templates(matches=lambda tmpl: tmpl.name.strip() == TEMPLATE_NAME)
+    if not templates:
+        raise LookupError(f"Template '{TEMPLATE_NAME}' not found on {page_title_hint}")
+    return templates[0]
+
+
+def parse_game_metadata(wikitext: str, page_title_hint: str = "") -> GameMetadata:
+    """Pure function: extract `GameMetadata` from the page's wikitext."""
+    tmpl = _game_template(wikitext, page_title_hint)
+
+    def required(field: str) -> str:
+        if not tmpl.has(field):
+            raise LookupError(f"Required field '{field}' missing on {page_title_hint}")
+        value = str(tmpl.get(field).value).strip()
+        if not value:
+            raise LookupError(f"Required field '{field}' is empty on {page_title_hint}")
+        return value
+
+    return GameMetadata(
+        season=required("עונה").replace("/", "-"),
+        competition=required("מפעל"),
+        stage=required("שלב במפעל"),
+        opponent=required("שם יריבה"),
+        maccabi_score=int(required("תוצאת משחק מכבי")),
+        opponent_score=int(required("תוצאת משחק יריבה")),
+    )
+
+
+def fetch_game_metadata(site: pw.Site, page_title: str) -> GameMetadata:
+    page = pw.Page(site, page_title)
+    if not page.exists():
+        raise LookupError(f"Wiki page not found: {page_title}")
+    return parse_game_metadata(page.text, page_title)
 
 
 def _check_wiki_field_empty(site: pw.Site, wiki_page_title: str, field: str) -> None:
@@ -65,11 +116,8 @@ def _check_wiki_field_empty(site: pw.Site, wiki_page_title: str, field: str) -> 
     page = pw.Page(site, wiki_page_title)
     if not page.exists():
         raise LookupError(f"Wiki page not found: {wiki_page_title}")
-    parsed = mw.parse(page.text)
-    templates = parsed.filter_templates(matches=lambda tmpl: tmpl.name.strip() == TEMPLATE_NAME)
-    if not templates:
-        raise LookupError(f"Template '{TEMPLATE_NAME}' not found on {wiki_page_title}")
-    existing = str(templates[0].get(field).value).strip() if templates[0].has(field) else ""
+    tmpl = _game_template(page.text, wiki_page_title)
+    existing = str(tmpl.get(field).value).strip() if tmpl.has(field) else ""
     if existing:
         raise ValueError(
             f"Wiki field '{field}' on {wiki_page_title} is already set to '{existing}'. "
@@ -81,12 +129,6 @@ def restore(
     *,
     video_path: Path,
     wiki_page_title: str,
-    season: str,
-    competition: str,
-    round_name: str,
-    opponent: str,
-    maccabi_score: int,
-    opponent_score: int,
     video_type: VideoType,
 ) -> str:
     if not video_path.is_file():
@@ -96,17 +138,20 @@ def restore(
     site = get_site()
     _check_wiki_field_empty(site, wiki_page_title, wiki_field)
 
+    metadata = fetch_game_metadata(site, wiki_page_title)
+    logger.info("Fetched metadata from wiki: %s", metadata)
+
     youtube_title = format_video_title(
-        season=season,
-        competition=competition,
-        round_name=round_name,
-        maccabi_score=maccabi_score,
-        opponent=opponent,
-        opponent_score=opponent_score,
+        season=metadata.season,
+        competition=metadata.competition,
+        round_name=metadata.stage,
+        maccabi_score=metadata.maccabi_score,
+        opponent=metadata.opponent,
+        opponent_score=metadata.opponent_score,
         video_type=video_type,
     )
     description = wiki_page_url(wiki_page_title)
-    playlist_title = season_playlist_title(season)
+    playlist_title = season_playlist_title(metadata.season)
 
     logger.info("Uploading %s as %r to %r", video_path, youtube_title, playlist_title)
     video_id = upload_and_add_to_playlist(video_path, youtube_title, playlist_title, description)
@@ -129,12 +174,6 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--file", required=True, help="Path to backup video file")
     parser.add_argument("--wiki-page", required=True, help="Full wiki page title (e.g. 'משחק:...')")
-    parser.add_argument("--season", required=True, help="Season in YYYY-YY form (e.g. 2008-09)")
-    parser.add_argument("--competition", required=True, help="Competition name as it appears on the wiki page")
-    parser.add_argument("--round", dest="round_name", required=True, help="Round name (e.g. 'מחזור 21', 'סיבוב ט')")
-    parser.add_argument("--opponent", required=True, help="Opponent team name")
-    parser.add_argument("--maccabi-score", type=int, required=True)
-    parser.add_argument("--opponent-score", type=int, required=True)
     parser.add_argument(
         "--video-type", required=True, choices=sorted(CLI_VIDEO_TYPE_TO_INTERNAL.keys()),
     )
@@ -146,12 +185,6 @@ def main() -> None:
     video_id = restore(
         video_path=Path(args.file),
         wiki_page_title=args.wiki_page,
-        season=args.season,
-        competition=args.competition,
-        round_name=args.round_name,
-        opponent=args.opponent,
-        maccabi_score=args.maccabi_score,
-        opponent_score=args.opponent_score,
         video_type=CLI_VIDEO_TYPE_TO_INTERNAL[args.video_type],
     )
     logger.info("Done. https://www.youtube.com/watch?v=%s", video_id)

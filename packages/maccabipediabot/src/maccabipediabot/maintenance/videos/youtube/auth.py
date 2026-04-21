@@ -34,8 +34,21 @@ def run_auth_flow() -> None:
         open_browser=False,
         prompt="select_account consent",
     )
-    TOKEN_FILE.write_text(creds.to_json())
+    _save_token(creds.to_json())
     print(f"Token saved to {TOKEN_FILE}")
+
+
+def _save_token(token_json: str) -> None:
+    """Write the OAuth token with owner-only permissions.
+
+    The default umask leaves files world-readable; an OAuth token granting upload +
+    playlist-management on our YouTube channel shouldn't be.
+    """
+    TOKEN_FILE.write_text(token_json)
+    try:
+        TOKEN_FILE.chmod(0o600)
+    except OSError:
+        pass  # chmod is best-effort on WSL/Windows; no loss of functionality.
 
 
 if __name__ == "__main__":

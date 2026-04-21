@@ -1,6 +1,8 @@
 # MaccabiPedia YouTube Channel
 
-Our channel — used to host Maccabi Tel Aviv match videos referenced from the wiki. When a match video gets deleted from an external channel, we upload our local backup here and update the wiki.
+Our channel — used to host Maccabi Tel Aviv match videos referenced from the wiki. When a match video gets deleted from an external channel (see `find_broken_videos.py`), we upload our local backup here and update the wiki to point at the new URL.
+
+This doc captures the conventions that aren't obvious from the code: title format quirks (BIDI), brand-account OAuth gotchas, and the Google Drive backup folder layout. Keep it current when the upload workflow changes — the next operator will read it first.
 
 Channel: https://www.youtube.com/@MaccabiPedia
 

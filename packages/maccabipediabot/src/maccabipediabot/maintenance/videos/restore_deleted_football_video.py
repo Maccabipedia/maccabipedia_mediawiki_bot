@@ -131,7 +131,14 @@ def restore(
     video_path: Path,
     wiki_page_title: str,
     video_type: VideoType,
+    dry_run: bool = False,
 ) -> str:
+    """Run the full restore pipeline.
+
+    When `dry_run=True`, fetches metadata, runs the pre-flight check, and prints the
+    YouTube title / playlist / wiki field it *would* produce — without uploading or
+    editing the wiki. Returns an empty string.
+    """
     if not video_path.is_file():
         raise FileNotFoundError(f"Backup video not found: {video_path}")
 
@@ -153,6 +160,15 @@ def restore(
     )
     description = wiki_page_url(wiki_page_title)
     playlist_title = season_playlist_title(metadata.season)
+
+    if dry_run:
+        logger.info("DRY RUN — would upload:")
+        logger.info("  file:        %s", video_path)
+        logger.info("  title:       %s", youtube_title)
+        logger.info("  playlist:    %s", playlist_title)
+        logger.info("  description: %s", description)
+        logger.info("  wiki field:  %s on %s", wiki_field, wiki_page_title)
+        return ""
 
     logger.info("Uploading %s as %r to %r", video_path, youtube_title, playlist_title)
     video_id = upload_and_add_to_playlist(video_path, youtube_title, playlist_title, description)
@@ -186,6 +202,11 @@ def main() -> None:
     parser.add_argument(
         "--video-type", required=True, choices=sorted(CLI_VIDEO_TYPE_TO_INTERNAL.keys()),
     )
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="Fetch metadata and print the computed YouTube title / playlist / wiki "
+             "field, but don't upload or edit the wiki. No quota cost.",
+    )
     args = parser.parse_args()
 
     setup_logging(level=logging.INFO)
@@ -195,8 +216,10 @@ def main() -> None:
         video_path=Path(args.file),
         wiki_page_title=args.wiki_page,
         video_type=CLI_VIDEO_TYPE_TO_INTERNAL[args.video_type],
+        dry_run=args.dry_run,
     )
-    logger.info("Done. https://www.youtube.com/watch?v=%s", video_id)
+    if video_id:
+        logger.info("Done. https://www.youtube.com/watch?v=%s", video_id)
 
 
 if __name__ == "__main__":

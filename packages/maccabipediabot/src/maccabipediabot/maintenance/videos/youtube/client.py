@@ -1,12 +1,13 @@
 import logging
 from pathlib import Path
 
+from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
-from maccabipediabot.maintenance.videos.youtube.auth import TOKEN_FILE
+from maccabipediabot.maintenance.videos.youtube.auth import TOKEN_FILE, _save_token
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +38,15 @@ def youtube_client():
         )
     creds = Credentials.from_authorized_user_file(str(TOKEN_FILE))
     if creds.expired and creds.refresh_token:
-        creds.refresh(Request())
-        TOKEN_FILE.write_text(creds.to_json())
+        try:
+            creds.refresh(Request())
+        except RefreshError as error:
+            raise SystemExit(
+                f"OAuth refresh failed: {error}. The token likely expired (the OAuth app "
+                f"is in Testing mode, so refresh tokens are valid for ~7 days). Re-run "
+                f"`uv run python -m maccabipediabot.maintenance.videos.youtube.auth`."
+            ) from error
+        _save_token(creds.to_json())
     client = build("youtube", "v3", credentials=creds)
     _verify_bound_to_maccabipedia(client)
     return client
@@ -109,7 +117,17 @@ def ensure_playlist(youtube, title: str) -> str:
 
 
 def upload_video(youtube, video_path: Path, title: str, description: str = "") -> str:
-    mimetype = _VIDEO_MIMETYPES.get(video_path.suffix.lower())
+    suffix = video_path.suffix.lower()
+    mimetype = _VIDEO_MIMETYPES.get(suffix)
+    if mimetype is None:
+        # Python's mimetypes will kick in (the same path that produced the .ts bug).
+        # Warn loudly so the next unmapped extension surfaces in logs before YouTube
+        # rejects the upload.
+        logger.warning(
+            "No explicit mimetype for %s — falling back to Python's guess_type. If "
+            "this upload fails with 'Media type ... is not supported', add %s to "
+            "_VIDEO_MIMETYPES.", suffix, suffix,
+        )
     media = MediaFileUpload(str(video_path), resumable=True, mimetype=mimetype)
     request = youtube.videos().insert(
         part="snippet,status",

@@ -4,6 +4,8 @@ Our channel — used to host Maccabi Tel Aviv match videos referenced from the w
 
 This doc captures the conventions that aren't obvious from the code: title format quirks (BIDI), brand-account OAuth gotchas, and the Google Drive backup folder layout. Keep it current when the upload workflow changes — the next operator will read it first.
 
+**Workflow:** see `CLAUDE.md` §5 "Restore a Deleted Football Video" for the step-by-step commands (`youtube.auth`, then `restore_deleted_football_video` with `--dry-run`, then the real run).
+
 Channel: https://www.youtube.com/@MaccabiPedia
 
 ## Video Metadata Conventions

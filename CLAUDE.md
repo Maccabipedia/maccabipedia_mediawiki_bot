@@ -60,6 +60,29 @@ Produces malformed HTTP (bad MIME headers, LF-only line endings) → Apache 400.
 - Monitor CI — if checks fail, fix and push before notifying the user
 - User reviews and merges
 
+### Restore a Deleted Football Video
+
+When `find_broken_videos` flags a broken YouTube link on a game page and a local backup exists under the MaccabiPedia Google Drive, re-host the backup on the MaccabiPedia YouTube channel and relink the wiki:
+
+1. **One-time auth** (or once per week, Testing-mode tokens expire):
+   ```
+   uv run python -m maccabipediabot.maintenance.videos.youtube.auth
+   ```
+   Open the printed URL, sign in with the account that manages the **MaccabiPedia brand** on YouTube (not a personal account — the token verifier will refuse a personal-account token).
+
+2. **Dry-run first** to preview title / playlist / wiki field without uploading:
+   ```
+   uv run python -m maccabipediabot.maintenance.videos.restore_deleted_football_video \
+     --file "$MACCABIPEDIA_GOOGLE_DRIVE_ROOT/…/<backup>.mp4" \
+     --wiki-page "משחק:DD-MM-YYYY …" \
+     --video-type highlights \
+     --dry-run
+   ```
+
+3. **Actual run** — drop `--dry-run`. Uploads, adds to the season playlist (creates it if missing), then sets the `תקציר וידאו` or `משחק מלא` field on the wiki page.
+
+All game metadata (season, competition, stage, opponent, scores) is read from the wiki page; the three args above are the only ones you supply. Scope: football only. See `.claude/maccabipedia_youtube_channel.md` for title conventions and the backup-folder layout.
+
 ### maccabistats Version Bump (maccabistats PRs only)
 
 Any PR touching `packages/maccabistats/` must also include, before the PR is created:
@@ -85,3 +108,4 @@ Every tool call result stays in context forever. Keep all outputs small:
 - `.claude/maccabipedia_structure_knowledge.md` — Game pages, player pages, templates, Cargo API
 - `.claude/maccabipedia_research_sources.md` — External data sources: rosters, match results, historical records, photos, video
 - `.claude/maccabistats_knowledge.md` — maccabistats Python package API reference
+- `.claude/maccabipedia_youtube_channel.md` — MaccabiPedia YouTube channel conventions + Google Drive backup layout (used by `restore_deleted_football_video`)

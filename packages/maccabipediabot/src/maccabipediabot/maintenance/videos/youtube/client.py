@@ -13,6 +13,21 @@ logger = logging.getLogger(__name__)
 SPORTS_CATEGORY_ID = "17"
 MACCABIPEDIA_CHANNEL_ID = "UCxnAYpW-2OJUXbrSil5EeQQ"
 
+# Python's `mimetypes` misidentifies video extensions that share a suffix with
+# non-video formats (`.ts` → Qt Linguist, `.flv` sometimes missing). Override.
+_VIDEO_MIMETYPES = {
+    ".ts": "video/mp2t",
+    ".m2ts": "video/mp2t",
+    ".mts": "video/mp2t",
+    ".flv": "video/x-flv",
+    ".mkv": "video/x-matroska",
+    ".webm": "video/webm",
+    ".mp4": "video/mp4",
+    ".m4v": "video/mp4",
+    ".mov": "video/quicktime",
+    ".avi": "video/x-msvideo",
+}
+
 
 def youtube_client():
     if not TOKEN_FILE.is_file():
@@ -87,7 +102,8 @@ def ensure_playlist(youtube, title: str) -> str:
 
 
 def upload_video(youtube, video_path: Path, title: str, description: str = "") -> str:
-    media = MediaFileUpload(str(video_path), resumable=True)
+    mimetype = _VIDEO_MIMETYPES.get(video_path.suffix.lower())
+    media = MediaFileUpload(str(video_path), resumable=True, mimetype=mimetype)
     request = youtube.videos().insert(
         part="snippet,status",
         body={
@@ -123,25 +139,3 @@ def add_video_to_playlist(youtube, playlist_id: str, video_id: str) -> None:
     ).execute()
 
 
-def update_video_snippet(youtube, video_id: str, title: str | None = None, description: str | None = None) -> None:
-    current = youtube.videos().list(part="snippet", id=video_id).execute()
-    items = current.get("items", [])
-    if not items:
-        raise LookupError(f"Video {video_id} not found on the channel")
-    snippet = items[0]["snippet"]
-    if title is not None:
-        snippet["title"] = title
-    if description is not None:
-        snippet["description"] = description
-    youtube.videos().update(
-        part="snippet",
-        body={"id": video_id, "snippet": snippet},
-    ).execute()
-
-
-def delete_video(youtube, video_id: str) -> None:
-    youtube.videos().delete(id=video_id).execute()
-
-
-def delete_playlist(youtube, playlist_id: str) -> None:
-    youtube.playlists().delete(id=playlist_id).execute()

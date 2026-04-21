@@ -40,18 +40,20 @@ def test_format_full_match_with_win():
     )
 
 
-def test_format_draw_still_reverses():
-    # 2018-19 Europa League 1st qualifying round, 12-07-2018 in Budapest: 1-1.
+def test_format_score_is_stored_opponent_first_for_bidi():
+    # Explicit non-palindrome check: Maccabi 3, Ajax 2 must appear as "(2-3)" in storage
+    # so the BIDI renderer flips it to "(3-2)" visually — Hebrew readers see Maccabi=3.
     title = format_video_title(
-        season="2018-19",
-        competition="הליגה האירופית",
-        round_name="מוקדמות ראשונות",
-        maccabi_score=1,
-        opponent="פרנצווארוש",
-        opponent_score=1,
+        season="2004-05",
+        competition="ליגת האלופות",
+        round_name="שלב הבתים - מחזור 4",
+        maccabi_score=3,
+        opponent="אייאקס אמסטרדם",
+        opponent_score=2,
         video_type=FULL_MATCH,
     )
-    assert "(1-1)" in title
+    assert "(2-3)" in title
+    assert "(3-2)" not in title
 
 
 def test_season_playlist_title():

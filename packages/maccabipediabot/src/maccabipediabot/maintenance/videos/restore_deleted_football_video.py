@@ -20,6 +20,7 @@ tables; a ball-sports variant can reuse the youtube/ helpers if needed.
 """
 import argparse
 import logging
+import shlex
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
@@ -161,10 +162,18 @@ def restore(
     try:
         set_video_field(site, wiki_page_title, wiki_field, video_url)
     except Exception:
+        # Build a copy-pasteable recovery command — %r wraps Hebrew strings in single
+        # quotes that the shell re-interprets, breaking the paste. shlex.quote emits
+        # shell-safe quoting that survives a real copy-paste.
+        recovery = " ".join([
+            "uv run python -m maccabipediabot.maintenance.videos.update_wiki_video_field",
+            f"--page {shlex.quote(wiki_page_title)}",
+            f"--field {shlex.quote(wiki_field)}",
+            f"--url {shlex.quote(video_url)}",
+        ])
         logger.exception(
-            "Upload succeeded (%s) but wiki update failed. Run update_wiki_video_field "
-            "manually with --page %r --field %r --url %s",
-            video_url, wiki_page_title, wiki_field, video_url,
+            "Upload succeeded (%s) but wiki update failed. Run this to finish the job:\n%s",
+            video_url, recovery,
         )
         raise
     return video_id

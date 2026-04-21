@@ -36,11 +36,9 @@ def set_video_field(site: pw.Site, page_title: str, field: str, url: str, summar
     if existing:
         raise ValueError(f"Field '{field}' already has a value on {page_title}: {existing}")
 
-    if tmpl.has(field):
-        tmpl.get(field).value = f"{url}\n"
-    else:
-        tmpl.add(field, f"{url}\n")
-
+    # mwparserfromhell's `add` replaces an existing parameter in place — same pattern
+    # as football/gamesbot.py and volleyball/gamesbot_volleyball.py.
+    tmpl.add(field, f"{url}\n")
     page.text = str(parsed)
     page.save(summary=summary or default_summary(url), bot=True)
 

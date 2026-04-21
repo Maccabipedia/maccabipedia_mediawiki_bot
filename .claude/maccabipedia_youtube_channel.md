@@ -4,7 +4,28 @@ Our channel — used to host Maccabi Tel Aviv match videos referenced from the w
 
 This doc captures the conventions that aren't obvious from the code: title format quirks (BIDI), brand-account OAuth gotchas, and the Google Drive backup folder layout. Keep it current when the upload workflow changes — the next operator will read it first.
 
-**Workflow:** see `CLAUDE.md` §5 "Restore a Deleted Football Video" for the step-by-step commands (`youtube.auth`, then `restore_deleted_football_video` with `--dry-run`, then the real run).
+## Restore-video workflow
+
+When `find_broken_videos` flags a broken YouTube link on a game page and a local backup exists under the MaccabiPedia Google Drive, re-host the backup here and relink the wiki:
+
+1. **One-time auth** (or once per week — Testing-mode tokens expire):
+   ```
+   uv run python -m maccabipediabot.maintenance.videos.youtube.auth
+   ```
+   Open the printed URL, sign in with the account that **manages the MaccabiPedia brand** on YouTube (a personal account is rejected by the token verifier).
+
+2. **Dry-run first** — previews the computed title / playlist / wiki field without uploading or editing:
+   ```
+   uv run python -m maccabipediabot.maintenance.videos.restore_deleted_football_video \
+     --file "$MACCABIPEDIA_GOOGLE_DRIVE_ROOT/…/<backup>.mp4" \
+     --wiki-page "משחק:DD-MM-YYYY …" \
+     --video-type highlights \
+     --dry-run
+   ```
+
+3. **Real run** — drop `--dry-run`. Uploads, adds to the season playlist (creates it if missing), then sets the `תקציר וידאו` or `משחק מלא` field on the wiki page.
+
+All game metadata (season, competition, stage, opponent, scores) is read from the wiki page; the three args above are the only ones you supply. Scope: football only.
 
 Channel: https://www.youtube.com/@MaccabiPedia
 

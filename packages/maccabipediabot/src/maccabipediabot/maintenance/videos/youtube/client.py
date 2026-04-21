@@ -67,8 +67,11 @@ def _verify_bound_to_maccabipedia(youtube) -> None:
 
 
 def find_playlist_id(youtube, title: str) -> str | None:
+    # The MaccabiPedia channel has ~30 playlists today, max ~200 realistically. Cap
+    # the paginated sweep at 20 pages (1000 playlists) so a misbehaving API can't hang.
     next_page_token = None
-    while True:
+    max_pages = 20
+    for _ in range(max_pages):
         resp = youtube.playlists().list(
             part="snippet",
             mine=True,
@@ -81,6 +84,10 @@ def find_playlist_id(youtube, title: str) -> str | None:
         next_page_token = resp.get("nextPageToken")
         if not next_page_token:
             return None
+    raise RuntimeError(
+        f"find_playlist_id: exceeded {max_pages} pages while searching for '{title}'. "
+        f"Channel has more playlists than the safety cap expects — bump max_pages."
+    )
 
 
 def create_playlist(youtube, title: str) -> str:
@@ -128,7 +135,7 @@ def upload_video(youtube, video_path: Path, title: str, description: str = "") -
 
 
 def add_video_to_playlist(youtube, playlist_id: str, video_id: str) -> None:
-    youtube.playlistItems().insert(
+    resp = youtube.playlistItems().insert(
         part="snippet",
         body={
             "snippet": {
@@ -137,5 +144,14 @@ def add_video_to_playlist(youtube, playlist_id: str, video_id: str) -> None:
             }
         },
     ).execute()
+    # Guard against silent insert failure (e.g. deleted/renamed playlist between
+    # ensure_playlist and this call). The API raises on HTTP errors; also verify the
+    # response carries the expected IDs so we don't report success on a no-op.
+    snippet = resp.get("snippet", {})
+    if snippet.get("playlistId") != playlist_id or snippet.get("resourceId", {}).get("videoId") != video_id:
+        raise RuntimeError(
+            f"Playlist insert returned an unexpected response: {resp!r} — video {video_id} "
+            f"may not have been added to playlist {playlist_id}"
+        )
 
 

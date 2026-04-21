@@ -19,13 +19,12 @@ Channel: https://www.youtube.com/@MaccabiPedia
 ## Playlists
 
 One playlist per season: `מכביפדיה | עונת YYYY/YY` (e.g. `מכביפדיה | עונת 2001/02`).
-Also: `מכביפדיה | דיסק פנאטיקס`.
 
 **Every uploaded video is added to its season playlist.** If a season playlist doesn't exist yet, create it (public) before adding the video.
 
 ## Google Drive Video Backup Structure
 
-All paths below are relative to `/mnt/d/maccabipedia_google_drive/מכביפדיה_ראשי/וידאו/`
+All paths below are relative to `$MACCABIPEDIA_GOOGLE_DRIVE_ROOT/מכביפדיה_ראשי/וידאו/` (the mapped drive root — `/mnt/d/maccabipedia_google_drive` on Roee's WSL machine, but operator-specific).
 
 ### Football (כדורגל)
 ```

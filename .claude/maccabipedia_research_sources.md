@@ -59,6 +59,9 @@ Wiki page with full list: `https://www.maccabipedia.co.il/מקורות_שימו�
 - WorldFootball.net: https://www.worldfootball.net/teams/maccabi-tel-aviv/ — all results + all-time player list
 - Wikipedia — International Football: https://en.wikipedia.org/wiki/Maccabi_Tel_Aviv_F.C._in_international_football
 
+**External club-history archives (opponent POV):**
+- Scored catalog of ~130 per-club archives / meta-league databases — see [external_club_history_sites.md](./external_club_history_sites.md). Use these to find Maccabi TLV match details from the opponent's side (lineups, attendance, reports).
+
 **Video (primary channels):**
 - maccabi-videos Vimeo: https://vimeo.com/428829885
 - maccabi-videos YouTube: https://www.youtube.com/channel/UCxnAYpW-2OJUXbrSil5EeQQ

@@ -4,7 +4,7 @@ Scored catalog of club-history / match-archive websites harvested from a Faceboo
 
 - **Source thread:** https://www.facebook.com/groups/375803282812198/posts/1395508027508380/
 - **Group:** https://www.facebook.com/groups/375803282812198/ (Football Lineups and Results Research)
-- **Original ask (Marco D'Avanzo):** "looking for as many as possible internet sites about club history, reporting a list of international friendlies matches played so far by that club."
+- **Original ask:** "looking for as many as possible internet sites about club history, reporting a list of international friendlies matches played so far by that club."
 - **Captured:** 2026-04-22 (138 unique URLs across 132 domains after stripping FB tracking params)
 
 ## Scoring rubric

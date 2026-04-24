@@ -2,22 +2,24 @@
 set -euo pipefail
 
 GENERATED_DIR=/generated
-GENERATED_LS="${GENERATED_DIR}/LocalSettings.php"
+INSTALLED_MARKER="${GENERATED_DIR}/.installed"
 ACTIVE_LS=/var/www/html/LocalSettings.php
-SNAPSHOT=/var/www/html/LocalSettings.prod-snapshot.php
+STUB=/var/www/html/LocalSettings.stub.php
 
 mkdir -p "$GENERATED_DIR"
 
-append_once() {
-    local marker="$1"
-    local block="$2"
-    if ! grep -qF "$marker" "$GENERATED_LS"; then
-        printf '\n%s\n%s\n' "$marker" "$block" >> "$GENERATED_LS"
-    fi
-}
+if [ ! -f "$STUB" ]; then
+    echo "[entrypoint] ERROR: $STUB not bind-mounted — check docker-compose.yml" >&2
+    exit 1
+fi
 
-if [ ! -f "$GENERATED_LS" ]; then
-    echo "[entrypoint] No LocalSettings.php found — running MediaWiki install.php"
+# First-boot install — writes the MediaWiki schema into the DB. The generated
+# LocalSettings.php from install.php goes to /tmp and is discarded; our
+# split-config stub is copied into place below. A marker file in the
+# persistent /generated volume tracks install state across container
+# restarts, so we don't re-run install.php every boot.
+if [ ! -f "$INSTALLED_MARKER" ]; then
+    echo "[entrypoint] First boot — running MediaWiki install.php"
 
     php maintenance/install.php \
         --dbtype=mysql \
@@ -32,63 +34,21 @@ if [ ! -f "$GENERATED_LS" ]; then
         --scriptpath="" \
         --lang="${MW_SITE_LANG}" \
         --pass="${MW_ADMIN_PASSWORD}" \
-        --confpath="${GENERATED_DIR}" \
+        --confpath=/tmp \
         "${MW_SITE_NAME}" \
         "${MW_ADMIN_USER}"
 
+    touch "$INSTALLED_MARKER"
     echo "[entrypoint] Install complete."
 fi
 
-# First layer of dev overrides — applied even when no prod snapshot is present.
-append_once "# --- dev overrides (appended by entrypoint.sh) ---" \
-'$wgMainCacheType = CACHE_NONE;
-$wgShowExceptionDetails = true;
-$wgShowDBErrorBacktrace = true;
-$wgShowSQLErrors = true;
-$wgDevelopmentWarnings = true;'
-
-# If the prod snapshot is mounted we load it, then re-assert dev-only values
-# AFTER the include so that prod secrets/URLs don't leak into runtime. PHP
-# executes top-to-bottom and the last assignment wins, so this block is our
-# "sanitization by override" in place of editing the snapshot on disk.
-if [ -f "$SNAPSHOT" ]; then
-    append_once "# --- prod snapshot include ---" \
-"if ( is_readable( '${SNAPSHOT}' ) ) {
-    require_once '${SNAPSHOT}';
-}"
-
-    append_once "# --- dev re-assert AFTER prod snapshot (wins by load order) ---" \
-"\$wgServer = '${MW_SITE_SERVER}';
-\$wgScriptPath = '';
-\$wgArticlePath = '/index.php/\$1';
-\$wgDBtype = 'mysql';
-\$wgDBserver = '${MW_DB_HOST}';
-\$wgDBname = '${MW_DB_NAME}';
-\$wgDBuser = '${MW_DB_USER}';
-\$wgDBpassword = '${MW_DB_PASSWORD}';
-\$wgDBprefix = '${MW_DB_PREFIX:-}';
-\$wgSecretKey = 'dev-secret-not-a-real-key-local-only';
-\$wgUpgradeKey = 'dev-upgrade-key-local-only';
-\$wgMainCacheType = CACHE_NONE;
-\$wgMemCachedServers = [];
-\$wgCacheDirectory = false;
-\$wgDBerrorLog = false;
-\$wgDebugLogFile = '';
-\$wgDebugLogGroups = [];
-\$wgShowExceptionDetails = true;
-\$wgShowDBErrorBacktrace = true;
-\$wgShowSQLErrors = true;
-\$wgDevelopmentWarnings = true;"
-else
-    # No snapshot — load just the skin so the wiki at least has branding.
-    if [ -d /var/www/html/skins/Metrolook ]; then
-        append_once "# --- skin: Metrolook (fallback when no snapshot) ---" \
-"wfLoadSkin( 'Metrolook' );
-\$wgDefaultSkin = 'metrolook';"
-    fi
-fi
-
-ln -sf "$GENERATED_LS" "$ACTIVE_LS"
+# Copy the split-config stub into place every boot. /var/www/html/ is image
+# filesystem and resets on container recreation, so this must run each time.
+# A real file (not symlink) is required: PHP's __DIR__ resolves to the real
+# path of the script, so symlinking the stub would break the sibling
+# require_once of LocalSettings.env.local.php / LocalSettings.shared.php
+# which are bind-mounted as siblings in /var/www/html/.
+cp "$STUB" "$ACTIVE_LS"
 
 echo "[entrypoint] Running maintenance/update.php --quick"
 php maintenance/update.php --quick

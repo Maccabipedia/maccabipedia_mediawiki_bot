@@ -4,7 +4,8 @@ set -euo pipefail
 GENERATED_DIR=/generated
 INSTALLED_MARKER="${GENERATED_DIR}/.installed"
 ACTIVE_LS=/var/www/html/LocalSettings.php
-STUB=/var/www/html/LocalSettings.stub.php
+CONFIG_DIR=/mw-config
+STUB="${CONFIG_DIR}/LocalSettings.stub.php"
 
 mkdir -p "$GENERATED_DIR"
 
@@ -42,13 +43,18 @@ if [ ! -f "$INSTALLED_MARKER" ]; then
     echo "[entrypoint] Install complete."
 fi
 
-# Copy the split-config stub into place every boot. /var/www/html/ is image
-# filesystem and resets on container recreation, so this must run each time.
-# A real file (not symlink) is required: PHP's __DIR__ resolves to the real
-# path of the script, so symlinking the stub would break the sibling
-# require_once of LocalSettings.env.local.php / LocalSettings.shared.php
-# which are bind-mounted as siblings in /var/www/html/.
+# The stub must be a real file at /var/www/html/LocalSettings.php so PHP's
+# __DIR__ resolves to /var/www/html/ — where the env and shared files are
+# symlinked as siblings below. /var/www/html/ is image filesystem and resets
+# on container recreation, so this must run each time.
 cp "$STUB" "$ACTIVE_LS"
+
+# Symlink the env + shared files (mounted as a group under /mw-config/)
+# into /var/www/html/ so the stub's __DIR__-relative require_once finds
+# them as siblings of LocalSettings.php. Symlinks (not cp) preserve
+# live edits from the host.
+ln -sf "${CONFIG_DIR}/LocalSettings.env.local.php" /var/www/html/LocalSettings.env.local.php
+ln -sf "${CONFIG_DIR}/LocalSettings.shared.php"    /var/www/html/LocalSettings.shared.php
 
 # Safety net: if someone edits the stub and breaks PHP syntax, catch it at
 # boot rather than at page load time.

@@ -1,2 +1,3 @@
 .env
 synced/
+prod-upload/LocalSettings.env.prod.php

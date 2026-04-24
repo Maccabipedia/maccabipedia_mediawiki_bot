@@ -8,9 +8,8 @@
 # so you get realistic infobox/Cargo rendering even from a small manifest.
 #
 # Edit freely — expand coverage as you need it. After changing, re-run:
-#   ./infra/local-wiki/scripts/sync-from-prod.sh pages \
-#       infra/local-wiki/scripts/content-manifests/starter.txt
-# then re-import inside the container (separate step, TBD).
+#   ./scripts/sync-from-prod.sh pages scripts/content-manifests/starter.manifest
+#   ./scripts/seed-content.sh starter
 
 # --- core ---
 עמוד ראשי

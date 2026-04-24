@@ -31,11 +31,19 @@
 #   ./sync-from-prod.sh <op> [args...]
 #
 # Allowed <op> values:
+#   bootstrap         — run every FTP+HTTP pull needed for first-time local
+#                       dev setup: skins + extensions + favicon + pages
+#                       (using scripts/content-manifests/starter.manifest).
+#                       Doesn't touch docker — run `docker compose up -d`
+#                       and `./scripts/seed-content.sh starter` afterwards.
 #   skins             — mirror <root>/skins/           → synced/skins/
 #   extensions        — mirror <root>/extensions/      → synced/extensions/
+#   favicon           — fetch   <root>/favicon.ico      → synced/favicon.ico
 #   localsettings     — fetch   <root>/LocalSettings.php
 #                       → synced/LocalSettings.prod-snapshot.php
+#                       (diagnostic only — not needed for boot)
 #   logo-assets       — mirror <root>/resources/assets/ → synced/resources/assets/
+#                       (diagnostic only — not mounted by the dev stack)
 #   versions          — list remote directory names under the webroot for audit
 #                       (no downloads; prints remote listing only)
 #   pages <manifest>  — pull page wikitext via Special:Export (HTTP) for every
@@ -66,7 +74,7 @@ if [ -f "$ENV_FILE" ]; then
 fi
 
 usage() {
-    sed -n '2,45p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,49p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 require_env() {
@@ -144,6 +152,17 @@ op_localsettings() {
     echo "   snapshot saved. Scrub secrets before committing anything derived from it."
 }
 
+op_favicon() {
+    require_env MACCABIPEDIA_FTP_HOST MACCABIPEDIA_FTP_USER MACCABIPEDIA_FTP_PASS MACCABIPEDIA_FTP_REMOTE_ROOT
+    local remote="${MACCABIPEDIA_FTP_REMOTE_ROOT%/}/favicon.ico"
+    local local_file="${SYNCED_DIR}/favicon.ico"
+
+    mkdir -p "${SYNCED_DIR}"
+    echo "==> lftp get  ${remote}  ->  ${local_file}"
+    run_lftp "get '${remote}' -o '${local_file}'"
+    log_event "get" "${remote}" "${local_file}"
+}
+
 op_versions() {
     require_env MACCABIPEDIA_FTP_HOST MACCABIPEDIA_FTP_USER MACCABIPEDIA_FTP_PASS MACCABIPEDIA_FTP_REMOTE_ROOT
     local remote="${MACCABIPEDIA_FTP_REMOTE_ROOT%/}"
@@ -156,7 +175,7 @@ op_pages() {
     local manifest="${1-}"
     if [ -z "$manifest" ]; then
         echo "ERROR: 'pages' op requires a manifest file path" >&2
-        echo "       example: $0 pages scripts/content-manifests/starter.txt" >&2
+        echo "       example: $0 pages scripts/content-manifests/starter.manifest" >&2
         exit 1
     fi
     if [ ! -f "$manifest" ]; then
@@ -169,7 +188,7 @@ op_pages() {
     local out_dir="${SYNCED_DIR}/pages"
     local stem
     stem="$(basename "$manifest")"
-    stem="${stem%.txt}"
+    stem="${stem%.*}"   # strip any extension (.txt, .manifest, …)
     local out_file="${out_dir}/${stem}.xml"
 
     mkdir -p "$out_dir"
@@ -226,8 +245,15 @@ op="$1"
 shift
 
 case "$op" in
+    bootstrap)
+        op_mirror_dir "skins"      "skins"
+        op_mirror_dir "extensions" "extensions"
+        op_favicon
+        op_pages "${SCRIPT_DIR}/content-manifests/starter.manifest"
+        ;;
     skins)         op_mirror_dir "skins"             "skins" ;;
     extensions)    op_mirror_dir "extensions"        "extensions" ;;
+    favicon)       op_favicon ;;
     logo-assets)   op_mirror_dir "resources/assets"  "resources/assets" ;;
     localsettings) op_localsettings ;;
     versions)      op_versions ;;

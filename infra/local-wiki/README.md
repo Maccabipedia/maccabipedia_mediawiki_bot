@@ -1,109 +1,108 @@
 # Local MaccabiPedia (Docker)
 
 Runs a local MediaWiki 1.39.11 + PHP 7.4 + MariaDB mirror of the production
-MaccabiPedia site. Pulls prod's skin, extensions, `LocalSettings.php`, and
-selected page wikitext over FTP + `Special:Export`; wraps them in a dev-safe
-override layer so prod DB/URLs/secrets never leak into local runtime.
+MaccabiPedia site. The wiki code and skin come from prod (pulled via FTP);
+site-wide config lives in `config/LocalSettings.shared.php` which ships
+byte-equivalent to prod. Dev-only values (DB host, URL, fake secrets) are
+in `config/LocalSettings.env.local.php` — prod has its own `.env.prod.php`.
 
 ## Prerequisites
 
 - **Linux / WSL (Ubuntu/Debian):** run `./scripts/setup-host.sh` once. It
   installs `docker.io`, `docker-compose-v2`, and `lftp`, starts the docker
-  daemon, and adds you to the `docker` group. After running it for the first
-  time, open a new shell (or `newgrp docker`) so `docker` works without sudo.
-- **macOS / Windows:** install Docker Desktop manually (with WSL 2 integration
-  on Windows). `lftp` is only needed for the prod-sync scripts and can be
-  installed via Homebrew / Scoop when you reach that step.
+  daemon, and adds you to the `docker` group. Open a new shell (or
+  `newgrp docker`) so `docker` works without sudo afterwards.
+- **macOS / Windows:** install Docker Desktop manually (with WSL 2
+  integration on Windows). `lftp` is needed for the prod-sync script and
+  can be installed via Homebrew / Scoop.
 
 ## First-time setup
 
 ```bash
-# Prereqs
 cd infra/local-wiki
 ./scripts/setup-host.sh               # docker + lftp + group membership
 
-# FTP credentials for pulling prod files
+# FTP credentials (file is gitignored)
 cp .env.example .env
 chmod 600 .env                        # fill in host/user/pass/remote-root
 
-# Pull prod code + config (skin, extensions, LocalSettings.php)
-./scripts/sync-from-prod.sh skins
-./scripts/sync-from-prod.sh extensions
-./scripts/sync-from-prod.sh localsettings
+# Pull everything needed for first boot (skin + extensions). ~few minutes.
+./scripts/sync-from-prod.sh bootstrap
 
 # Bring up the stack (first build takes a few minutes)
 docker compose up -d --build
-```
 
-Then open http://localhost:8080 — you'll see the `מכביפדיה` site with the
-real Metrolook skin and prod's extension set, backed by a fresh empty DB.
-
-Admin user: `admin` / `devadminpass` (from `docker-compose.yml`; local-only).
-
-## Seed real content
-
-After the wiki is up, pull page wikitext from prod and import it:
-
-```bash
-# Edit the starter manifest to add pages you care about
-$EDITOR scripts/content-manifests/starter.txt
-
-# Pull those pages + their referenced templates via Special:Export (HTTP)
-./scripts/sync-from-prod.sh pages scripts/content-manifests/starter.txt
-
-# Import the XML dump into the running container
+# Import the pulled page XML into the running container
 ./scripts/seed-content.sh starter
 ```
 
-Now browse to a seeded page (e.g.
-`http://localhost:8080/index.php/ערן_זהבי`) to see real content rendering
-with the Metrolook skin.
+Open http://localhost:8080 — you'll see the `מכביפדיה` site with the real
+Metrolook skin, prod's extension set, and the seeded pages rendering.
 
-**Limitation**: Cargo data tables aren't populated — only page wikitext
-comes in via `Special:Export`. Populating Cargo requires a full DB dump
-(see "Follow-ups" below).
+Admin user: `admin` / `devadminpass` (from `docker-compose.yml`; local-only).
+
+## Adjusting the seed set
+
+Pages pulled by `bootstrap` are listed in
+`scripts/content-manifests/starter.manifest`. Edit that file (one page
+title per line, `#` for comments), then:
+
+```bash
+./scripts/sync-from-prod.sh pages scripts/content-manifests/starter.manifest
+./scripts/seed-content.sh starter
+```
+
+Now browse e.g. `http://localhost:8080/index.php/ערן_זהבי`.
+
+**Limitation**: Cargo data tables aren't populated — `Special:Export`
+returns page wikitext only. Full Cargo-table parity needs a real DB dump
+(see "Follow-ups").
 
 ## Tear down
 
 ```bash
 docker compose down          # keep data
-docker compose down -v       # wipe DB + uploaded images + LocalSettings
+docker compose down -v       # wipe DB + images + install marker
 ```
 
 ## Files
 
 - `Dockerfile` — `FROM php:7.4.33-apache-bullseye`, installs MW 1.39.11 +
   PHP extensions (intl, gd, mysqli, zip, mbstring, calendar, opcache, apcu
-  pinned to 5.1.24). Version tags pinned for reproducibility.
-- `docker-compose.yml` — `mediawiki` (built from `Dockerfile`) + `mariadb:10.11`.
-  Named volumes: `mw_db`, `mw_images`, `mw_config` (`LocalSettings.php` lives
-  in `mw_config` so it survives container recreation). Mediawiki healthcheck
-  polls `http://localhost/`.
-- `entrypoint.sh` — on first boot runs `install.php` with prefix `MPMW_`,
-  generates random `$wgSecretKey` / `$wgUpgradeKey`, appends dev overrides,
-  requires the prod snapshot, re-asserts dev-only values AFTER the snapshot
-  (managed-block — re-assert updates on env var change), syntax-checks the
-  generated `LocalSettings.php`, then runs `update.php --quick`.
-- `scripts/setup-host.sh` — one-shot host-prereq installer (docker, compose,
-  lftp). Idempotent; safe to re-run.
-- `scripts/sync-from-prod.sh` — named-op wrapper around `lftp` (+ `curl` for
-  HTTP ops) for pulling files from prod. Download-only, scoped to a fixed
-  menu of ops. See `.env.example` for the env vars.
-  Ops: `skins`, `extensions`, `logo-assets`, `localsettings`, `versions`,
-  `pages <manifest>`.
-- `scripts/seed-content.sh` — imports pulled `synced/pages/*.xml` dumps into
-  the running container via `importDump.php`, then `rebuildall.php` +
-  `runJobs.php` to flush deferred work.
-- `scripts/content-manifests/starter.txt` — editable list of page titles to
-  pull; extend with games, seasons, stadiums, coaches, categories as needed.
+  pinned to 5.1.24). All versions pinned for reproducibility.
+- `docker-compose.yml` — `mediawiki` (built locally) + `mariadb:10.11`.
+  Named volumes: `mw_db`, `mw_images`, `mw_config` (first-boot marker).
+  Mediawiki healthcheck polls `http://localhost/`.
+- `entrypoint.sh` — on first boot runs `install.php` with prefix `MPMW_`
+  (output discarded to `/tmp`, state tracked via `/generated/.installed`);
+  every boot copies the stub to `/var/www/html/LocalSettings.php` as a
+  real file and symlinks env+shared as siblings, `php -l` checks the
+  result, then runs `update.php --quick`.
+- `config/` — the three split `LocalSettings*.php` files. Mounted
+  read-only into the container at `/mw-config/`.
+  - `LocalSettings.stub.php` — 5-line bootstrap: `require_once` env then
+    shared.
+  - `LocalSettings.env.local.php` — dev env values (`mariadb` host, dev
+    creds from `MW_DB_*` env, verbose errors, `CACHE_NONE`, fake keys).
+  - `LocalSettings.shared.php` — site-wide config (extensions, skins,
+    namespaces, hooks, Cargo, ContactPage, TabberNeue, …). Byte-equivalent
+    to prod's `LocalSettings.shared.php`; prod uploads this file manually
+    when it changes.
+- `scripts/setup-host.sh` — one-shot host-prereq installer (docker,
+  compose, lftp). Idempotent.
+- `scripts/sync-from-prod.sh` — named-op wrapper around `lftp` (+ `curl`
+  for HTTP). Download-only. See `.env.example` for env vars.
+  Ops: `bootstrap`, `skins`, `extensions`, `logo-assets`, `localsettings`,
+  `versions`, `pages <manifest>`.
+- `scripts/seed-content.sh` — imports pulled XML dumps into the running
+  container via `importDump.php`, then `rebuildall.php` + `runJobs.php`.
+- `scripts/content-manifests/starter.manifest` — editable list of page titles
+  to pull.
 
 ## Follow-ups (not yet shipped)
 
-- Split `LocalSettings.php` into a shared file (committed both sides) + an
-  env-specific file per deployment. Removes the override dance in
-  `entrypoint.sh`.
-- Prod DB dump importer for full Cargo-table parity. Requires a `.sql` from
-  the hosting panel's phpMyAdmin export.
+- Prod DB dump importer for full Cargo-table parity. Requires a `.sql`
+  export from the hosting panel's phpMyAdmin.
 - Bot-target integration: a `[maccabipedia-local]` profile in
-  `pywikibot_configs/user-password.py` + `MACCABIPEDIA_SITE=local` env switch
-  so the Python bots target the local wiki.
+  `pywikibot_configs/user-password.py` + `MACCABIPEDIA_SITE=local` env
+  switch so the Python bots target the local wiki.

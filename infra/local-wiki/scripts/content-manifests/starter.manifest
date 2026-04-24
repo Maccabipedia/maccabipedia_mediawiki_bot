@@ -1,0 +1,23 @@
+# Starter content manifest for local MaccabiPedia dev wiki.
+#
+# One page title per line. Lines starting with '#' and blank lines are
+# ignored. Titles must be spelled exactly as on the wiki (including Hebrew
+# characters, spaces, colons for namespaces, etc.).
+#
+# Special:Export auto-includes every template referenced by these pages,
+# so you get realistic infobox/Cargo rendering even from a small manifest.
+#
+# Edit freely — expand coverage as you need it. After changing, re-run:
+#   ./scripts/sync-from-prod.sh pages scripts/content-manifests/starter.manifest
+#   ./scripts/seed-content.sh starter
+
+# --- core ---
+עמוד ראשי
+
+# --- pages to include ---
+# Add titles below exactly as they appear on maccabipedia.co.il (URL-decoded).
+# Extend with games, seasons, coaches, stadiums, prose articles, and category
+# pages as you need realistic content to test against.
+ערן זהבי
+שרן ייני
+אצטדיון בלומפילד

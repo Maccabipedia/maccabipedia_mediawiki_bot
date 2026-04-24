@@ -1,0 +1,52 @@
+services:
+  mediawiki:
+    build: .
+    ports:
+      - "8080:80"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
+    environment:
+      MW_DB_HOST: mariadb
+      MW_DB_NAME: maccabipedia
+      MW_DB_USER: mw
+      MW_DB_PASSWORD: devpass
+      MW_DB_PREFIX: "MPMW_"
+      MW_ADMIN_USER: admin
+      MW_ADMIN_PASSWORD: devadminpass
+      MW_SITE_NAME: "MaccabiPedia Dev"
+      MW_SITE_SERVER: "http://localhost:8080"
+      MW_SITE_LANG: "he"
+    volumes:
+      - mw_config:/generated
+      - mw_images:/var/www/html/images
+      - ./synced/skins/Metrolook:/var/www/html/skins/Metrolook:ro
+      - ./synced/extensions:/var/www/html/extensions:ro
+      - ./synced/favicon.ico:/var/www/html/favicon.ico:ro
+      - ./config:/mw-config:ro
+
+  mariadb:
+    image: mariadb:10.11
+    environment:
+      MYSQL_DATABASE: maccabipedia
+      MYSQL_USER: mw
+      MYSQL_PASSWORD: devpass
+      MYSQL_ROOT_PASSWORD: devroot
+    volumes:
+      - mw_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  mw_config:
+  mw_images:
+  mw_db:

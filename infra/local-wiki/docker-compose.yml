@@ -28,7 +28,7 @@ services:
       - mw_images:/var/www/html/images
       - ./synced/skins/Metrolook:/var/www/html/skins/Metrolook:ro
       - ./synced/extensions:/var/www/html/extensions:ro
-      - ./prod-upload/LocalSettings.shared.php:/var/www/html/LocalSettings.shared.php:ro
+      - ./LocalSettings.shared.php:/var/www/html/LocalSettings.shared.php:ro
       - ./LocalSettings.env.local.php:/var/www/html/LocalSettings.env.local.php:ro
       - ./LocalSettings.stub.php:/var/www/html/LocalSettings.stub.php:ro
 

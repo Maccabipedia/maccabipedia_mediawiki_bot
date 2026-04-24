@@ -75,8 +75,10 @@ fi
 
 for xml in "${xml_files[@]}"; do
     echo "==> importDump.php  <  ${xml}"
+    # Drop --quiet so per-page import errors are visible rather than hidden
+    # behind a uniformly-successful exit code.
     compose_exec -T "$SERVICE" \
-        php maintenance/importDump.php --quiet --no-updates \
+        php maintenance/importDump.php --no-updates \
         < "$xml"
 done
 

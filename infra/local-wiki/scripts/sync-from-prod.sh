@@ -103,10 +103,17 @@ run_lftp() {
     fi
     if [ "${MACCABIPEDIA_FTP_TLS_VERIFY:-0}" = "1" ]; then
         tls_line="${tls_line//verify-certificate no/verify-certificate yes}"
+    else
+        echo "WARN: FTP cert verification is OFF — TLS encrypts the password but" >&2
+        echo "      cannot detect an active MITM. Set MACCABIPEDIA_FTP_TLS_VERIFY=1" >&2
+        echo "      in infra/local-wiki/.env once your host's FTP cert is trusted." >&2
     fi
+    # cmd:fail-exit makes lftp exit non-zero on any command failure inside
+    # the -e script (auth fail, mirror error, missing remote path, etc.);
+    # without it, a partial or failed transfer silently exits 0.
     lftp -u "${MACCABIPEDIA_FTP_USER},${MACCABIPEDIA_FTP_PASS}" \
          "${MACCABIPEDIA_FTP_HOST}" \
-         -e "${tls_line} set net:max-retries 3; set net:timeout 20; ${script}; bye"
+         -e "set cmd:fail-exit yes; ${tls_line} set net:max-retries 3; set net:timeout 20; ${script}; bye"
 }
 
 op_mirror_dir() {
@@ -118,7 +125,10 @@ op_mirror_dir() {
 
     mkdir -p "$local_dir"
     echo "==> lftp mirror  ${remote}  ->  ${local_dir}"
-    run_lftp "mirror --verbose --only-missing --parallel=4 '${remote}' '${local_dir}'"
+    # Drop --only-missing: we want upstream file updates picked up on re-sync.
+    # lftp still compares size/mtime and skips unchanged files, so a re-sync
+    # after no prod changes is fast without leaving stale content behind.
+    run_lftp "mirror --verbose --parallel=4 '${remote}' '${local_dir}'"
     log_event "mirror" "${remote}" "${local_dir}"
 }
 
@@ -193,8 +203,10 @@ op_pages() {
         "$export_url"
 
     # Quick sanity check: Special:Export returns MediaWiki XML on success; if
-    # the server returned an HTML error page, the opening tag will be wrong.
-    if ! head -c 256 "$out_file" | grep -q '<mediawiki'; then
+    # the server returned an HTML error page, the root element won't match.
+    # Anchor the match to a <mediawiki followed by space/newline/> so we don't
+    # accept an HTML page that happens to mention "mediawiki" in its body.
+    if ! head -c 512 "$out_file" | grep -Eq '<mediawiki[[:space:]]'; then
         echo "ERROR: response is not a MediaWiki XML dump — check ${out_file}" >&2
         exit 1
     fi

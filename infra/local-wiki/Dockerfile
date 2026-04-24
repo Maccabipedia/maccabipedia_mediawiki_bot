@@ -1,6 +1,7 @@
-FROM php:7.4-apache
+FROM php:7.4.33-apache-bullseye
 
 ENV MW_VERSION=1.39.11 \
+    APCU_VERSION=5.1.24 \
     DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -24,7 +25,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         opcache \
         zip
 
-RUN pecl install apcu && docker-php-ext-enable apcu
+RUN pecl install "apcu-${APCU_VERSION}" && docker-php-ext-enable apcu
 
 RUN a2enmod rewrite
 

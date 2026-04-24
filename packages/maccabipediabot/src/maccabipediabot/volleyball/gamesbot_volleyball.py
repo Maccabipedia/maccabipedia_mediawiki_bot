@@ -19,7 +19,6 @@ site = get_site()
 
 setup_logging(level=logging.INFO)
 
-VOLLEYBALL_ROOT_FOLDER = volleyball_root()
 ALLOWED_SEASONS = ['1999-00']
 
 volleyball_games_prefix = "כדורעף"
@@ -69,7 +68,7 @@ FILES_TO_IGNORE = {'desktop.ini'}
 
 def build_volleyball_game_from_folder(potential_game_folder: Path) -> VolleyballGame:
     raw_season, raw_competition, raw_game_details = potential_game_folder.relative_to(
-        VOLLEYBALL_ROOT_FOLDER).parts
+        volleyball_root()).parts
 
     season = raw_season.replace("עונת", "").strip().replace("-", "/")
     competition = raw_competition
@@ -101,8 +100,9 @@ def build_volleyball_game_from_folder(potential_game_folder: Path) -> Volleyball
 def get_volleyball_games() -> List[VolleyballGame]:
     all_games = []
 
-    for potential_game_folder in VOLLEYBALL_ROOT_FOLDER.glob("**"):
-        if len(potential_game_folder.relative_to(VOLLEYBALL_ROOT_FOLDER).parts) != 3:
+    root = volleyball_root()
+    for potential_game_folder in root.glob("**"):
+        if len(potential_game_folder.relative_to(root).parts) != 3:
             logging.info(f'skipping folder: {potential_game_folder}, this folder has less parts than needed')
             continue
 

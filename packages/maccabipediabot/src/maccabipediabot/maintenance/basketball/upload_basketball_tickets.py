@@ -18,7 +18,7 @@ Dependencies:
     pywikibot, requests
 
 Configuration:
-    Set TICKETS_BASE_FOLDER to the batch folder containing the 'input' sub-folder.
+    Set MACCABIPEDIA_BASKETBALL_TICKETS_ROOT to the batch folder containing the 'input' sub-folder.
     Set SHOULD_SAVE = False to do a dry-run without uploading.
 """
 
@@ -30,6 +30,7 @@ from datetime import datetime
 import contextlib
 
 from maccabipediabot.common.logging_setup import setup_logging
+from maccabipediabot.common.paths import basketball_tickets_root
 from maccabipediabot.common.wiki_login import get_site
 import pywikibot as pw
 from pywikibot.comms import http as pw_http
@@ -42,9 +43,6 @@ site = get_site()
 
 API_URL = 'https://www.maccabipedia.co.il/api.php'
 
-# Configuration
-from maccabipediabot.common.paths import basketball_tickets_root
-TICKETS_BASE_FOLDER = basketball_tickets_root()
 SHOULD_SAVE = True
 
 TEMPLATE_NAME = "תיוג כרטיס משחק כדורסל"
@@ -54,19 +52,19 @@ SUPPORTED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.pdf'}
 
 
 def _input_folder() -> Path:
-    return TICKETS_BASE_FOLDER / 'input'
+    return basketball_tickets_root() / 'input'
 
 
 def _passed_folder() -> Path:
-    return TICKETS_BASE_FOLDER / 'passed'
+    return basketball_tickets_root() / 'passed'
 
 
 def _failed_folder() -> Path:
-    return TICKETS_BASE_FOLDER / 'failed'
+    return basketball_tickets_root() / 'failed'
 
 
 def _duplicate_folder() -> Path:
-    return TICKETS_BASE_FOLDER / 'duplicate'
+    return basketball_tickets_root() / 'duplicate'
 
 
 def _ensure_folders_exist() -> None:

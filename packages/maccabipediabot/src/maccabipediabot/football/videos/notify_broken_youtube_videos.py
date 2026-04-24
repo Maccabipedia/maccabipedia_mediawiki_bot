@@ -14,8 +14,6 @@ import logging
 from maccabipediabot.common.logging_setup import setup_logging
 setup_logging(level=logging.INFO)
 
-_API = os.environ['YOUTUBE_API_KEY']
-
 
 def youtube_link(link):
     return 'youtube.' in link or 'youtu.be' in link
@@ -31,7 +29,8 @@ def youtube_video_active_and_public(link):
     else:
         raise Exception("Not a familiar youtube format")
 
-    query_youtube_video_api = f'https://www.googleapis.com/youtube/v3/videos?id={youtube_id}&key={_API}&part=status'
+    api_key = os.environ['YOUTUBE_API_KEY']
+    query_youtube_video_api = f'https://www.googleapis.com/youtube/v3/videos?id={youtube_id}&key={api_key}&part=status'
     answer = requests.get(query_youtube_video_api)
     if answer.status_code != 200:
         raise Exception(f"Bad answer from youtube api, code: {answer.status_code}, json: {answer.json()}")

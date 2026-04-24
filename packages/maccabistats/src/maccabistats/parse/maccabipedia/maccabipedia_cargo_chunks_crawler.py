@@ -6,12 +6,34 @@ from typing import Dict
 import html
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
 from maccabistats.config import MaccabiStatsConfigSingleton
 
 logger = logging.getLogger(__name__)
 
 _MAX_LIMIT_PER_REQUEST = 5000  # mediawiki api hardcoded limit
 _MUST_HAVE_FIELDS = "_pageName"
+
+# MaccabiPedia occasionally serves transient 415 from an openresty proxy (normal server is nginx);
+# seen twice in six days at ~19:00 UTC. Retry across those blips instead of failing the daily job.
+_RETRYABLE_STATUSES = (408, 415, 429, 500, 502, 503, 504)
+
+
+def _build_session() -> requests.Session:
+    session = requests.Session()
+    retry = Retry(
+        total=5,
+        backoff_factor=2,
+        status_forcelist=_RETRYABLE_STATUSES,
+        allowed_methods=frozenset(["GET"]),
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
 
 
 class MaccabiPediaCargoChunksCrawler(Iterator):
@@ -39,6 +61,7 @@ class MaccabiPediaCargoChunksCrawler(Iterator):
         self._current_offset = 0
         self._finished_to_crawl = False
         self._already_fetched_data_queue = deque()
+        self._session = _build_session()
 
     @property
     def full_crawl_address(self):
@@ -60,7 +83,7 @@ class MaccabiPediaCargoChunksCrawler(Iterator):
         """
 
         # Get data
-        request_result = requests.get(self.full_crawl_address)
+        request_result = self._session.get(self.full_crawl_address, timeout=30)
         if request_result.status_code != 200:
             logging.exception(f"Error while fetching data from address: {self.full_crawl_address}, "
                               f"status code: {request_result.status_code}, text: {request_result.text}")

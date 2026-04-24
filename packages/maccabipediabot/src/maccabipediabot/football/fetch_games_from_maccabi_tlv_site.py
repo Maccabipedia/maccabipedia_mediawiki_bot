@@ -9,8 +9,8 @@ setup_logging(level=logging.DEBUG)
 
 
 def fetch_games_from_maccabi_tlv_site() -> None:
-    # Season 2024/25
-    os.environ['START_SEASON_TO_CRAWL'] = '85'
+    # Season 2025/26
+    os.environ['START_SEASON_TO_CRAWL'] = '86'
     logging.info(f"Fetching maccabi tlv site games with start season: {os.environ['START_SEASON_TO_CRAWL']}")
 
     MaccabiStatsConfigSingleton.maccabi_site.use_multiprocess_crawling = False

@@ -93,10 +93,12 @@ echo "    snapshot: $SNAPSHOT_DIR"
 # Copy the tracked skin source. cp -a preserves perms and timestamps.
 cp -a "$SOURCE_SKIN/." "$OUT/"
 
-# The .gitkeep at skins/Metrolook/assets/ exists only to stabilize the
-# docker bind-mount target locally; it has no purpose on prod and would
-# look like cruft.
-rm -f "$OUT/assets/.gitkeep"
+# Strip git-only directives that have no purpose on prod:
+#   - .gitkeep at assets/ exists to stabilize the docker bind-mount
+#     target locally
+#   - .gitattributes tells git not to normalize CRLF in this vendored
+#     tree; prod's apache/php don't read it
+rm -f "$OUT/assets/.gitkeep" "$OUT/.gitattributes"
 
 # Replace the (empty) tracked assets/ directory with the real binary
 # banners. Synced/ is the FTP mirror so this is exactly what prod

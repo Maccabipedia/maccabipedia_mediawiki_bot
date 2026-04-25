@@ -27,6 +27,7 @@
 set -euo pipefail
 
 command -v curl >/dev/null || { echo "ERROR: curl required but not found" >&2; exit 2; }
+command -v jq   >/dev/null || { echo "ERROR: jq required but not found"   >&2; exit 2; }
 
 BASE_URL="${1:-http://localhost:8080}"
 BASE_URL="${BASE_URL%/}"
@@ -49,6 +50,12 @@ assert() {
         echo "  ✗ ${name}"
         FAIL=$((FAIL + 1))
     fi
+}
+
+# Helper for asserting a file does NOT contain a fixed string. Used as
+# `assert "name" not_contains "$FILE" 'pattern'`.
+not_contains() {
+    ! grep -qF "$2" "$1"
 }
 
 echo "==> GET ${MAIN_URL}"
@@ -142,13 +149,84 @@ assert "no menu links degraded to href=\"#\" (found $broken_hrefs)" \
     test "$broken_hrefs" = "0"
 
 echo
-echo "Anonymous user panel renders with login + create-account links:"
-# We curl with no cookies, so the page is rendered for an anonymous user.
+echo "Anonymous user (no cookies) sees login + create-account links:"
+# The default $HTML render above used no cookies, so we're already anonymous.
 # Match by the menu's Hebrew labels (specific enough to be unique).
 assert "anonymous: 'כניסה לחשבון' link rendered" \
     grep -qF 'כניסה לחשבון' "$HTML"
 assert "anonymous: 'יצירת חשבון' link rendered" \
     grep -qF 'יצירת חשבון' "$HTML"
+assert "anonymous: no 'התנתק' (logout) link" \
+    not_contains "$HTML" '>התנתק</a>'
+assert "anonymous: no 'מחיקה' (delete, admin-only) link" \
+    not_contains "$HTML" '>מחיקה</a>'
+
+echo
+echo "Logged-in admin sees user panel + admin-only options:"
+# The local stack ships an admin/devadminpass account (see docker-compose.yml).
+# Authenticate via the MediaWiki action=login API: first GET a login token,
+# then POST it with the credentials. The resulting session cookie is reused
+# for the subsequent main-page request. Both calls keep credentials in
+# --data so they don't appear in shell process listings.
+COOKIE_JAR="$(mktemp)"
+trap 'rm -f "$HTML" "$COOKIE_JAR"' EXIT
+
+token_json=$(curl -sL -c "$COOKIE_JAR" -b "$COOKIE_JAR" \
+    "${BASE_URL}/api.php?action=query&meta=tokens&type=login&format=json")
+# jq -r unescapes the JSON string (e.g. `+\\` → `+\`) which the API
+# requires; a hand-rolled grep+sed extraction would send the escaped
+# form and the API would reject it as WrongToken.
+login_token=$(printf '%s' "$token_json" | jq -r '.query.tokens.logintoken // empty')
+
+if [ -z "$login_token" ]; then
+    echo "  · skipped — couldn't fetch login token (API response: $token_json)"
+else
+    login_result=$(curl -sL -c "$COOKIE_JAR" -b "$COOKIE_JAR" \
+        --data-urlencode "action=login" \
+        --data-urlencode "lgname=admin" \
+        --data-urlencode "lgpassword=devadminpass" \
+        --data-urlencode "lgtoken=${login_token}" \
+        --data-urlencode "format=json" \
+        "${BASE_URL}/api.php")
+    if ! printf '%s' "$login_result" | grep -q '"result":"Success"'; then
+        echo "  · skipped — login failed (API response: $login_result)"
+    else
+        AUTH_HTML="$(mktemp)"
+        trap 'rm -f "$HTML" "$COOKIE_JAR" "$AUTH_HTML"' EXIT
+        curl -sL -b "$COOKIE_JAR" -o "$AUTH_HTML" "$MAIN_URL"
+
+        # Logged-in user panel: username + talk + preferences + contributions
+        # + logout, instead of the anonymous login/create-account links.
+        assert "admin: 'התנתק' (logout) link rendered" \
+            grep -qF '>התנתק</a>' "$AUTH_HTML"
+        assert "admin: 'העדפות' (preferences) link rendered" \
+            grep -qF '>העדפות</a>' "$AUTH_HTML"
+        assert "admin: 'התרומות שלי' (my contributions) link rendered" \
+            grep -qF '>התרומות שלי</a>' "$AUTH_HTML"
+        assert "admin: 'עמוד השיחה שלי' (my talk page) link rendered" \
+            grep -qF '>עמוד השיחה שלי</a>' "$AUTH_HTML"
+        assert "admin: anonymous 'כניסה לחשבון' link absent" \
+            not_contains "$AUTH_HTML" '>כניסה לחשבון</a>'
+        assert "admin: anonymous 'יצירת חשבון' link absent" \
+            not_contains "$AUTH_HTML" '>יצירת חשבון</a>'
+
+        # Edit panel (default 'edit' permission for any registered user):
+        assert "admin: 'עריכה' (edit) link rendered" \
+            grep -qF '>עריכה</a>' "$AUTH_HTML"
+
+        # Admin-only items gated on $user->isAllowed('protect'):
+        assert "admin: 'מחיקה' (delete) link rendered" \
+            grep -qF '>מחיקה</a>' "$AUTH_HTML"
+        assert "admin: 'העברה' (move) link rendered" \
+            grep -qF '>העברה</a>' "$AUTH_HTML"
+        assert "admin: 'הגנה' (protect) link rendered" \
+            grep -qF '>הגנה</a>' "$AUTH_HTML"
+    fi
+fi
+# Note: we don't test a non-admin logged-in user explicitly because the
+# local stack ships only the admin account. The contrast we DO test —
+# anonymous (no edit/no admin items) vs admin (edit + admin items) —
+# covers the two state transitions in the template.
 
 echo
 echo "oldid is preserved in action URLs when viewing an old revision:"

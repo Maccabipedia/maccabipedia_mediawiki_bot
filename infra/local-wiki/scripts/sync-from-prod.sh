@@ -11,8 +11,8 @@
 #   - Credentials come from env vars; never hardcoded, never logged.
 #   - Every invocation appends a timestamped line to SYNC_LOG.
 #
-# Required for FTP-based ops (metrolook-assets, extensions, logo-assets,
-# localsettings, versions):
+# Required for FTP-based ops (maccabipedia-skin-assets, extensions,
+# logo-assets, localsettings, versions):
 #   MACCABIPEDIA_FTP_HOST        — FTP hostname (e.g. ftp.maccabipedia.co.il)
 #   MACCABIPEDIA_FTP_USER        — FTP username
 #   MACCABIPEDIA_FTP_PASS        — FTP password
@@ -31,29 +31,35 @@
 #   ./sync-from-prod.sh <op> [args...]
 #
 # Allowed <op> values:
-#   bootstrap         — run every FTP+HTTP pull needed for first-time local
-#                       dev setup: metrolook-assets + extensions + favicon
-#                       + pages (using scripts/content-manifests/starter.manifest).
-#                       Doesn't touch docker — run `docker compose up -d`
-#                       and `./scripts/seed-content.sh starter` afterwards.
-#   metrolook-assets  — mirror <root>/skins/Metrolook/assets/
-#                       → synced/skins/Metrolook/assets/
-#                       (only the binary banners; the rest of the Metrolook
-#                       skin source is vendored at <repo-root>/skins/Metrolook/).
-#   extensions        — mirror <root>/extensions/      → synced/extensions/
-#   favicon           — fetch   <root>/favicon.ico      → synced/favicon.ico
-#   localsettings     — fetch   <root>/LocalSettings.php
-#                       → synced/LocalSettings.prod-snapshot.php
-#                       (diagnostic only — not needed for boot)
-#   logo-assets       — mirror <root>/resources/assets/ → synced/resources/assets/
-#                       (diagnostic only — not mounted by the dev stack)
-#   versions          — list remote directory names under the webroot for audit
-#                       (no downloads; prints remote listing only)
-#   pages <manifest>  — pull page wikitext via Special:Export (HTTP) for every
-#                       title in <manifest> (one title per line; blanks and
-#                       lines starting with '#' ignored). Templates referenced
-#                       by the pages are included automatically. Output:
-#                       synced/pages/<manifest-stem>.xml  (MediaWiki XML dump)
+#   bootstrap                — run every FTP+HTTP pull needed for first-time
+#                              local dev setup: maccabipedia-skin-assets +
+#                              extensions + favicon + pages (using
+#                              scripts/content-manifests/starter.manifest).
+#                              Doesn't touch docker — run `docker compose up
+#                              -d` and `./scripts/seed-content.sh starter`
+#                              afterwards.
+#   maccabipedia-skin-assets — mirror <root>/skins/Metrolook/assets/
+#                              → synced/skins/Metrolook/assets/
+#                              (binary banners only; the skin source itself
+#                              — our maccabipedia fork of Metrolook — is
+#                              vendored at <repo-root>/skins/Metrolook/ and
+#                              is NOT pulled by this script).
+#   extensions               — mirror <root>/extensions/ → synced/extensions/
+#   favicon                  — fetch  <root>/favicon.ico → synced/favicon.ico
+#   localsettings            — fetch  <root>/LocalSettings.php
+#                              → synced/LocalSettings.prod-snapshot.php
+#                              (diagnostic only — not needed for boot)
+#   logo-assets              — mirror <root>/resources/assets/
+#                              → synced/resources/assets/
+#                              (diagnostic only — not mounted by the dev stack)
+#   versions                 — list remote directory names under the webroot
+#                              for audit (no downloads; prints listing only)
+#   pages <manifest>         — pull page wikitext via Special:Export (HTTP)
+#                              for every title in <manifest> (one title per
+#                              line; blanks and lines starting with '#'
+#                              ignored). Templates referenced by the pages
+#                              are included automatically. Output:
+#                              synced/pages/<manifest-stem>.xml (MW XML dump)
 
 set -euo pipefail
 
@@ -257,7 +263,7 @@ case "$op" in
         op_favicon
         op_pages "${SCRIPT_DIR}/content-manifests/starter.manifest"
         ;;
-    metrolook-assets)
+    maccabipedia-skin-assets)
         op_mirror_dir "skins/Metrolook/assets" "skins/Metrolook/assets" ;;
     extensions)    op_mirror_dir "extensions"        "extensions" ;;
     favicon)       op_favicon ;;

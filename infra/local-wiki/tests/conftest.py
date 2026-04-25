@@ -100,3 +100,17 @@ def admin_html(admin_session: requests.Session, main_url: str) -> str:
         f"Admin GET {main_url} returned HTTP {response.status_code}"
     )
     return response.text
+
+
+@pytest.fixture(scope="session")
+def maccabipedia_anon_html(main_url: str) -> str:
+    """GET the main page with ?useskin=maccabipedia and return the body.
+
+    The new skin is opt-in until Phase 2 cutover — see
+    docs/superpowers/specs/2026-04-25-maccabipedia-skin-rewrite.md.
+    """
+    response = requests.get(main_url, params={"useskin": "maccabipedia"}, timeout=15)
+    assert response.status_code == 200, (
+        f"useskin=maccabipedia GET {main_url} returned HTTP {response.status_code}"
+    )
+    return response.text

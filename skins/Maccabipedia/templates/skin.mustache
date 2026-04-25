@@ -1,32 +1,31 @@
-<div class="mw-page-container">
-	<header class="mw-header">
-		{{{html-title-heading}}}
-	</header>
+<div class="maccabipedia-site-container">
+	<div class="page-overlay"></div>
 
-	<main class="mw-body" role="main">
-		<div class="mw-body-content">
+	{{{html-app-header}}}
+
+	<div class="maccabipedia-page-title">
+		<div class="content">
+			{{{html-title-heading}}}
+		</div>
+	</div>
+
+	<main>
+		<a id="top"></a>
+		{{{html-prebodyhtml}}}
+		<div id="bodyContent" class="mw-body-content">
+			{{#html-subtitle}}
+				<div id="contentSub">{{{html-subtitle}}}</div>
+			{{/html-subtitle}}
+			{{#html-user-message}}
+				<div class="usermessage">{{{html-user-message}}}</div>
+			{{/html-user-message}}
 			{{{html-body-content}}}
+			{{{html-categories}}}
+			<div class="visualClear"></div>
+			{{{html-after-content}}}
+			<div class="visualClear"></div>
 		</div>
 	</main>
 
-	<aside class="mw-portlets">
-		{{#data-portlets-sidebar.data-portlets-first}}
-			<nav class="mw-portlet" id="{{id}}">
-				<h3>{{label}}</h3>
-				<div class="mw-portlet-body">{{{html-items}}}</div>
-			</nav>
-		{{/data-portlets-sidebar.data-portlets-first}}
-		{{#data-portlets-sidebar.array-portlets-rest}}
-			<nav class="mw-portlet" id="{{id}}">
-				<h3>{{label}}</h3>
-				<div class="mw-portlet-body">{{{html-items}}}</div>
-			</nav>
-		{{/data-portlets-sidebar.array-portlets-rest}}
-	</aside>
-
-	<footer class="mw-footer" role="contentinfo">
-		{{#data-footer.array-items}}
-			<ul class="footer-{{name}}">{{{html-items}}}</ul>
-		{{/data-footer.array-items}}
-	</footer>
+	{{{html-app-footer}}}
 </div>

@@ -4,12 +4,9 @@
  * links + last-mod credit + powered-by-MediaWiki image.
  */
 
-$mwResourceURL = $GLOBALS['wgServer'] . $GLOBALS['wgScriptPath']
-    . '/resources/assets/';
-$pageURL = static function (string $titleText): string {
-    $t = Title::newFromText($titleText);
-    return $t ? $t->getLocalURL() : '#';
-};
+require_once __DIR__ . '/menu-helpers.php';
+
+$mwResourceURL = mp_static_base_url() . '/resources/assets/';
 
 $aboutLinks = [
     'תרומות' => 'מכביפדיה: תרומות',
@@ -28,7 +25,7 @@ $socialLinks = [
         <div class="content">
             <div class="usefull-links">
                 <?php foreach ($aboutLinks as $label => $titleText): ?>
-                    <a href="<?php echo htmlspecialchars($pageURL($titleText)); ?>"><?php echo htmlspecialchars($label); ?></a>
+                    <a href="<?php echo htmlspecialchars(mp_page_url($titleText)); ?>"><?php echo htmlspecialchars($label); ?></a>
                 <?php endforeach; ?>
             </div>
 

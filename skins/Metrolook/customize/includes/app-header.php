@@ -8,6 +8,8 @@
  * delegated to the QuickTemplate base via renderNavigation(['SEARCH']).
  */
 
+require_once __DIR__ . '/menu-helpers.php';
+
 $user = $skin->getUser();
 $title = $skin->getTitle();
 // On Special:WhatLinksHere/Foo etc. the action buttons should target Foo.
@@ -18,14 +20,9 @@ $currentAction = $request->getRawVal('action');
 $currentOldid = $request->getInt('oldid', 0);
 $isViewingEditForm = $currentAction === 'edit';
 
-$skinAssetsURL = $GLOBALS['wgServer'] . $GLOBALS['wgScriptPath']
-    . '/skins/Metrolook/assets/';
+$skinAssetsURL = mp_static_base_url() . '/skins/Metrolook/assets/';
 $mainPageURL = Title::newMainPage()->getLocalURL();
 
-$pageURL = static function (string $titleText): string {
-    $t = Title::newFromText($titleText);
-    return $t ? $t->getLocalURL() : '#';
-};
 $specialURL = static function (string $name, ?string $subpage = null): string {
     return SpecialPage::getTitleFor($name, $subpage)->getLocalURL();
 };
@@ -34,7 +31,7 @@ $specialURL = static function (string $name, ?string $subpage = null): string {
 $actionURL = static function (string $action, array $extra = [])
         use ($relevantTitle, $currentOldid): string {
     $params = ['action' => $action] + $extra;
-    if ($currentOldid) {
+    if ($currentOldid > 0) {
         $params['oldid'] = $currentOldid;
     }
     return $relevantTitle->getLocalURL($params);
@@ -122,14 +119,14 @@ $primaryDropdowns = [
                         </div>
                         <div class="dropdown-content">
                             <?php foreach ($items as $label => $titleText): ?>
-                                <a href="<?php echo htmlspecialchars($pageURL($titleText)); ?>"><?php echo htmlspecialchars($label); ?></a>
+                                <a href="<?php echo htmlspecialchars(mp_page_url($titleText)); ?>"><?php echo htmlspecialchars($label); ?></a>
                             <?php endforeach; ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
 
                 <div class="navigation-link-block">
-                    <a href="<?php echo htmlspecialchars($pageURL('מכבימדיה')); ?>">מכבימדיה</a>
+                    <a href="<?php echo htmlspecialchars(mp_page_url('מכבימדיה')); ?>">מכבימדיה</a>
                 </div>
             </div>
 
@@ -162,6 +159,10 @@ $primaryDropdowns = [
                             <?php if ($talkPageURL !== null): ?>
                                 <a href="<?php echo htmlspecialchars($talkPageURL); ?>">שיחת עמוד</a>
                             <?php elseif ($subjectPageURL !== null && $currentAction === null): ?>
+                                <?php /* On a talk page during action=edit/history/etc. the
+                                       edit-dropdown branch above already renders a "חזור
+                                       לערך" pointing back to this same talk page; suppress
+                                       the subject-link here to avoid two "חזור לערך"s. */ ?>
                                 <a href="<?php echo htmlspecialchars($subjectPageURL); ?>">חזור לערך</a>
                             <?php endif; ?>
 
@@ -190,15 +191,15 @@ $primaryDropdowns = [
                         <?php if ($user->isRegistered()):
                             $userName = $user->getName();
                         ?>
-                            <a href="<?php echo htmlspecialchars($pageURL('משתמש:' . $userName)); ?>"><?php echo htmlspecialchars($userName); ?></a>
-                            <a href="<?php echo htmlspecialchars($pageURL('שיחת משתמש:' . $userName)); ?>">עמוד השיחה שלי</a>
+                            <a href="<?php echo htmlspecialchars(mp_page_url('משתמש:' . $userName)); ?>"><?php echo htmlspecialchars($userName); ?></a>
+                            <a href="<?php echo htmlspecialchars(mp_page_url('שיחת משתמש:' . $userName)); ?>">עמוד השיחה שלי</a>
                             <a href="<?php echo htmlspecialchars($specialURL('Preferences')); ?>">העדפות</a>
                             <a href="<?php echo htmlspecialchars($specialURL('Contributions', $userName)); ?>">התרומות שלי</a>
                             <a href="<?php echo htmlspecialchars($specialURL('Userlogout')); ?>">התנתק</a>
                         <?php else: ?>
                             <a href="<?php echo htmlspecialchars($specialURL('Userlogin')); ?>">כניסה לחשבון</a>
                             <a href="<?php echo htmlspecialchars($specialURL('CreateAccount')); ?>">יצירת חשבון</a>
-                            <a href="<?php echo htmlspecialchars($pageURL('מיוחד:השיחה שלי')); ?>">שיחה</a>
+                            <a href="<?php echo htmlspecialchars(mp_page_url('מיוחד:השיחה שלי')); ?>">שיחה</a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -214,7 +215,7 @@ $primaryDropdowns = [
                         <a href="<?php echo htmlspecialchars($specialURL('Recentchanges')); ?>">שינויים אחרונים</a>
                         <a href="<?php echo htmlspecialchars($specialURL('Upload')); ?>">העלאת קובץ</a>
                         <a href="<?php echo htmlspecialchars($specialURL('Whatlinkshere', $relevantTitle->getPrefixedText())); ?>">דפים מקושרים</a>
-                        <a href="<?php echo htmlspecialchars($pageURL('מיוחד:קישורי מפעיל')); ?>">קישורי מפעיל</a>
+                        <a href="<?php echo htmlspecialchars(mp_page_url('מיוחד:קישורי מפעיל')); ?>">קישורי מפעיל</a>
                     </div>
                 </div>
             </div>

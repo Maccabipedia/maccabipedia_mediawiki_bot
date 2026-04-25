@@ -23,6 +23,9 @@ import requests
 _MAIN_PAGE_TITLE = "עמוד_ראשי"
 _ADMIN_USERNAME = "admin"
 _ADMIN_PASSWORD = "devadminpass"  # see infra/local-wiki/docker-compose.yml
+_REGULAR_USERNAME = "regular"
+_REGULAR_PASSWORD = "regularpass"  # created via:
+# docker exec local-wiki-mediawiki-1 php maintenance/createAndPromote.php regular regularpass --force
 
 
 @pytest.fixture(scope="session")
@@ -98,6 +101,48 @@ def admin_session(base_url: str) -> requests.Session:
 
 
 @pytest.fixture(scope="session")
+def regular_session(base_url: str) -> requests.Session:
+    """A logged-in session for a non-admin user.
+
+    The user 'regular' / 'regularpass' is created by:
+        docker exec local-wiki-mediawiki-1 php /var/www/html/maintenance/createAndPromote.php regular regularpass --force
+    Skips cleanly if the account doesn't exist yet — run that command once
+    when bootstrapping the local stack.
+    """
+    session = requests.Session()
+    api_url = f"{base_url}/api.php"
+    try:
+        token_response = session.get(
+            api_url,
+            params={"action": "query", "meta": "tokens", "type": "login", "format": "json"},
+            timeout=15,
+        )
+    except requests.RequestException as exc:
+        pytest.skip(f"login token request failed: {exc}")
+    login_token = token_response.json().get("query", {}).get("tokens", {}).get("logintoken")
+    if not login_token:
+        pytest.skip(f"couldn't fetch login token (response: {token_response.text})")
+    login_response = session.post(
+        api_url,
+        data={
+            "action": "login",
+            "lgname": _REGULAR_USERNAME,
+            "lgpassword": _REGULAR_PASSWORD,
+            "lgtoken": login_token,
+            "format": "json",
+        },
+        timeout=15,
+    )
+    result = login_response.json().get("login", {}).get("result")
+    if result != "Success":
+        pytest.skip(
+            f"regular-user login failed (run createAndPromote.php first?): "
+            f"{login_response.text}"
+        )
+    return session
+
+
+@pytest.fixture(scope="session")
 def admin_html(admin_session: requests.Session, main_url: str) -> str:
     """GET the main page with the admin session cookie and return the body."""
     response = admin_session.get(main_url, timeout=15)
@@ -140,6 +185,17 @@ def maccabipedia_admin_html(admin_session: requests.Session, main_url: str) -> s
     """Main page, admin-logged-in, ?useskin=maccabipedia. Verifies admin-only
     items (delete/move/protect) + user dropdown shows logout/preferences."""
     response = admin_session.get(main_url, params={"useskin": "maccabipedia"}, timeout=15)
+    assert response.status_code == 200
+    return response.text
+
+
+@pytest.fixture(scope="session")
+def maccabipedia_regular_user_html(regular_session: requests.Session, main_url: str) -> str:
+    """Main page, regular (non-admin) user logged in, ?useskin=maccabipedia.
+    Verifies the edit dropdown's admin-only items (delete/move/protect) are
+    correctly hidden — without this, accidental privilege leaks slip past
+    the admin-only test (which only asserts admin items ARE visible)."""
+    response = regular_session.get(main_url, params={"useskin": "maccabipedia"}, timeout=15)
     assert response.status_code == 200
     return response.text
 

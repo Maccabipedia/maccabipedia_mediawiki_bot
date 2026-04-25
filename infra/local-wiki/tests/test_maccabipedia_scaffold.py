@@ -122,6 +122,37 @@ def test_admin_user_panel_on_maccabipedia(
         assert label not in maccabipedia_admin_html
 
 
+@pytest.mark.parametrize(
+    "label, present",
+    [
+        # Logged-in panel — should look like a registered user
+        (">התנתק</a>", True),
+        (">העדפות</a>", True),
+        (">התרומות שלי</a>", True),
+        (">כניסה לחשבון</a>", False),
+        (">יצירת חשבון</a>", False),
+        # Edit shown for any registered user
+        (">עריכה</a>", True),
+        # Admin-only items must NOT appear for a regular user — this is
+        # the privilege-leak guard the admin-only test couldn't check.
+        (">מחיקה</a>", False),
+        (">העברה</a>", False),
+        (">הגנה</a>", False),
+    ],
+)
+def test_regular_user_panel_on_maccabipedia(
+    maccabipedia_regular_user_html: str, label: str, present: bool
+) -> None:
+    if present:
+        assert label in maccabipedia_regular_user_html, (
+            f"expected {label!r} in regular user's view"
+        )
+    else:
+        assert label not in maccabipedia_regular_user_html, (
+            f"{label!r} leaked into regular user's view (admin-only or anon-only)"
+        )
+
+
 def test_edit_mode_shows_back_to_article_link(maccabipedia_edit_mode_html: str) -> None:
     """When ?action=edit is on the URL the edit dropdown should show
     "חזור לערך" (back to article view) instead of "עריכה" (open editor) —

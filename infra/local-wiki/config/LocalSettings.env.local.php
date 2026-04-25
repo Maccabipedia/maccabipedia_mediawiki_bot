@@ -12,11 +12,13 @@ if (!defined('MEDIAWIKI')) {
 	exit;
 }
 
-## URL — no rewrite rules in the docker image, so article path keeps the
-## /index.php/ segment. Prod uses "/$1" with mod_rewrite.
+## URL — pretty-URL article path, mirrors prod. The .htaccess at the
+## docroot (mounted via docker-compose from config/htaccess) routes
+## "/foo" → "index.php?title=foo" via mod_rewrite; AllowOverride is
+## enabled in config/apache-allow-override.conf.
 $wgServer = getenv('MW_SITE_SERVER') ?: 'http://localhost:8080';
 $wgScriptPath = '';
-$wgArticlePath = '/index.php/$1';
+$wgArticlePath = '/$1';
 
 ## Email — disabled locally, no SMTP reachable.
 $wgEnableEmail = false;

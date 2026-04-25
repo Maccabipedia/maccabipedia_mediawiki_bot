@@ -1,0 +1,16 @@
+# MediaWiki pretty-URL rewrite. Mounted at /var/www/html/.htaccess so it
+# matches the prod hosting setup (shared-host Apache + .htaccess). Pairs
+# with $wgArticlePath = '/$1' in LocalSettings.env.local.php to make the
+# canonical URL for "Foo" be /Foo instead of /index.php/Foo.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    # Real files (index.php, /skins/..., /resources/..., favicon.ico, etc.)
+    # and directories pass through unchanged; everything else is treated as
+    # an article title and routed to index.php?title=… . [QSA] preserves
+    # query strings (action=edit, oldid=N, …); [B] escapes %-encoded bytes
+    # in the captured title so non-ASCII (Hebrew) titles round-trip safely.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.+)$ index.php?title=$1 [L,QSA,B]
+</IfModule>

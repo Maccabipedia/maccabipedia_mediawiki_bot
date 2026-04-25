@@ -1,10 +1,14 @@
-"""End-to-end smoke tests for the MaccabiPedia Metrolook menu + footer.
+"""End-to-end smoke tests for the Metrolook skin's menu + user panels.
 
-Mirrors the assertions from ``infra/local-wiki/scripts/test-menu.sh`` against
-a running local docker stack (default http://localhost:8080). All tests are
-marked ``integration`` and deselected by default; run with::
+Hits the running local docker stack (default http://localhost:8080); the
+default skin is Metrolook. All tests are marked ``integration`` and
+deselected by default; run with::
 
     uv run pytest -m integration infra/local-wiki/tests
+
+The matching coverage for Maccabipedia (?useskin=maccabipedia) is in
+`test_maccabipedia_scaffold.py`. `MENU_LABELS` and `PHP_ERROR_RE` live in
+`skin_test_constants.py` so both suites share one source of truth.
 """
 from __future__ import annotations
 
@@ -13,35 +17,14 @@ import re
 import pytest
 import requests
 
+from skin_test_constants import MENU_LABELS, PHP_ERROR_RE
+
 pytestmark = pytest.mark.integration
-
-
-# Mirror of the menu definitions in
-# skins/Metrolook/customize/includes/{app-header,app-footer}.php.
-# Adding/removing/renaming a menu link must be a coordinated change in
-# both the PHP and this list — the duplication is the point.
-_MENU_LABELS = [
-    # מכבי תל אביב dropdown
-    "ההיסטוריה", "עונות", "מתקנים", "מפעלים", "מדים", "תארים",
-    # שחקנים וצוות dropdown
-    "שחקנים", "אנשי צוות",
-    # אוהדים ותרבות dropdown
-    "שירים", "כרטיסים ומנויים", "כרזות", "קלפים ומדבקות",
-    "תפאורות", "ארגונים", "ספרים", "פנזינים",
-    # משחקים dropdown
-    "חיפוש משחק", "סטטיסטיקות",
-    # standalone link
-    "מכבימדיה",
-    # footer about-section links (app-footer.php)
-    "תרומות", "יצירת קשר",
-]
-
-_PHP_ERROR_RE = re.compile(r"Fatal error|Warning:|Notice:|Deprecated:")
 
 
 def test_main_page_renders(anon_html: str) -> None:
     """HTTP 200 already asserted in fixture; body must have no PHP errors."""
-    matches = _PHP_ERROR_RE.findall(anon_html)
+    matches = PHP_ERROR_RE.findall(anon_html)
     assert not matches, f"PHP errors leaked into body: {matches[:5]}"
 
 
@@ -81,7 +64,7 @@ def test_menu_links_title_encoded(anon_html: str) -> None:
     assert encoded, "expected at least one Title-encoded Hebrew menu link"
 
 
-@pytest.mark.parametrize("label", _MENU_LABELS)
+@pytest.mark.parametrize("label", MENU_LABELS)
 def test_menu_link_renders(anon_html: str, label: str) -> None:
     """Each menu link from $primaryDropdowns + standalone + footer must render."""
     assert f">{label}</a>" in anon_html

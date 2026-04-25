@@ -149,9 +149,11 @@ $wgNativeImageLazyLoading = true;
 ## names, ie 'vector', 'monobook':
 $wgDefaultSkin = "Metrolook";
 
-# Enabled skins.
-# The following skins were automatically enabled:
+# Enabled skins. Maccabipedia is loaded as an opt-in option (selectable
+# via ?useskin=maccabipedia or via Special:Preferences); default stays
+# Metrolook until the new skin is verified.
 wfLoadSkin('Metrolook');
+wfLoadSkin('Maccabipedia');
 
 
 // For debugging, dont remove this! just comment out.

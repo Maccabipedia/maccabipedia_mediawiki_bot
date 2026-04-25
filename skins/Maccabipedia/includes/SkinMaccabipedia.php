@@ -42,19 +42,12 @@ class SkinMaccabipedia extends SkinMustache {
 	public function getTemplateData() {
 		$data = parent::getTemplateData();
 		// SkinMustache's default `html-title-heading` wraps the title in
-		// <h1 class="firstHeading">, but our CSS gives `.firstHeading` a
-		// font-size of 140%, which scales the .mw-page-title-main span
-		// inside the yellow .maccabipedia-page-title bar from 1.1rem to
-		// ~25px. Metrolook's template called $this->html('title') which
-		// emitted only the bare <span class="mw-page-title-main">; match
-		// that here by using OutputPage::getPageTitle() (no h1 wrapper).
-		// Main page also drops the heading entirely — the app-header chrome
-		// carries site identity already.
-		if ( $this->getTitle() && $this->getTitle()->isMainPage() ) {
-			$data['html-title-heading'] = '';
-		} else {
-			$data['html-title-heading'] = $this->getOutput()->getPageTitle();
-		}
+		// <h1 class="firstHeading">; our `.firstHeading` rule has font-size:140%
+		// which would scale the .mw-page-title-main span inside the yellow
+		// .maccabipedia-page-title bar from 1.1rem to ~25px. Match Metrolook's
+		// $this->html('title') emission — bare <span class="mw-page-title-main">
+		// via OutputPage::getPageTitle().
+		$data['html-title-heading'] = $this->getOutput()->getPageTitle();
 		$data['data-app-header'] = $this->buildAppHeaderData();
 		$data['data-app-footer'] = $this->buildAppFooterData();
 		$data['html-search-input'] = $this->buildSearchInputHtml();

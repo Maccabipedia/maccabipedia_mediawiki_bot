@@ -152,6 +152,7 @@ $wgDefaultSkin = "Metrolook";
 # Enabled skins.
 # The following skins were automatically enabled:
 wfLoadSkin('Metrolook');
+wfLoadSkin('Maccabipedia');
 
 
 // For debugging, dont remove this! just comment out.

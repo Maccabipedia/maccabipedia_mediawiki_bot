@@ -26,11 +26,12 @@ OPPONENTS_NAMES_TO_UNICODE = {"FC Ashdod": "\u05de.\u05e1. \u05d0\u05e9\u05d3\u0
                               "Ironi Tiberias": "עירוני טבריה", "Hapoel Ironi Kiryat Shmona": "עירוני קריית שמונה"}
 
 LINKS_TO_FETCH_LEAGUE_TABLE_FROM = [
-    # Links for probably playoff stages:
-    #"https://prod-public-api.livescore.com/v1/api/app/stage/soccer/israel/premier-league-championship-group/3",
-    #"https://prod-public-api.livescore.com/v1/api/app/stage/soccer/israel/premier-league-relegation-group/3",
+    # Playoff stages (top 6 + bottom 8). Swap with the regular-season URL below
+    # at the start of each season, then back once playoffs begin.
+    "https://prod-public-api.livescore.com/v1/api/app/stage/soccer/israel/premier-league-championship-group/3",
+    "https://prod-public-api.livescore.com/v1/api/app/stage/soccer/israel/premier-league-relegation-group/3",
 
-    "https://prod-public-api.livescore.com/v1/api/app/stage/soccer/israel/premier-league/3?locale=en&MD=1"
+    #"https://prod-public-api.livescore.com/v1/api/app/stage/soccer/israel/premier-league/3?locale=en&MD=1"
 ]
 
 from maccabipediabot.common.logging_setup import setup_logging

@@ -83,7 +83,6 @@
 	},
 	"ResourceModuleSkinStyles": {
 		"maccabipedia": {
-			"jquery.tipsy": "skinStyles/jquery.tipsy.less",
 			"jquery.ui.core": [
 				"skinStyles/jquery.ui/jquery.ui.core.css",
 				"skinStyles/jquery.ui/jquery.ui.theme.css"
@@ -98,9 +97,7 @@
 			"jquery.ui.resizable": "skinStyles/jquery.ui/jquery.ui.resizable.css",
 			"jquery.ui.selectable": "skinStyles/jquery.ui/jquery.ui.selectable.css",
 			"jquery.ui.slider": "skinStyles/jquery.ui/jquery.ui.slider.css",
-			"jquery.ui.tabs": "skinStyles/jquery.ui/jquery.ui.tabs.css",
-			"jquery.ui.tooltips": "skinStyles/jquery.ui/jquery.ui.tooltips.css",
-			"+oojs-ui-core.styles": "skinStyles/ooui.less"
+			"jquery.ui.tabs": "skinStyles/jquery.ui/jquery.ui.tabs.css"
 		}
 	},
 	"manifest_version": 2

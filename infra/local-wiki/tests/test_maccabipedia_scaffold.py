@@ -1,14 +1,11 @@
-"""Scaffold-level invariants the Maccabipedia skin must hold on every page.
+"""End-to-end smoke tests for the new Maccabipedia skin (?useskin=maccabipedia).
 
-Tests scoped to skin chrome the rest of the suite doesn't naturally cover:
-  - exactly one <body>; no PHP errors leak through; correct skin body class
-  - mobile viewport meta is emitted (without it iPhones render at 1000px)
-  - <h1 class="firstHeading"> never reaches the rendered HTML (otherwise
-    the .firstHeading 140% font-size scales the title bar ~40% bigger)
-  - search input keeps its .text-field class hook (5 LESS rules in
-    app-header.less depend on it)
+Asserts the new skin renders the main page without PHP errors, emits the
+expected body class, mobile viewport, no firstHeading h1, search input
+text-field class, and the same menu links Metrolook does. Default skin is
+still Metrolook; Maccabipedia is opt-in for the soak window.
 
-Menu / footer / link / user-panel assertions live in `test_menu.py`.
+`MENU_LABELS` and `PHP_ERROR_RE` come from `skin_test_constants.py`.
 """
 from __future__ import annotations
 
@@ -16,7 +13,7 @@ import re
 
 import pytest
 
-from skin_test_constants import PHP_ERROR_RE
+from skin_test_constants import MENU_LABELS, PHP_ERROR_RE
 
 pytestmark = pytest.mark.integration
 
@@ -66,3 +63,16 @@ def test_search_input_has_text_field_class(maccabipedia_anon_html: str) -> None:
         r'<input[^>]*id="searchInput"[^>]*class="[^"]*\btext-field\b',
         maccabipedia_anon_html,
     ), "search input missing the text-field class hook"
+
+
+@pytest.mark.parametrize("label", MENU_LABELS)
+def test_menu_link_renders(maccabipedia_anon_html: str, label: str) -> None:
+    """Maccabipedia must emit every menu link Metrolook does — same data, same
+    contract. test_menu.py runs the same parametrize against Metrolook (default)."""
+    assert f">{label}</a>" in maccabipedia_anon_html
+
+
+def test_no_broken_dropdown_hrefs(maccabipedia_anon_html: str) -> None:
+    """A dead link from pageUrl() degrades to href="#" — never intended."""
+    broken = re.findall(r'<a href="#">', maccabipedia_anon_html)
+    assert not broken, f"found {len(broken)} menu link(s) degraded to href=\"#\""

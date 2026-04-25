@@ -43,6 +43,14 @@ if [ -f "$CAL_ENV" ]; then
     cp "$CAL_ENV" "${WT_DIR}/packages/maccabipediabot/src/maccabipediabot/calendar/.env"
 fi
 
+# Copy local-wiki .env (gitignored, has prod FTP credentials)
+LW_ENV="${REPO_ROOT}/infra/local-wiki/.env"
+if [ -f "$LW_ENV" ]; then
+    mkdir -p "${WT_DIR}/infra/local-wiki"
+    cp "$LW_ENV" "${WT_DIR}/infra/local-wiki/.env"
+    chmod 600 "${WT_DIR}/infra/local-wiki/.env"
+fi
+
 # Create independent venv with packages (uv is ~10x faster than pip)
 if [ ! -e "${WT_DIR}/.venv" ]; then
     uv sync --directory "${WT_DIR}" >&2

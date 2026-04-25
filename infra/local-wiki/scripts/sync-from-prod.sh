@@ -33,11 +33,10 @@
 # Allowed <op> values:
 #   bootstrap                — run every FTP+HTTP pull needed for first-time
 #                              local dev setup: maccabipedia-skin-assets +
-#                              extensions + favicon + pages (using
-#                              scripts/content-manifests/starter.manifest).
+#                              extensions + favicon + site-scripts + pages
+#                              (using scripts/content-manifests/starter.manifest).
 #                              Doesn't touch docker — run `docker compose up
-#                              -d` and `./scripts/seed-content.sh starter`
-#                              afterwards.
+#                              -d` and `./scripts/seed-content.sh` afterwards.
 #   maccabipedia-skin-assets — mirror <root>/skins/Metrolook/assets/
 #                              → synced/skins/Metrolook/assets/
 #                              (binary banners only; the skin source itself
@@ -54,6 +53,12 @@
 #                              (diagnostic only — not mounted by the dev stack)
 #   versions                 — list remote directory names under the webroot
 #                              for audit (no downloads; prints listing only)
+#   site-scripts             — pull MediaWiki:Common.css + MediaWiki:Common.js
+#                              via Special:Export. Common.css backs the
+#                              site.styles ResourceLoader bundle; Common.js
+#                              carries CanvasJS chart hooks, jump-to-id
+#                              scrolling, and the fanzine email form. Output:
+#                              synced/pages/site-scripts.xml.
 #   pages <manifest>         — pull page wikitext via Special:Export (HTTP)
 #                              for every title in <manifest> (one title per
 #                              line; blanks and lines starting with '#'
@@ -183,41 +188,25 @@ op_versions() {
     log_event "list" "${remote}" ""
 }
 
-op_pages() {
-    local manifest="${1-}"
-    if [ -z "$manifest" ]; then
-        echo "ERROR: 'pages' op requires a manifest file path" >&2
-        echo "       example: $0 pages scripts/content-manifests/starter.manifest" >&2
-        exit 1
-    fi
-    if [ ! -f "$manifest" ]; then
-        echo "ERROR: manifest not found: $manifest" >&2
+# Args: $1 = output stem (synced/pages/<stem>.xml)
+#       $2 = path to a titles file (one title per line, no comments/blanks)
+_export_titles_xml() {
+    local stem="$1"
+    local titles_file="$2"
+
+    local title_count
+    title_count=$(wc -l < "$titles_file")
+    if [ "$title_count" -eq 0 ]; then
+        echo "ERROR: no page titles to export" >&2
         exit 1
     fi
 
     local base_url="${MACCABIPEDIA_WEB_URL:-https://maccabipedia.co.il}"
     local export_url="${base_url%/}/index.php?title=Special:Export"
     local out_dir="${SYNCED_DIR}/pages"
-    local stem
-    stem="$(basename "$manifest")"
-    stem="${stem%.*}"   # strip any extension (.txt, .manifest, …)
     local out_file="${out_dir}/${stem}.xml"
 
     mkdir -p "$out_dir"
-
-    # Strip comments / blanks from the manifest before sending. Special:Export
-    # treats each non-empty line as a page title. Use a script-level temp var
-    # so the EXIT trap can reference it without tripping `set -u`.
-    cleaned="$(mktemp)"
-    trap 'rm -f "${cleaned:-}"' EXIT
-    grep -vE '^\s*(#|$)' "$manifest" > "$cleaned"
-
-    local title_count
-    title_count=$(wc -l < "$cleaned")
-    if [ "$title_count" -eq 0 ]; then
-        echo "ERROR: manifest contains no page titles after stripping comments/blanks" >&2
-        exit 1
-    fi
 
     echo "==> GET ${export_url}"
     echo "    titles: ${title_count}  ->  ${out_file}"
@@ -226,7 +215,7 @@ op_pages() {
     # returning the HTML form on this site (prod has an edge layer that
     # rejects the POST form submission); GET with the same params works.
     curl -fsSLG \
-        --data-urlencode "pages@${cleaned}" \
+        --data-urlencode "pages@${titles_file}" \
         --data "curonly=1" \
         --data "templates=1" \
         --data "action=submit" \
@@ -248,6 +237,48 @@ op_pages() {
     log_event "export" "${export_url}" "${out_file}"
 }
 
+op_pages() {
+    local manifest="${1-}"
+    if [ -z "$manifest" ]; then
+        echo "ERROR: 'pages' op requires a manifest file path" >&2
+        echo "       example: $0 pages scripts/content-manifests/starter.manifest" >&2
+        exit 1
+    fi
+    if [ ! -f "$manifest" ]; then
+        echo "ERROR: manifest not found: $manifest" >&2
+        exit 1
+    fi
+
+    local stem
+    stem="$(basename "$manifest")"
+    stem="${stem%.*}"   # strip any extension (.txt, .manifest, …)
+
+    # Strip comments / blanks from the manifest before sending. Special:Export
+    # treats each non-empty line as a page title. Use a script-level temp var
+    # so the EXIT trap can reference it without tripping `set -u`.
+    cleaned="$(mktemp)"
+    trap 'rm -f "${cleaned:-}"' EXIT
+    grep -vE '^\s*(#|$)' "$manifest" > "$cleaned"
+
+    _export_titles_xml "$stem" "$cleaned"
+}
+
+op_site_scripts() {
+    # MediaWiki:Common.css backs the site.styles ResourceLoader bundle (used
+    # site-wide for layout + skin tweaks). MediaWiki:Common.js carries
+    # CanvasJS chart hooks, jump-to-id scrolling, and the fanzine email form.
+    # Kept out of starter.manifest because they're site-wide assets, not
+    # sample content.
+    cleaned="$(mktemp)"
+    trap 'rm -f "${cleaned:-}"' EXIT
+    printf '%s\n' \
+        "MediaWiki:Common.css" \
+        "MediaWiki:Common.js" \
+        > "$cleaned"
+
+    _export_titles_xml "site-scripts" "$cleaned"
+}
+
 if [ $# -lt 1 ]; then
     usage
     exit 1
@@ -261,6 +292,7 @@ case "$op" in
         op_mirror_dir "skins/Metrolook/assets" "skins/Metrolook/assets"
         op_mirror_dir "extensions"             "extensions"
         op_favicon
+        op_site_scripts
         op_pages "${SCRIPT_DIR}/content-manifests/starter.manifest"
         ;;
     maccabipedia-skin-assets)
@@ -270,6 +302,7 @@ case "$op" in
     logo-assets)   op_mirror_dir "resources/assets"  "resources/assets" ;;
     localsettings) op_localsettings ;;
     versions)      op_versions ;;
+    site-scripts)  op_site_scripts ;;
     pages)         op_pages "$@" ;;
     -h|--help|help)
         usage

@@ -18,8 +18,8 @@ services:
       MW_DB_USER: mw
       MW_DB_PASSWORD: devpass
       MW_DB_PREFIX: "MPMW_"
-      MW_ADMIN_USER: admin
-      MW_ADMIN_PASSWORD: devadminpass
+      MW_ADMIN_USER: maccabi
+      MW_ADMIN_PASSWORD: maccabi
       MW_SITE_NAME: "MaccabiPedia Dev"
       MW_SITE_SERVER: "http://localhost:8080"
       MW_SITE_LANG: "he"

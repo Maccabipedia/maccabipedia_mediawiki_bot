@@ -45,7 +45,7 @@ docker compose up -d --build
 Open http://localhost:8080 — you'll see the `מכביפדיה` site with the
 MaccabiPedia skin, prod's extension set, and the seeded pages rendering.
 
-Admin user: `admin` / `devadminpass` (from `docker-compose.yml`; local-only).
+Admin user: `maccabi` / `maccabi` (from `docker-compose.yml`; local-only).
 
 ## Adjusting the seed set
 

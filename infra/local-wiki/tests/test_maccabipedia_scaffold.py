@@ -21,7 +21,7 @@ import re
 
 import pytest
 
-from conftest import MENU_LABELS, PHP_ERROR_RE
+from skin_test_constants import MENU_LABELS, PHP_ERROR_RE
 
 pytestmark = pytest.mark.integration
 

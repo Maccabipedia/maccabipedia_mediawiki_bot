@@ -1,0 +1,68 @@
+{
+	"name": "Maccabipedia",
+	"namemsg": "skinname-maccabipedia",
+	"version": "0.1.0",
+	"author": [
+		"MaccabiPedia"
+	],
+	"descriptionmsg": "maccabipedia-desc",
+	"license-name": "GPL-2.0-or-later",
+	"type": "skin",
+	"requires": {
+		"MediaWiki": ">= 1.39.0"
+	},
+	"ValidSkinNames": {
+		"maccabipedia": {
+			"displayname": "Maccabipedia",
+			"class": "MediaWiki\\Skin\\Maccabipedia\\SkinMaccabipedia",
+			"args": [
+				{
+					"name": "maccabipedia",
+					"templateDirectory": "templates",
+					"messages": [
+						"sitetitle"
+					]
+				}
+			]
+		}
+	},
+	"MessagesDirs": {
+		"Maccabipedia": [
+			"i18n"
+		]
+	},
+	"AutoloadNamespaces": {
+		"MediaWiki\\Skin\\Maccabipedia\\": "includes/"
+	},
+	"HookHandlers": {
+		"main": {
+			"class": "MediaWiki\\Skin\\Maccabipedia\\Hooks"
+		}
+	},
+	"Hooks": {
+		"BeforePageDisplay": "main"
+	},
+	"ResourceFileModulePaths": {
+		"localBasePath": "",
+		"remoteSkinPath": "Maccabipedia"
+	},
+	"ResourceModules": {
+		"skins.maccabipedia.styles": {
+			"class": "ResourceLoaderSkinModule",
+			"features": {
+				"content-links": true,
+				"content-media": true,
+				"interface-message-box": true,
+				"interface-category": true,
+				"content-tables": true,
+				"i18n-ordered-lists": true,
+				"i18n-all-lists-margins": true,
+				"i18n-headings": true,
+				"elements": true,
+				"interface": true,
+				"logo": true
+			}
+		}
+	},
+	"manifest_version": 2
+}

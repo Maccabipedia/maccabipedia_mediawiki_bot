@@ -31,14 +31,15 @@ cd infra/local-wiki
 cp .env.example .env
 chmod 600 .env                        # fill in host/user/pass/remote-root
 
-# Pull what isn't vendored: extensions + skin assets. ~few minutes.
+# Pull what isn't vendored: extensions + skin assets + Common.css/js +
+# sample pages. ~few minutes.
 ./scripts/sync-from-prod.sh bootstrap
 
 # Bring up the stack (first build takes a few minutes)
 docker compose up -d --build
 
-# Import the pulled page XML into the running container
-./scripts/seed-content.sh starter
+# Import every pulled XML dump (starter pages + MediaWiki:Common.{css,js})
+./scripts/seed-content.sh
 ```
 
 Open http://localhost:8080 — you'll see the `מכביפדיה` site with the
@@ -97,11 +98,16 @@ docker compose down -v       # wipe DB + images + install marker
   compose, lftp). Idempotent.
 - `scripts/sync-from-prod.sh` — named-op wrapper around `lftp` (+ `curl`
   for HTTP). Download-only. See `.env.example` for env vars.
-  Ops: `bootstrap`, `maccabipedia-skin-assets`, `extensions`, `logo-assets`,
-  `localsettings`, `versions`, `pages <manifest>`.
+  Ops: `bootstrap`, `maccabipedia-skin-assets`, `extensions`, `favicon`,
+  `logo-assets`, `localsettings`, `versions`, `site-scripts`,
+  `pages <manifest>`.
   The skin source is vendored at `<repo-root>/skins/Metrolook/` and is
   NOT touched by this script — only the binary banners under
   `skins/Metrolook/assets/` are pulled from prod.
+  `site-scripts` pulls `MediaWiki:Common.css` + `MediaWiki:Common.js` (the
+  site-wide CSS/JS that back the `site.styles` bundle, CanvasJS hooks, and
+  the fanzine form); kept separate from `starter.manifest` because they're
+  site-wide assets, not sample content.
 - `scripts/seed-content.sh` — imports pulled XML dumps into the running
   container via `importDump.php`, then `rebuildall.php` + `runJobs.php`.
 - `scripts/content-manifests/starter.manifest` — editable list of page titles

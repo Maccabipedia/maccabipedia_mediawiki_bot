@@ -49,16 +49,6 @@ def test_body_has_skin_maccabipedia_class(maccabipedia_anon_html: str) -> None:
     )
 
 
-def test_body_has_skin_metrolook_compat_class(maccabipedia_anon_html: str) -> None:
-    """Compat body class — see SkinMaccabipedia::getPageClasses() docblock.
-    Drops on or after 2026-05-09 (Trello https://trello.com/c/dMO1FPCj)."""
-    body_open_match = re.search(r"<body[^>]*>", maccabipedia_anon_html)
-    assert body_open_match, "no <body> tag in response"
-    assert "skin-metrolook" in body_open_match.group(0), (
-        f"compat skin-metrolook missing from body: {body_open_match.group(0)}"
-    )
-
-
 def test_mobile_viewport_meta_present(maccabipedia_anon_html: str) -> None:
     """Without this, iPhones render the page at 1000px-wide desktop layout.
     Metrolook gates this on $wgMetrolookMobile=true; the new skin always emits."""

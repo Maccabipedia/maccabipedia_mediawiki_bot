@@ -28,27 +28,9 @@ use Title;
 
 class SkinMaccabipedia extends SkinMustache {
 
-	/**
-	 * Body classes:
-	 *   - `skin-maccabipedia` is auto-emitted by MW from the valid skin name.
-	 *   - `skin-metrolook` is a compat token for any prod content / templates
-	 *     keyed on the legacy skin name. Verified live (2026-04-25): zero hits
-	 *     for `metrolook` / `skin-metrolook` across all wiki namespaces, so the
-	 *     compat is purely insurance against unindexed `User:<name>/metrolook.css`
-	 *     pages and prod LocalSettings hooks.
-	 *
-	 * **Remove on or after 2026-05-09** (Phase 2 launch + 2-week soak),
-	 * tracked at https://trello.com/c/dMO1FPCj.
-	 */
-	public function getPageClasses( $title ): string {
-		return parent::getPageClasses( $title ) . ' skin-metrolook';
-	}
-
 	public function initPage( OutputPage $out ) {
 		parent::initPage( $out );
-		// Mobile viewport — without this, iPhones render the page at 1000px-wide
-		// desktop layout. Metrolook gates this on $wgMetrolookMobile=true; the
-		// new skin always emits it.
+		// Mobile viewport — without it, iPhones render at 1000px desktop width.
 		$out->addMeta( 'viewport', 'width=device-width, initial-scale=1' );
 		$out->addModuleStyles( [
 			'skins.metrolook.styles',

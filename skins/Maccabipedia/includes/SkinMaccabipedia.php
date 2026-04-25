@@ -59,12 +59,19 @@ class SkinMaccabipedia extends SkinMustache {
 
 	public function getTemplateData() {
 		$data = parent::getTemplateData();
-		// Suppress the page heading on the main page — the app-header chrome
-		// carries the site title, so an extra <h1> above the lead paragraph
-		// is visual noise (parity with what Metrolook's template did
-		// implicitly by not emitting one).
+		// SkinMustache's default `html-title-heading` wraps the title in
+		// <h1 class="firstHeading">, but our CSS gives `.firstHeading` a
+		// font-size of 140%, which scales the .mw-page-title-main span
+		// inside the yellow .maccabipedia-page-title bar from 1.1rem to
+		// ~25px. Metrolook's template called $this->html('title') which
+		// emitted only the bare <span class="mw-page-title-main">; match
+		// that here by using OutputPage::getPageTitle() (no h1 wrapper).
+		// Main page also drops the heading entirely — the app-header chrome
+		// carries site identity already.
 		if ( $this->getTitle() && $this->getTitle()->isMainPage() ) {
 			$data['html-title-heading'] = '';
+		} else {
+			$data['html-title-heading'] = $this->getOutput()->getPageTitle();
 		}
 		$data['data-app-header'] = $this->buildAppHeaderData();
 		$data['data-app-footer'] = $this->buildAppFooterData();

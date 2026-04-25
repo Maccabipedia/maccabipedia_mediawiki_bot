@@ -78,6 +78,19 @@ def test_no_h1_on_main_page(maccabipedia_anon_html: str) -> None:
     )
 
 
+def test_title_not_wrapped_in_firstheading(maccabipedia_anon_html: str) -> None:
+    """SkinMustache's default `html-title-heading` wraps the title in
+    <h1 class="firstHeading">, but our `.firstHeading` rule has font-size:140%
+    which scales the .mw-page-title-main span ~40% bigger than intended inside
+    the yellow .maccabipedia-page-title bar. SkinMaccabipedia overrides
+    html-title-heading to use OutputPage::getPageTitle() instead — assert no
+    `firstHeading` wrapper reaches the rendered output anywhere on the page."""
+    assert "firstHeading" not in maccabipedia_anon_html, (
+        "found .firstHeading in rendered HTML — would scale the title to ~25px "
+        "instead of 17.6px. See SkinMaccabipedia::getTemplateData()."
+    )
+
+
 def test_search_input_has_text_field_class(maccabipedia_anon_html: str) -> None:
     """Five LESS rules in `app-header.less` (white text, padding, transition,
     ::placeholder, focus opacity) target `.search-content .text-field`; without

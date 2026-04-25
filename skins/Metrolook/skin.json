@@ -1,11 +1,11 @@
 {
-	"name": "Maccabipedia",
-	"namemsg": "skinname-maccabipedia",
+	"name": "Metrolook",
+	"namemsg": "skinname-metrolook",
 	"version": "1.0",
 	"author": [
 		"MaccabiPedia"
 	],
-	"descriptionmsg": "maccabipedia-desc",
+	"descriptionmsg": "metrolook-desc",
 	"license-name": "GPL-2.0-or-later",
 	"type": "skin",
 	"requires": {

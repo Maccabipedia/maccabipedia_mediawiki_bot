@@ -5,7 +5,7 @@
 		]
 	},
 	"skinname-metrolook": "Metrolook",
-	"maccabipedia-desc": "maccabipedia is a responsive skin - inspired fork of the Vector skin",
+	"metrolook-desc": "Metrolook is a responsive skin — inspired fork of the Vector skin. Legacy MaccabiPedia skin; superseded by the Maccabipedia skin (skins/Maccabipedia/) per the Phase 2 cutover.",
 	"metrolook.css": "/* All CSS here will be loaded for users of the Metrolook skin */",
 	"metrolook.js": "/* All JavaScript here will be loaded for users of the Metrolook skin */",
 	"metrolook-guest": "Guest",

@@ -1,10 +1,15 @@
 # Local MaccabiPedia (Docker)
 
 Runs a local MediaWiki 1.39.11 + PHP 7.4 + MariaDB mirror of the production
-MaccabiPedia site. The wiki code and skin come from prod (pulled via FTP);
-site-wide config lives in `config/LocalSettings.shared.php` which ships
-byte-equivalent to prod. Dev-only values (DB host, URL, fake secrets) are
-in `config/LocalSettings.env.local.php` — prod has its own `.env.prod.php`.
+MaccabiPedia site. MediaWiki itself is built into the image. The
+MaccabiPedia skin — our heavily-customized fork of the upstream Metrolook
+skin — is vendored at `<repo-root>/skins/Metrolook/` (the directory keeps
+the upstream name so MediaWiki's skin loader resolves it without extra
+config). Only the skin's binary banner `assets/` and the prod extensions
+are pulled from the FTP server into `synced/`. Site-wide config lives in
+`config/LocalSettings.shared.php` which ships byte-equivalent to prod.
+Dev-only values (DB host, URL, fake secrets) are in
+`config/LocalSettings.env.local.php` — prod has its own `.env.prod.php`.
 
 ## Prerequisites
 
@@ -26,7 +31,7 @@ cd infra/local-wiki
 cp .env.example .env
 chmod 600 .env                        # fill in host/user/pass/remote-root
 
-# Pull everything needed for first boot (skin + extensions). ~few minutes.
+# Pull what isn't vendored: extensions + skin assets. ~few minutes.
 ./scripts/sync-from-prod.sh bootstrap
 
 # Bring up the stack (first build takes a few minutes)
@@ -36,8 +41,8 @@ docker compose up -d --build
 ./scripts/seed-content.sh starter
 ```
 
-Open http://localhost:8080 — you'll see the `מכביפדיה` site with the real
-Metrolook skin, prod's extension set, and the seeded pages rendering.
+Open http://localhost:8080 — you'll see the `מכביפדיה` site with the
+MaccabiPedia skin, prod's extension set, and the seeded pages rendering.
 
 Admin user: `admin` / `devadminpass` (from `docker-compose.yml`; local-only).
 
@@ -92,8 +97,11 @@ docker compose down -v       # wipe DB + images + install marker
   compose, lftp). Idempotent.
 - `scripts/sync-from-prod.sh` — named-op wrapper around `lftp` (+ `curl`
   for HTTP). Download-only. See `.env.example` for env vars.
-  Ops: `bootstrap`, `skins`, `extensions`, `logo-assets`, `localsettings`,
-  `versions`, `pages <manifest>`.
+  Ops: `bootstrap`, `maccabipedia-skin-assets`, `extensions`, `logo-assets`,
+  `localsettings`, `versions`, `pages <manifest>`.
+  The skin source is vendored at `<repo-root>/skins/Metrolook/` and is
+  NOT touched by this script — only the binary banners under
+  `skins/Metrolook/assets/` are pulled from prod.
 - `scripts/seed-content.sh` — imports pulled XML dumps into the running
   container via `importDump.php`, then `rebuildall.php` + `runJobs.php`.
 - `scripts/content-manifests/starter.manifest` — editable list of page titles

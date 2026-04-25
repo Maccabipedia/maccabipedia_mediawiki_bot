@@ -119,10 +119,11 @@ class SkinMaccabipedia extends SkinMustache {
 		$isViewingEditForm = $currentAction === 'edit';
 		$pageNamespace = $title->getNamespace();
 
-		$showOptionsPanel = !in_array( $pageNamespace, [ NS_SPECIAL, NS_MEDIA ], true );
-		if ( !$showOptionsPanel ) {
-			return [ 'show' => false ];
-		}
+		// Only the edit dropdown is hidden on Special: / Media: namespaces —
+		// those pages have no editable wikitext / talk page / history. The
+		// user dropdown and the global options dropdown still render so a
+		// reader on Special:Recentchanges can still log in / open settings.
+		$showEditDropdown = !in_array( $pageNamespace, [ NS_SPECIAL, NS_MEDIA ], true );
 
 		$actionURL = static function ( string $action, array $extra = [] )
 				use ( $relevantTitle, $currentOldid ): string {
@@ -140,8 +141,7 @@ class SkinMaccabipedia extends SkinMustache {
 			: $actionURL( 'edit' );
 
 		return [
-			'show' => true,
-			'edit' => [
+			'edit' => $showEditDropdown ? [
 				'icon-url'           => $editIconURL,
 				'is-editing'         => $isViewingEditForm,
 				'can-edit'           => $user->isAllowed( 'edit' ),
@@ -156,7 +156,7 @@ class SkinMaccabipedia extends SkinMustache {
 				'delete-url'         => $actionURL( 'delete' ),
 				'move-url'           => SpecialPage::getTitleFor( 'Movepage', $relevantTitle->getPrefixedText() )->getLocalURL(),
 				'protect-url'        => $actionURL( 'protect' ),
-			],
+			] : false,
 			'user' => $this->buildUserPanel( $user ),
 			'options' => [
 				[ 'url' => SpecialPage::getTitleFor( 'Recentchanges' )->getLocalURL(), 'label' => 'שינויים אחרונים' ],

@@ -119,3 +119,16 @@ def maccabipedia_anon_html(main_url: str) -> str:
         f"useskin=maccabipedia GET {main_url} returned HTTP {response.status_code}"
     )
     return response.text
+
+
+@pytest.fixture(scope="session")
+def maccabipedia_special_recentchanges_html(base_url: str) -> str:
+    """GET Special:Recentchanges with ?useskin=maccabipedia. Special: pages
+    take a different code path through the skin (no edit dropdown, no talk
+    page); regressions there don't surface on the main-page fixture."""
+    url = f"{base_url}/index.php?title=Special:Recentchanges&useskin=maccabipedia"
+    response = requests.get(url, timeout=15)
+    assert response.status_code == 200, (
+        f"useskin=maccabipedia GET {url} returned HTTP {response.status_code}"
+    )
+    return response.text

@@ -56,6 +56,23 @@ def test_title_not_wrapped_in_firstheading(maccabipedia_anon_html: str) -> None:
     )
 
 
+def test_special_page_keeps_user_and_options_dropdowns(
+    maccabipedia_special_recentchanges_html: str,
+) -> None:
+    """On Special: pages the edit dropdown is correctly hidden (no editable
+    wikitext / talk page / history), but the user dropdown and the global
+    options dropdown must still render — otherwise a logged-in reader
+    can't reach Preferences/Logout from Special:Recentchanges (regression
+    fix: see SkinMaccabipedia::buildOptionsPanel())."""
+    html = maccabipedia_special_recentchanges_html
+    assert 'fa-user option-icon' in html, "user dropdown missing on Special page"
+    assert 'fa-cogs option-icon' in html, "options dropdown missing on Special page"
+    # Edit dropdown should NOT render on a Special page.
+    assert 'fa-pencil-alt option-icon' not in html, (
+        "edit dropdown unexpectedly rendered on Special:Recentchanges"
+    )
+
+
 def test_search_input_has_text_field_class(maccabipedia_anon_html: str) -> None:
     """Five LESS rules in `app-header.less` (white text, padding, transition,
     ::placeholder, focus opacity) target `.search-content .text-field`."""

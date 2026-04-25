@@ -17,11 +17,7 @@
 			"class": "MediaWiki\\Skin\\Maccabipedia\\SkinMaccabipedia",
 			"args": [
 				{
-					"name": "maccabipedia",
-					"templateDirectory": "templates",
-					"messages": [
-						"sitetitle"
-					]
+					"name": "maccabipedia"
 				}
 			]
 		}
@@ -48,7 +44,7 @@
 	},
 	"ResourceModules": {
 		"skins.maccabipedia.styles": {
-			"class": "ResourceLoaderSkinModule",
+			"class": "MediaWiki\\ResourceLoader\\SkinModule",
 			"features": {
 				"content-links": true,
 				"content-media": true,

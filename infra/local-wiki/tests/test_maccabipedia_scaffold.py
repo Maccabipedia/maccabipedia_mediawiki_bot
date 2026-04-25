@@ -16,7 +16,10 @@ import pytest
 
 pytestmark = pytest.mark.integration
 
-_PHP_ERROR_RE = re.compile(r"Fatal error|Warning:|Notice:|Deprecated:")
+# Anchor on PHP's own display_errors markup (`<b>type</b>: …`) so we don't
+# false-positive on wiki content that happens to contain the words "Notice:" /
+# "Warning:" / etc. in prose.
+_PHP_ERROR_RE = re.compile(r"<b>(?:Fatal error|Warning|Notice|Deprecated)</b>:")
 
 
 def test_no_php_errors(maccabipedia_anon_html: str) -> None:

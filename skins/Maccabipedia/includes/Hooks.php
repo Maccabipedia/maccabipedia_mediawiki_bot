@@ -10,9 +10,11 @@
 namespace MediaWiki\Skin\Maccabipedia;
 
 use MediaWiki\Hook\BeforePageDisplayHook;
+use OutputPage;
+use Skin;
 
 class Hooks implements BeforePageDisplayHook {
-	public function onBeforePageDisplay( $out, $skin ): void {
+	public function onBeforePageDisplay( OutputPage $out, Skin $skin ): void {
 		// Intentionally empty in Plan 1. Plans 3+ will wire skin-specific
 		// modules / preferences here.
 	}

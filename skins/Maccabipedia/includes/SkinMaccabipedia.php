@@ -21,13 +21,13 @@ class SkinMaccabipedia extends SkinMustache {
 	 * prod content (User CSS, MediaWiki:*.css overrides, parser-function
 	 * branches keyed on SKINNAME) keeps applying during the soak window.
 	 *
-	 * The compat class is removed at Phase 2 + 2 weeks per the rewrite spec.
+	 * The compat class is removed at Phase 2 + 2 weeks per the rewrite spec
+	 * (docs/superpowers/specs/2026-04-25-maccabipedia-skin-rewrite.md).
+	 *
+	 * Mirrors how the legacy SkinMetrolook adds its own page classes —
+	 * `getPageClasses()` is the documented MW idiom for body-class additions.
 	 */
-	public function getTemplateData() {
-		$data = parent::getTemplateData();
-		$data['html-body-class'] = trim(
-			( $data['html-body-class'] ?? '' ) . ' skin-metrolook'
-		);
-		return $data;
+	public function getPageClasses( $title ): string {
+		return parent::getPageClasses( $title ) . ' skin-metrolook';
 	}
 }

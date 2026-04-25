@@ -11,8 +11,8 @@
 #   - Credentials come from env vars; never hardcoded, never logged.
 #   - Every invocation appends a timestamped line to SYNC_LOG.
 #
-# Required for FTP-based ops (skins, extensions, logo-assets, localsettings,
-# versions):
+# Required for FTP-based ops (metrolook-assets, extensions, logo-assets,
+# localsettings, versions):
 #   MACCABIPEDIA_FTP_HOST        — FTP hostname (e.g. ftp.maccabipedia.co.il)
 #   MACCABIPEDIA_FTP_USER        — FTP username
 #   MACCABIPEDIA_FTP_PASS        — FTP password
@@ -32,11 +32,14 @@
 #
 # Allowed <op> values:
 #   bootstrap         — run every FTP+HTTP pull needed for first-time local
-#                       dev setup: skins + extensions + favicon + pages
-#                       (using scripts/content-manifests/starter.manifest).
+#                       dev setup: metrolook-assets + extensions + favicon
+#                       + pages (using scripts/content-manifests/starter.manifest).
 #                       Doesn't touch docker — run `docker compose up -d`
 #                       and `./scripts/seed-content.sh starter` afterwards.
-#   skins             — mirror <root>/skins/           → synced/skins/
+#   metrolook-assets  — mirror <root>/skins/Metrolook/assets/
+#                       → synced/skins/Metrolook/assets/
+#                       (only the binary banners; the rest of the Metrolook
+#                       skin source is vendored at <repo-root>/skins/Metrolook/).
 #   extensions        — mirror <root>/extensions/      → synced/extensions/
 #   favicon           — fetch   <root>/favicon.ico      → synced/favicon.ico
 #   localsettings     — fetch   <root>/LocalSettings.php
@@ -74,7 +77,10 @@ if [ -f "$ENV_FILE" ]; then
 fi
 
 usage() {
-    sed -n '2,49p' "$0" | sed 's/^# \{0,1\}//'
+    # Print the script's leading comment block (everything from line 2 up to
+    # but not including the first non-comment statement). Sentinel-based so
+    # adding/removing op docs above doesn't silently truncate --help.
+    awk 'NR < 2 { next } /^set -euo pipefail/ { exit } { sub(/^# ?/, ""); print }' "$0"
 }
 
 require_env() {
@@ -246,12 +252,13 @@ shift
 
 case "$op" in
     bootstrap)
-        op_mirror_dir "skins"      "skins"
-        op_mirror_dir "extensions" "extensions"
+        op_mirror_dir "skins/Metrolook/assets" "skins/Metrolook/assets"
+        op_mirror_dir "extensions"             "extensions"
         op_favicon
         op_pages "${SCRIPT_DIR}/content-manifests/starter.manifest"
         ;;
-    skins)         op_mirror_dir "skins"             "skins" ;;
+    metrolook-assets)
+        op_mirror_dir "skins/Metrolook/assets" "skins/Metrolook/assets" ;;
     extensions)    op_mirror_dir "extensions"        "extensions" ;;
     favicon)       op_favicon ;;
     logo-assets)   op_mirror_dir "resources/assets"  "resources/assets" ;;

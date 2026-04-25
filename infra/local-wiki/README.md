@@ -1,10 +1,13 @@
 # Local MaccabiPedia (Docker)
 
 Runs a local MediaWiki 1.39.11 + PHP 7.4 + MariaDB mirror of the production
-MaccabiPedia site. The wiki code and skin come from prod (pulled via FTP);
-site-wide config lives in `config/LocalSettings.shared.php` which ships
-byte-equivalent to prod. Dev-only values (DB host, URL, fake secrets) are
-in `config/LocalSettings.env.local.php` — prod has its own `.env.prod.php`.
+MaccabiPedia site. MediaWiki itself is built into the image; extensions
+and the Metrolook skin's binary `assets/` (banner images) are pulled from
+prod via FTP into `synced/`. The Metrolook skin source is vendored at
+`<repo-root>/skins/Metrolook/`. Site-wide config lives in
+`config/LocalSettings.shared.php` which ships byte-equivalent to prod.
+Dev-only values (DB host, URL, fake secrets) are in
+`config/LocalSettings.env.local.php` — prod has its own `.env.prod.php`.
 
 ## Prerequisites
 
@@ -26,7 +29,7 @@ cd infra/local-wiki
 cp .env.example .env
 chmod 600 .env                        # fill in host/user/pass/remote-root
 
-# Pull everything needed for first boot (skin + extensions). ~few minutes.
+# Pull what isn't vendored: extensions + Metrolook assets. ~few minutes.
 ./scripts/sync-from-prod.sh bootstrap
 
 # Bring up the stack (first build takes a few minutes)
@@ -92,8 +95,10 @@ docker compose down -v       # wipe DB + images + install marker
   compose, lftp). Idempotent.
 - `scripts/sync-from-prod.sh` — named-op wrapper around `lftp` (+ `curl`
   for HTTP). Download-only. See `.env.example` for env vars.
-  Ops: `bootstrap`, `skins`, `extensions`, `logo-assets`, `localsettings`,
-  `versions`, `pages <manifest>`.
+  Ops: `bootstrap`, `metrolook-assets`, `extensions`, `logo-assets`,
+  `localsettings`, `versions`, `pages <manifest>`.
+  Note: the Metrolook skin source lives in `<repo-root>/skins/Metrolook/`
+  (vendored). Only the binary banners under `assets/` are pulled from prod.
 - `scripts/seed-content.sh` — imports pulled XML dumps into the running
   container via `importDump.php`, then `rebuildall.php` + `runJobs.php`.
 - `scripts/content-manifests/starter.manifest` — editable list of page titles

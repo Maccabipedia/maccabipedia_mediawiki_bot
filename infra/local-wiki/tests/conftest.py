@@ -1,12 +1,18 @@
-"""Fixtures for the local-wiki menu smoke suite.
+"""Fixtures + shared constants for the local-wiki integration suite.
 
 Hits the running docker stack (default http://localhost:8080) and exposes
-both an anonymous and an admin-logged-in HTML body of the Hebrew main page.
-All fixtures are session-scoped so the suite makes only two main-page GETs.
+anonymous / admin / Maccabipedia-skin HTML bodies of the Hebrew main page.
+All fixtures are session-scoped so the suite makes minimal HTTP calls.
+
+Module-level constants (`MENU_LABELS`, `PHP_ERROR_RE`) are the canonical
+single source for both `test_menu.py` (Metrolook) and
+`test_maccabipedia_scaffold.py` (Maccabipedia) — both skins must pass the
+same menu contract.
 """
 from __future__ import annotations
 
 import os
+import re
 from urllib.parse import quote
 
 import pytest
@@ -18,6 +24,34 @@ import requests
 _MAIN_PAGE_TITLE = "עמוד_ראשי"
 _ADMIN_USERNAME = "admin"
 _ADMIN_PASSWORD = "devadminpass"  # see infra/local-wiki/docker-compose.yml
+
+
+# Mirror of the menu definitions in `SkinMaccabipedia::buildPrimaryDropdowns()`
+# and `skins/Metrolook/customize/includes/{app-header,app-footer}.php`. Adding,
+# removing, or renaming a menu link must be a coordinated change in both PHP
+# locations and this list — the duplication between PHP and tests is the point;
+# the duplication between tests is what this constant exists to eliminate.
+MENU_LABELS = (
+    # מכבי תל אביב dropdown
+    "ההיסטוריה", "עונות", "מתקנים", "מפעלים", "מדים", "תארים",
+    # שחקנים וצוות dropdown
+    "שחקנים", "אנשי צוות",
+    # אוהדים ותרבות dropdown
+    "שירים", "כרטיסים ומנויים", "כרזות", "קלפים ומדבקות",
+    "תפאורות", "ארגונים", "ספרים", "פנזינים",
+    # משחקים dropdown
+    "חיפוש משחק", "סטטיסטיקות",
+    # standalone link
+    "מכבימדיה",
+    # footer about-section links
+    "תרומות", "יצירת קשר",
+)
+
+
+# Anchor on PHP's display_errors markup (`<b>type</b>: …`) so we don't
+# false-positive on wiki content that happens to contain the words "Notice:" /
+# "Warning:" in prose.
+PHP_ERROR_RE = re.compile(r"<b>(?:Fatal error|Warning|Notice|Deprecated)</b>:")
 
 
 @pytest.fixture(scope="session")

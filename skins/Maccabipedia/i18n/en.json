@@ -5,5 +5,5 @@
 		]
 	},
 	"skinname-maccabipedia": "Maccabipedia",
-	"maccabipedia-desc": "Maccabipedia, the official skin of MaccabiPedia (successor to Metrolook)."
+	"maccabipedia-desc": "Modern SkinMustache-based replacement for Metrolook (Phase 2 — opt-in soak via ?useskin=maccabipedia; default skin remains Metrolook until Phase 4 cutover)."
 }

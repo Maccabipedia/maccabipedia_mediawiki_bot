@@ -2,16 +2,20 @@
 /**
  * Maccabipedia skin — successor to Metrolook.
  *
- * Modern SkinMustache-based skin. Visual parity with Metrolook is
- * delivered (during Phases 1–3) by reusing the legacy skin's already-
- * registered ResourceLoader modules (`skins.metrolook.styles`,
- * `skins.metrolook.js`, …) — the new skin contributes the modern PHP
- * shell and the Mustache template; CSS/JS migration follows in Phase 4.
+ * SkinMustache-based skin built around declarative data builders + mustache
+ * iteration. The skin's responsibilities, roughly: build menu data arrays
+ * (`getTemplateData()` and helpers), set the body class + viewport, and
+ * delegate everything else to MW core.
  *
- * See docs/superpowers/specs/2026-04-25-maccabipedia-skin-rewrite.md.
+ * Visual parity with Metrolook (during Phases 2–3) is delivered by reusing
+ * the legacy skin's `skins.metrolook.styles` / `skins.metrolook.interface`
+ * / `skins.metrolook.js` ResourceLoader modules. Phase 4 cutover will move
+ * the LESS/JS source into `skins/Maccabipedia/`, rename the modules, and
+ * delete `skins/Metrolook/`.
  *
  * @file
  * @ingroup Skins
+ * @license GPL-2.0-or-later
  */
 
 namespace MediaWiki\Skin\Maccabipedia;
@@ -19,35 +23,33 @@ namespace MediaWiki\Skin\Maccabipedia;
 use Html;
 use OutputPage;
 use SkinMustache;
+use SpecialPage;
+use Title;
 
 class SkinMaccabipedia extends SkinMustache {
 
 	/**
 	 * Body classes:
-	 * - `skin-maccabipedia` is auto-emitted by MW from the valid skin name.
-	 * - `skin-metrolook` is a compat token so any prod content / templates
-	 *   keyed on the legacy skin name keep applying during the soak window
-	 *   (drops at Phase 2 + 2 weeks per the rewrite spec).
-	 * - `metrolook-nav-directionality` matches what Metrolook adds in
-	 *   SkinMetrolook::getPageClasses() — a number of CSS rules in
-	 *   skins.metrolook.styles use this class as a directionality root,
-	 *   so we must keep it while we share Metrolook's stylesheet.
+	 *   - `skin-maccabipedia` is auto-emitted by MW from the valid skin name.
+	 *   - `skin-metrolook` is a compat token for any prod content / templates
+	 *     keyed on the legacy skin name. Verified live (2026-04-25): zero hits
+	 *     for `metrolook` / `skin-metrolook` across all wiki namespaces, so the
+	 *     compat is purely insurance against unindexed `User:<name>/metrolook.css`
+	 *     pages and prod LocalSettings hooks.
+	 *
+	 * **Remove on or after 2026-05-09** (Phase 2 launch + 2-week soak),
+	 * tracked at https://trello.com/c/dMO1FPCj.
 	 */
 	public function getPageClasses( $title ): string {
-		return parent::getPageClasses( $title )
-			. ' skin-metrolook'
-			. ' metrolook-nav-directionality';
+		return parent::getPageClasses( $title ) . ' skin-metrolook';
 	}
 
-	/**
-	 * Pull in Metrolook's existing styles + scripts. The new skin contributes
-	 * a modern PHP shell + Mustache template; the actual CSS rules (which
-	 * MaccabiPedia authored under skins/Metrolook/customize/styles/) keep
-	 * loading from the legacy module names. Phase 4's cutover will move the
-	 * source LESS/JS into skins/Maccabipedia/ and rename the modules.
-	 */
 	public function initPage( OutputPage $out ) {
 		parent::initPage( $out );
+		// Mobile viewport — without this, iPhones render the page at 1000px-wide
+		// desktop layout. Metrolook gates this on $wgMetrolookMobile=true; the
+		// new skin always emits it.
+		$out->addMeta( 'viewport', 'width=device-width, initial-scale=1' );
 		$out->addModuleStyles( [
 			'skins.metrolook.styles',
 			'skins.metrolook.interface',
@@ -55,83 +57,249 @@ class SkinMaccabipedia extends SkinMustache {
 		$out->addModules( [ 'skins.metrolook.js' ] );
 	}
 
-	/**
-	 * Build the search-box form using values from SkinMustache's
-	 * `data-search-box` template-data array, in the same shape Metrolook's
-	 * QuickTemplate emitted via $this->renderNavigation(['SEARCH']).
-	 *
-	 * Done as a separate method so getTemplateData() stays readable.
-	 */
-	private function buildSearchBoxHtml( array $searchBoxData ): string {
-		$formAction = $searchBoxData['form-action'] ?? '';
-		$pageTitle = $searchBoxData['page-title'] ?? '';
-		$inputHtml = $searchBoxData['html-input'] ?? '';
-		$buttonFallback = $searchBoxData['html-button-search-fallback'] ?? '';
-		$buttonGo = $searchBoxData['html-button-search'] ?? '';
+	public function getTemplateData() {
+		$data = parent::getTemplateData();
+		// Suppress the page heading on the main page — the app-header chrome
+		// carries the site title, so an extra <h1> above the lead paragraph
+		// is visual noise (parity with what Metrolook's template did
+		// implicitly by not emitting one).
+		if ( $this->getTitle() && $this->getTitle()->isMainPage() ) {
+			$data['html-title-heading'] = '';
+		}
+		$data['data-app-header'] = $this->buildAppHeaderData();
+		$data['data-app-footer'] = $this->buildAppFooterData();
+		$data['html-search-input'] = $this->buildSearchInputHtml();
+		$data['html-footer-info-items'] = $this->buildFooterInfoHtml( $data );
+		return $data;
+	}
 
-		$hidden = Html::hidden( 'title', $pageTitle );
+	private function buildAppHeaderData(): array {
+		$skinAssetsBase = $this->getConfig()->get( 'Server' )
+			. $this->getConfig()->get( 'ScriptPath' )
+			. '/skins/Metrolook/assets/'; // TODO Phase 4: copy assets/ into skins/Maccabipedia/resources/.
+		return [
+			'logo-url'         => Title::newMainPage()->getLocalURL(),
+			'logo-image-src'   => $skinAssetsBase . 'images/logo.png',
+			'primary-dropdowns' => $this->buildPrimaryDropdowns(),
+			'standalone-link'  => [
+				'url'   => $this->pageUrl( 'מכבימדיה' ),
+				'label' => 'מכבימדיה',
+			],
+			'options-panel'    => $this->buildOptionsPanel(),
+		];
+	}
 
-		return <<<HTML
-<div class="search-content" role="search">
-	<form action="{$formAction}" id="searchform">
-		<div id="simpleSearch">
-			{$inputHtml}
-			{$hidden}
-			{$buttonFallback}
-			{$buttonGo}
-		</div>
-	</form>
-</div>
-HTML;
+	private function buildPrimaryDropdowns(): array {
+		$dropdowns = [
+			[ 'heading' => 'מכבי תל אביב', 'items' => [
+				[ 'label' => 'ההיסטוריה', 'title' => 'קטגוריה: היסטוריה' ],
+				[ 'label' => 'עונות',     'title' => 'עונות' ],
+				[ 'label' => 'מתקנים',    'title' => 'פורטל מתקנים' ],
+				[ 'label' => 'מפעלים',    'title' => 'פורטל מפעלים' ],
+				[ 'label' => 'מדים',      'title' => 'פורטל מדים' ],
+				[ 'label' => 'תארים',     'title' => 'תארים' ],
+			] ],
+			[ 'heading' => 'שחקנים וצוות', 'items' => [
+				[ 'label' => 'שחקנים',    'title' => 'פורטל שחקנים' ],
+				[ 'label' => 'אנשי צוות', 'title' => 'פורטל אנשי צוות' ],
+			] ],
+			[ 'heading' => 'אוהדים ותרבות', 'items' => [
+				[ 'label' => 'שירים',           'title' => 'שירי קהל' ],
+				[ 'label' => 'כרטיסים ומנויים', 'title' => 'כרטיסים ומנויים' ],
+				[ 'label' => 'כרזות',           'title' => 'כרזות משחק' ],
+				[ 'label' => 'קלפים ומדבקות',  'title' => 'קלפים ומדבקות' ],
+				[ 'label' => 'תפאורות',         'title' => 'קטגוריה: תפאורות' ],
+				[ 'label' => 'ארגונים',         'title' => 'ארגוני אוהדים' ],
+				[ 'label' => 'ספרים',           'title' => 'ספריה צהובה' ],
+				[ 'label' => 'פנזינים',         'title' => 'קטגוריה: פנזינים' ],
+			] ],
+			[ 'heading' => 'משחקים', 'items' => [
+				[ 'label' => 'חיפוש משחק',   'title' => 'חיפוש משחק' ],
+				[ 'label' => 'סטטיסטיקות',   'title' => 'סטטיסטיקות' ],
+			] ],
+		];
+		// Resolve URLs once (mustache iterates structurally).
+		foreach ( $dropdowns as &$group ) {
+			foreach ( $group['items'] as &$item ) {
+				$item['url'] = $this->pageUrl( $item['title'] );
+			}
+		}
+		return $dropdowns;
+	}
+
+	private function buildOptionsPanel(): array {
+		$title = $this->getTitle();
+		$relevantTitle = $this->getRelevantTitle();
+		$user = $this->getUser();
+		$request = $this->getRequest();
+		$currentAction = $request->getRawVal( 'action' );
+		$currentOldid = $request->getInt( 'oldid', 0 );
+		$isViewingEditForm = $currentAction === 'edit';
+		$pageNamespace = $title->getNamespace();
+
+		$showOptionsPanel = !in_array( $pageNamespace, [ NS_SPECIAL, NS_MEDIA ], true );
+		if ( !$showOptionsPanel ) {
+			return [ 'show' => false ];
+		}
+
+		$actionURL = static function ( string $action, array $extra = [] )
+				use ( $relevantTitle, $currentOldid ): string {
+			$params = [ 'action' => $action ] + $extra;
+			if ( $currentOldid > 0 ) {
+				$params['oldid'] = $currentOldid;
+			}
+			return $relevantTitle->getLocalURL( $params );
+		};
+
+		[ 'talk' => $talkURL, 'subject' => $subjectURL ] = $this->getTalkSubjectPair( $title );
+
+		$editIconURL = $isViewingEditForm
+			? $relevantTitle->getLocalURL()
+			: $actionURL( 'edit' );
+
+		return [
+			'show' => true,
+			'edit' => [
+				'icon-url'           => $editIconURL,
+				'is-editing'         => $isViewingEditForm,
+				'can-edit'           => $user->isAllowed( 'edit' ),
+				'edit-action-url'    => $actionURL( 'edit' ),
+				'view-url'           => $relevantTitle->getLocalURL(),
+				'talk-page-url'      => $talkURL,
+				'subject-page-url'   => $subjectURL,
+				'show-subject-back'  => $subjectURL !== null && $currentAction === null,
+				'history-url'        => $actionURL( 'history' ),
+				'purge-url'          => $actionURL( 'purge', [ 'forcerecursivelinkupdate' => 1 ] ),
+				'is-admin'           => $user->isAllowed( 'protect' ),
+				'delete-url'         => $actionURL( 'delete' ),
+				'move-url'           => SpecialPage::getTitleFor( 'Movepage', $relevantTitle->getPrefixedText() )->getLocalURL(),
+				'protect-url'        => $actionURL( 'protect' ),
+			],
+			'user' => $this->buildUserPanel( $user ),
+			'options' => [
+				[ 'url' => SpecialPage::getTitleFor( 'Recentchanges' )->getLocalURL(), 'label' => 'שינויים אחרונים' ],
+				[ 'url' => SpecialPage::getTitleFor( 'Upload' )->getLocalURL(),        'label' => 'העלאת קובץ' ],
+				[ 'url' => SpecialPage::getTitleFor( 'Whatlinkshere', $relevantTitle->getPrefixedText() )->getLocalURL(), 'label' => 'דפים מקושרים' ],
+				[ 'url' => $this->pageUrl( 'מיוחד:קישורי מפעיל' ),                     'label' => 'קישורי מפעיל' ],
+			],
+		];
 	}
 
 	/**
-	 * Pluck the "Last modified" footer line out of SkinMustache's
-	 * `data-footer.array-items` (key 'info'), matching what Metrolook
-	 * pulled from $this->data['lastmod'] / $this->html('lastmod').
+	 * Custom Hebrew namespaces in `LocalSettings.shared.php` use non-standard
+	 * IDs that break MediaWiki's even=subject / odd=talk pairing convention,
+	 * so we pair them explicitly here. Each constant is `defined()`-guarded
+	 * so a missing namespace constant in a stripped-down environment doesn't
+	 * fatal the wiki — the corresponding talk-link silently skips instead.
 	 *
-	 * Returns the lastmod HTML or empty string if absent.
+	 * @return array{talk: ?string, subject: ?string}
 	 */
-	private function extractLastmodHtml( array $data ): string {
-		$footerItems = $data['data-footer']['array-items'] ?? [];
-		foreach ( $footerItems as $section ) {
-			if ( ( $section['name'] ?? '' ) !== 'info' ) {
-				continue;
+	private function getTalkSubjectPair( Title $title ): array {
+		$customPairs = [
+			'NS_שיר'    => 'NS_שיחת_שיר',
+			'NS_כדורעף' => 'NS_שיחת_כדורעף',
+			'NS_כדורסל' => 'NS_שיחת_כדורסל',
+			'NS_כדורגל' => 'NS_שיחת_כדורגל',
+			'NS_כדוריד' => 'NS_שיחת_כדוריד',
+		];
+		$subjectToTalk = [];
+		foreach ( $customPairs as $subjectName => $talkName ) {
+			if ( defined( $subjectName ) && defined( $talkName ) ) {
+				$subjectToTalk[ constant( $subjectName ) ] = constant( $talkName );
 			}
-			// 'info' section's html-items contains the lastmod <li>.
-			$html = $section['html-items'] ?? '';
-			// Strip the <ul> wrapper but keep the inner content; matches
-			// Metrolook's narrower output (just the lastmod line, no list).
-			if ( preg_match( '/<li[^>]*id="lastmod"[^>]*>(.*?)<\/li>/s', $html, $m ) ) {
-				return $m[1];
+		}
+		foreach ( [ NS_MAIN, NS_USER, NS_PROJECT, NS_FILE, NS_MEDIAWIKI, NS_TEMPLATE, NS_HELP, NS_CATEGORY ] as $ns ) {
+			$subjectToTalk[ $ns ] = $ns + 1;
+		}
+		$talkToSubject = array_flip( $subjectToTalk );
+
+		$pageNs = $title->getNamespace();
+		$talkURL = null;
+		$subjectURL = null;
+		if ( isset( $subjectToTalk[ $pageNs ] ) ) {
+			$talkURL = Title::makeTitle( $subjectToTalk[ $pageNs ], $title->getText() )->getLocalURL();
+		} elseif ( isset( $talkToSubject[ $pageNs ] ) ) {
+			$subjectURL = Title::makeTitle( $talkToSubject[ $pageNs ], $title->getText() )->getLocalURL();
+		}
+		return [ 'talk' => $talkURL, 'subject' => $subjectURL ];
+	}
+
+	private function buildUserPanel( $user ): array {
+		if ( $user->isRegistered() ) {
+			$userName = $user->getName();
+			return [
+				'is-registered'     => true,
+				'name'              => $userName,
+				'profile-url'       => $this->pageUrl( 'משתמש:' . $userName ),
+				'talk-url'          => $this->pageUrl( 'שיחת משתמש:' . $userName ),
+				'preferences-url'   => SpecialPage::getTitleFor( 'Preferences' )->getLocalURL(),
+				'contributions-url' => SpecialPage::getTitleFor( 'Contributions', $userName )->getLocalURL(),
+				'logout-url'        => SpecialPage::getTitleFor( 'Userlogout' )->getLocalURL(),
+			];
+		}
+		return [
+			'is-registered'      => false,
+			'name'               => 'משתמש',
+			'login-url'          => SpecialPage::getTitleFor( 'Userlogin' )->getLocalURL(),
+			'create-account-url' => SpecialPage::getTitleFor( 'CreateAccount' )->getLocalURL(),
+			'talk-url'           => $this->pageUrl( 'מיוחד:השיחה שלי' ),
+		];
+	}
+
+	private function buildAppFooterData(): array {
+		$mwResourceURL = $this->getConfig()->get( 'Server' )
+			. $this->getConfig()->get( 'ScriptPath' )
+			. '/resources/assets/';
+		return [
+			'about-links' => [
+				[ 'url' => $this->pageUrl( 'מכביפדיה: תרומות' ),  'label' => 'תרומות' ],
+				[ 'url' => $this->pageUrl( 'מכביפדיה: צור קשר' ), 'label' => 'יצירת קשר' ],
+			],
+			// TODO: replace bit.ly URL shorteners with canonical URLs (creates
+			// operational risk: account churn, ad-blocker breakage, no record
+			// of resolution targets).
+			'social-links' => [
+				[ 'icon' => 'fa-facebook-f', 'url' => 'https://bit.ly/visit_mp_fb' ],
+				[ 'icon' => 'fa-x-twitter',  'url' => 'https://bit.ly/visit_mp_x' ],
+				[ 'icon' => 'fa-instagram',  'url' => 'https://bit.ly/visit_mp_i' ],
+				[ 'icon' => 'fa-youtube',    'url' => 'https://bit.ly/visit_mp_y' ],
+			],
+			'powered-by-mw-image-url' => $mwResourceURL . 'poweredby_mediawiki_88x31.png',
+		];
+	}
+
+	/**
+	 * Search input — Metrolook used $this->makeSearchInput(['class' => 'text-field']).
+	 * SkinMustache's data-search-box.html-input has no class hook, so we build
+	 * the input ourselves to keep the .text-field CSS rules in app-header.less
+	 * applying.
+	 */
+	private function buildSearchInputHtml(): string {
+		return Html::input( 'search', '', 'search', [
+			'id'          => 'searchInput',
+			'class'       => 'text-field',
+			'placeholder' => $this->msg( 'search' )->text(),
+			'autocomplete' => 'off',
+		] );
+	}
+
+	/**
+	 * Pluck the `info` section's html-items out of SkinMustache's
+	 * `data-footer.array-items` for rendering inside the credits row.
+	 * Returns the section's pre-rendered <ul> as-is — mustache renders it
+	 * via {{{html-footer-info-items}}}.
+	 */
+	private function buildFooterInfoHtml( array $data ): string {
+		foreach ( $data['data-footer']['array-items'] ?? [] as $section ) {
+			if ( ( $section['name'] ?? '' ) === 'info' ) {
+				return $section['html-items'] ?? '';
 			}
 		}
 		return '';
 	}
 
-	/**
-	 * Output-buffer the legacy customize/includes/*.php templates and
-	 * surface their rendered HTML as Mustache variables. The included
-	 * files reference $skin (this Skin instance) and $searchBoxHtml /
-	 * $lastmodHtml (pre-rendered) — they no longer touch $this.
-	 */
-	public function getTemplateData() {
-		$data = parent::getTemplateData();
-
-		$skin = $this;
-		$searchBoxHtml = $this->buildSearchBoxHtml( $data['data-search-box'] ?? [] );
-		$lastmodHtml = $this->extractLastmodHtml( $data );
-
-		$includesDir = __DIR__ . '/../customize/includes';
-
-		ob_start();
-		require $includesDir . '/app-header.php';
-		$data['html-app-header'] = ob_get_clean();
-
-		ob_start();
-		require $includesDir . '/app-footer.php';
-		$data['html-app-footer'] = ob_get_clean();
-
-		return $data;
+	private function pageUrl( string $titleText ): string {
+		$title = Title::newFromText( $titleText );
+		return $title ? $title->getLocalURL() : '#';
 	}
 }

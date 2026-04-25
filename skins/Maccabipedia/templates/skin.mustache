@@ -1,7 +1,121 @@
 <div class="maccabipedia-site-container">
 	<div class="page-overlay"></div>
 
-	{{{html-app-header}}}
+	<header class="app-header">
+		<div class="content">
+			<i class="fas fa-bars mobile-side-menu-trigger mobile-only"></i>
+
+			<a href="{{data-app-header.logo-url}}" class="homepage-navigation">
+				<img src="{{data-app-header.logo-image-src}}" />
+			</a>
+
+			<nav class="navigation-section-container">
+				<div class="pages-navigation-container">
+					{{#data-app-header.primary-dropdowns}}
+						<div class="dropdown-container">
+							<div class="dropdown-title">
+								<span class="text">{{heading}}</span>
+								<i class="fas fa-caret-down dropdown-indication mobile-only"></i>
+							</div>
+							<div class="dropdown-content">
+								{{#items}}<a href="{{url}}">{{label}}</a>{{/items}}
+							</div>
+						</div>
+					{{/data-app-header.primary-dropdowns}}
+
+					<div class="navigation-link-block">
+						<a href="{{data-app-header.standalone-link.url}}">{{data-app-header.standalone-link.label}}</a>
+					</div>
+				</div>
+
+				{{#data-app-header.options-panel.show}}
+				<div class="options-navigation-container">
+					<div class="dropdown-container">
+						<div class="dropdown-title">
+							<i class="fas fa-pencil-alt option-icon"></i>
+							<span class="text mobile-only">עריכה</span>
+							<i class="fas fa-caret-down dropdown-indication mobile-only"></i>
+							<a href="{{data-app-header.options-panel.edit.icon-url}}" class="icon-link desktop-only"></a>
+						</div>
+						<div class="dropdown-content">
+							{{#data-app-header.options-panel.edit.can-edit}}
+								{{#data-app-header.options-panel.edit.is-editing}}
+									<a href="{{data-app-header.options-panel.edit.view-url}}">חזור לערך</a>
+								{{/data-app-header.options-panel.edit.is-editing}}
+								{{^data-app-header.options-panel.edit.is-editing}}
+									<a href="{{data-app-header.options-panel.edit.edit-action-url}}">עריכה</a>
+								{{/data-app-header.options-panel.edit.is-editing}}
+							{{/data-app-header.options-panel.edit.can-edit}}
+
+							{{#data-app-header.options-panel.edit.talk-page-url}}
+								<a href="{{data-app-header.options-panel.edit.talk-page-url}}">שיחת עמוד</a>
+							{{/data-app-header.options-panel.edit.talk-page-url}}
+
+							{{#data-app-header.options-panel.edit.show-subject-back}}
+								<a href="{{data-app-header.options-panel.edit.subject-page-url}}">חזור לערך</a>
+							{{/data-app-header.options-panel.edit.show-subject-back}}
+
+							<a href="{{data-app-header.options-panel.edit.history-url}}">גרסאות קודמות</a>
+							<a href="{{data-app-header.options-panel.edit.purge-url}}">רענון העמוד</a>
+
+							{{#data-app-header.options-panel.edit.is-admin}}
+								<a href="{{data-app-header.options-panel.edit.delete-url}}">מחיקה</a>
+								<a href="{{data-app-header.options-panel.edit.move-url}}">העברה</a>
+								<a href="{{data-app-header.options-panel.edit.protect-url}}">הגנה</a>
+							{{/data-app-header.options-panel.edit.is-admin}}
+						</div>
+					</div>
+
+					<div class="dropdown-container">
+						<div class="dropdown-title">
+							<i class="far fa-user option-icon"></i>
+							<span class="text mobile-only">{{data-app-header.options-panel.user.name}}</span>
+							<i class="fas fa-caret-down dropdown-indication mobile-only"></i>
+						</div>
+						<div class="dropdown-content">
+							{{#data-app-header.options-panel.user.is-registered}}
+								<a href="{{data-app-header.options-panel.user.profile-url}}">{{data-app-header.options-panel.user.name}}</a>
+								<a href="{{data-app-header.options-panel.user.talk-url}}">עמוד השיחה שלי</a>
+								<a href="{{data-app-header.options-panel.user.preferences-url}}">העדפות</a>
+								<a href="{{data-app-header.options-panel.user.contributions-url}}">התרומות שלי</a>
+								<a href="{{data-app-header.options-panel.user.logout-url}}">התנתק</a>
+							{{/data-app-header.options-panel.user.is-registered}}
+							{{^data-app-header.options-panel.user.is-registered}}
+								<a href="{{data-app-header.options-panel.user.login-url}}">כניסה לחשבון</a>
+								<a href="{{data-app-header.options-panel.user.create-account-url}}">יצירת חשבון</a>
+								<a href="{{data-app-header.options-panel.user.talk-url}}">שיחה</a>
+							{{/data-app-header.options-panel.user.is-registered}}
+						</div>
+					</div>
+
+					<div class="dropdown-container">
+						<div class="dropdown-title">
+							<i class="fas fa-cogs option-icon"></i>
+							<span class="text mobile-only">אפשרויות</span>
+							<i class="fas fa-caret-down dropdown-indication mobile-only"></i>
+						</div>
+						<div class="dropdown-content">
+							{{#data-app-header.options-panel.options}}<a href="{{url}}">{{label}}</a>{{/data-app-header.options-panel.options}}
+						</div>
+					</div>
+				</div>
+				{{/data-app-header.options-panel.show}}
+			</nav>
+
+			<div class="search-container">
+				<div class="search-content" role="search">
+					<form action="{{data-search-box.form-action}}" id="searchform">
+						<div id="simpleSearch">
+							{{{html-search-input}}}
+							<input type="hidden" name="title" value="{{data-search-box.page-title}}" />
+							{{{data-search-box.html-button-search-fallback}}}
+							{{{data-search-box.html-button-search}}}
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</header>
 
 	<div class="maccabipedia-page-title">
 		<div class="content">
@@ -11,14 +125,9 @@
 
 	<main>
 		<a id="top"></a>
-		{{{html-prebodyhtml}}}
 		<div id="bodyContent" class="mw-body-content">
-			{{#html-subtitle}}
-				<div id="contentSub">{{{html-subtitle}}}</div>
-			{{/html-subtitle}}
-			{{#html-user-message}}
-				<div class="usermessage">{{{html-user-message}}}</div>
-			{{/html-user-message}}
+			{{#html-subtitle}}<div id="contentSub">{{{html-subtitle}}}</div>{{/html-subtitle}}
+			{{{html-user-message}}}
 			{{{html-body-content}}}
 			{{{html-categories}}}
 			<div class="visualClear"></div>
@@ -27,5 +136,32 @@
 		</div>
 	</main>
 
-	{{{html-app-footer}}}
+	<footer>
+		<section class="about-maccabipedia">
+			<div class="content">
+				<div class="usefull-links">
+					{{#data-app-footer.about-links}}<a href="{{url}}">{{label}}</a>{{/data-app-footer.about-links}}
+				</div>
+
+				<div class="social-networks">
+					<div class="title">עקבו אחרינו</div>
+					<div class="links-container">
+						{{#data-app-footer.social-links}}<a href="{{url}}"><i class="fa-brands {{icon}}"></i></a>{{/data-app-footer.social-links}}
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section class="credits">
+			<div class="content">
+				<div class="last-edited">{{{html-footer-info-items}}}</div>
+				<div class="all-rights-reserved">
+					&copy; מכביפדיה כל הזכויות שמורות
+				</div>
+				<a href="https://www.mediawiki.org" target="_blank">
+					<img src="{{data-app-footer.powered-by-mw-image-url}}" />
+				</a>
+			</div>
+		</section>
+	</footer>
 </div>

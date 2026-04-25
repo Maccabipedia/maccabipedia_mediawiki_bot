@@ -30,35 +30,5 @@
 	"AutoloadNamespaces": {
 		"MediaWiki\\Skin\\Maccabipedia\\": "includes/"
 	},
-	"HookHandlers": {
-		"main": {
-			"class": "MediaWiki\\Skin\\Maccabipedia\\Hooks"
-		}
-	},
-	"Hooks": {
-		"BeforePageDisplay": "main"
-	},
-	"ResourceFileModulePaths": {
-		"localBasePath": "",
-		"remoteSkinPath": "Maccabipedia"
-	},
-	"ResourceModules": {
-		"skins.maccabipedia.styles": {
-			"class": "MediaWiki\\ResourceLoader\\SkinModule",
-			"features": {
-				"content-links": true,
-				"content-media": true,
-				"interface-message-box": true,
-				"interface-category": true,
-				"content-tables": true,
-				"i18n-ordered-lists": true,
-				"i18n-all-lists-margins": true,
-				"i18n-headings": true,
-				"elements": true,
-				"interface": true,
-				"logo": true
-			}
-		}
-	},
 	"manifest_version": 2
 }

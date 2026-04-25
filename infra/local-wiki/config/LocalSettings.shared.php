@@ -152,7 +152,13 @@ $wgDefaultSkin = "Metrolook";
 # Enabled skins.
 # The following skins were automatically enabled:
 wfLoadSkin('Metrolook');
-wfLoadSkin('Maccabipedia');
+// Guard against the file missing (shallow clone, partial sync, etc.) — without
+// the guard the wiki refuses to boot. Path resolves from inside the container
+// where this is mounted at /mw-config/LocalSettings.shared.php; the matching
+// skins/ directory is at /var/www/html/skins/.
+if ( file_exists( '/var/www/html/skins/Maccabipedia/skin.json' ) ) {
+    wfLoadSkin('Maccabipedia');
+}
 
 
 // For debugging, dont remove this! just comment out.

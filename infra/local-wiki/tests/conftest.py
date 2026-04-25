@@ -158,6 +158,20 @@ def maccabipedia_edit_mode_html(admin_session: requests.Session, main_url: str) 
 
 
 @pytest.fixture(scope="session")
+def maccabipedia_talk_page_html(base_url: str) -> str:
+    """Talk-namespace page (שיחה:עמוד_ראשי), anon, ?useskin=maccabipedia.
+    The page may not exist (HTTP 404) but the skin chrome must still render.
+    Asserts the subject-back link points at the parent article."""
+    url = f"{base_url}/{quote('שיחה:עמוד_ראשי')}?useskin=maccabipedia"
+    response = requests.get(url, timeout=15, allow_redirects=True)
+    # Talk page may or may not exist — chrome still renders either way.
+    assert response.status_code in (200, 404), (
+        f"GET {url} returned HTTP {response.status_code}"
+    )
+    return response.text
+
+
+@pytest.fixture(scope="session")
 def maccabipedia_oldid_html(main_url: str, base_url: str) -> str:
     """Main page at ?oldid=<old_revision>&useskin=maccabipedia. Asserts
     edit/history hrefs preserve the oldid parameter (Metrolook regression

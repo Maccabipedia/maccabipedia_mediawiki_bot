@@ -131,6 +131,19 @@ def test_edit_mode_shows_back_to_article_link(maccabipedia_edit_mode_html: str) 
     )
 
 
+def test_talk_page_emits_subject_back_link(maccabipedia_talk_page_html: str) -> None:
+    """On a talk-namespace page the edit dropdown must include a "חזור לערך"
+    link pointing back to the subject article. The parent's `talk-page-url`
+    is null on talk pages, so the dropdown's subject-back branch fires
+    instead — see SkinMaccabipedia::buildOptionsPanel()."""
+    assert ">חזור לערך</a>" in maccabipedia_talk_page_html
+    # The href should point to the subject article (no Talk: prefix).
+    assert re.search(
+        r'<a href="/[^"]*%D7%A2%D7%9E%D7%95%D7%93[^"]*">חזור לערך</a>',
+        maccabipedia_talk_page_html,
+    ), "subject-back link not pointing at the parent article"
+
+
 def test_oldid_preserved_in_action_urls_on_maccabipedia(
     maccabipedia_oldid_html: str,
 ) -> None:

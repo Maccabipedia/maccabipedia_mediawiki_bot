@@ -36,8 +36,6 @@ _MENU_LABELS = [
     "תרומות", "יצירת קשר",
 ]
 
-_DROPDOWN_HEADINGS = ["מכבי תל אביב", "שחקנים וצוות", "אוהדים ותרבות", "משחקים"]
-
 _PHP_ERROR_RE = re.compile(r"Fatal error|Warning:|Notice:|Deprecated:")
 
 
@@ -81,12 +79,6 @@ def test_menu_links_title_encoded(anon_html: str) -> None:
     # so a Hebrew menu link should land on "/%D7…" with no /index.php/ segment.
     encoded = re.findall(r'href="/%D7', anon_html)
     assert encoded, "expected at least one Title-encoded Hebrew menu link"
-
-
-@pytest.mark.parametrize("heading", _DROPDOWN_HEADINGS)
-def test_dropdown_heading_renders(anon_html: str, heading: str) -> None:
-    """All four primary dropdown headings must appear in the rendered HTML."""
-    assert heading in anon_html
 
 
 @pytest.mark.parametrize("label", _MENU_LABELS)

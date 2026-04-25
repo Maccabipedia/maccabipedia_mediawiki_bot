@@ -62,15 +62,91 @@ def test_special_page_keeps_user_and_options_dropdowns(
     """On Special: pages the edit dropdown is correctly hidden (no editable
     wikitext / talk page / history), but the user dropdown and the global
     options dropdown must still render — otherwise a logged-in reader
-    can't reach Preferences/Logout from Special:Recentchanges (regression
-    fix: see SkinMaccabipedia::buildOptionsPanel())."""
+    can't reach Preferences/Logout from Special:Recentchanges."""
     html = maccabipedia_special_recentchanges_html
     assert 'fa-user option-icon' in html, "user dropdown missing on Special page"
     assert 'fa-cogs option-icon' in html, "options dropdown missing on Special page"
-    # Edit dropdown should NOT render on a Special page.
     assert 'fa-pencil-alt option-icon' not in html, (
         "edit dropdown unexpectedly rendered on Special:Recentchanges"
     )
+
+
+# ---------------------------------------------------------------------------
+# Per-state menu coverage — every branch in SkinMaccabipedia::buildOptionsPanel
+# and ::buildUserPanel.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "label, present",
+    [
+        ("כניסה לחשבון", True),    # login link
+        ("יצירת חשבון", True),     # create-account link
+        (">התנתק</a>", False),     # logout must NOT appear
+        (">העדפות</a>", False),    # preferences must NOT appear (anon)
+    ],
+)
+def test_anon_user_panel_on_maccabipedia(
+    maccabipedia_anon_html: str, label: str, present: bool
+) -> None:
+    if present:
+        assert label in maccabipedia_anon_html
+    else:
+        assert label not in maccabipedia_anon_html
+
+
+@pytest.mark.parametrize(
+    "label, present",
+    [
+        # Logged-in user panel
+        (">התנתק</a>", True),
+        (">העדפות</a>", True),
+        (">התרומות שלי</a>", True),
+        (">עמוד השיחה שלי</a>", True),
+        (">כניסה לחשבון</a>", False),
+        (">יצירת חשבון</a>", False),
+        # Edit dropdown for any registered user with 'edit' permission
+        (">עריכה</a>", True),
+        # Admin-only items gated on $user->isAllowed('protect')
+        (">מחיקה</a>", True),
+        (">העברה</a>", True),
+        (">הגנה</a>", True),
+    ],
+)
+def test_admin_user_panel_on_maccabipedia(
+    maccabipedia_admin_html: str, label: str, present: bool
+) -> None:
+    if present:
+        assert label in maccabipedia_admin_html
+    else:
+        assert label not in maccabipedia_admin_html
+
+
+def test_edit_mode_shows_back_to_article_link(maccabipedia_edit_mode_html: str) -> None:
+    """When ?action=edit is on the URL the edit dropdown should show
+    "חזור לערך" (back to article view) instead of "עריכה" (open editor) —
+    matches Metrolook's behavior."""
+    assert ">חזור לערך</a>" in maccabipedia_edit_mode_html, (
+        "in action=edit mode, expected back-to-article link in the edit dropdown"
+    )
+
+
+def test_oldid_preserved_in_action_urls_on_maccabipedia(
+    maccabipedia_oldid_html: str,
+) -> None:
+    """Viewing ?oldid=N on Maccabipedia must keep that oldid in edit/history
+    action hrefs so editing/historying while viewing an old revision keeps
+    targeting that revision (parity with Metrolook test_menu's coverage)."""
+    edit_re = re.compile(
+        r'href="[^"]*action=edit[^"]*oldid=\d+'
+        r'|href="[^"]*oldid=\d+[^"]*action=edit'
+    )
+    history_re = re.compile(
+        r'href="[^"]*action=history[^"]*oldid=\d+'
+        r'|href="[^"]*oldid=\d+[^"]*action=history'
+    )
+    assert edit_re.search(maccabipedia_oldid_html), "oldid dropped from edit href"
+    assert history_re.search(maccabipedia_oldid_html), "oldid dropped from history href"
 
 
 def test_search_input_has_text_field_class(maccabipedia_anon_html: str) -> None:

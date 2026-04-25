@@ -11,6 +11,7 @@ with the monorepo's other `conftest.py`s).
 from __future__ import annotations
 
 import os
+import re
 from urllib.parse import quote
 
 import pytest
@@ -123,12 +124,50 @@ def maccabipedia_anon_html(main_url: str) -> str:
 
 @pytest.fixture(scope="session")
 def maccabipedia_special_recentchanges_html(base_url: str) -> str:
-    """GET Special:Recentchanges with ?useskin=maccabipedia. Special: pages
-    take a different code path through the skin (no edit dropdown, no talk
-    page); regressions there don't surface on the main-page fixture."""
+    """Special:Recentchanges, anon, ?useskin=maccabipedia. Special: pages
+    take a different code path (no edit dropdown, no talk page) — regressions
+    there don't surface on the main-page fixture."""
     url = f"{base_url}/index.php?title=Special:Recentchanges&useskin=maccabipedia"
     response = requests.get(url, timeout=15)
     assert response.status_code == 200, (
         f"useskin=maccabipedia GET {url} returned HTTP {response.status_code}"
     )
+    return response.text
+
+
+@pytest.fixture(scope="session")
+def maccabipedia_admin_html(admin_session: requests.Session, main_url: str) -> str:
+    """Main page, admin-logged-in, ?useskin=maccabipedia. Verifies admin-only
+    items (delete/move/protect) + user dropdown shows logout/preferences."""
+    response = admin_session.get(main_url, params={"useskin": "maccabipedia"}, timeout=15)
+    assert response.status_code == 200
+    return response.text
+
+
+@pytest.fixture(scope="session")
+def maccabipedia_edit_mode_html(admin_session: requests.Session, main_url: str) -> str:
+    """Main page rendered in action=edit mode, admin-logged-in (anon users
+    don't have edit permission so the dropdown's edit link wouldn't render
+    even when not gated). Edit dropdown should show "חזור לערך" (back to
+    article view) instead of "עריכה" (open editor)."""
+    response = admin_session.get(
+        main_url, params={"useskin": "maccabipedia", "action": "edit"}, timeout=15
+    )
+    assert response.status_code == 200
+    return response.text
+
+
+@pytest.fixture(scope="session")
+def maccabipedia_oldid_html(main_url: str, base_url: str) -> str:
+    """Main page at ?oldid=<old_revision>&useskin=maccabipedia. Asserts
+    edit/history hrefs preserve the oldid parameter (Metrolook regression
+    test from test_menu.py — same contract on the new skin)."""
+    history = requests.get(main_url, params={"action": "history", "useskin": "maccabipedia"}, timeout=15)
+    assert history.status_code == 200
+    oldid_match = re.search(r"oldid=(\d+)", history.text)
+    if not oldid_match:
+        pytest.skip("couldn't find an oldid in page history — only 1 revision?")
+    oldid = oldid_match.group(1)
+    response = requests.get(main_url, params={"useskin": "maccabipedia", "oldid": oldid}, timeout=15)
+    assert response.status_code == 200
     return response.text

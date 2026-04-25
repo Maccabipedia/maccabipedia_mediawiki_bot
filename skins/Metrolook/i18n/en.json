@@ -1,0 +1,16 @@
+{
+	"@metadata": {
+		"authors": [
+			"paladox"
+		]
+	},
+	"skinname-metrolook": "Metrolook",
+	"metrolook-desc": "Metrolook is a responsive skin — inspired fork of the Vector skin. Legacy MaccabiPedia skin; superseded by the Maccabipedia skin (skins/Maccabipedia/) per the Phase 2 cutover.",
+	"metrolook.css": "/* All CSS here will be loaded for users of the Metrolook skin */",
+	"metrolook.js": "/* All JavaScript here will be loaded for users of the Metrolook skin */",
+	"metrolook-guest": "Guest",
+	"metrolook-jump-to-navigation": "Jump to navigation",
+	"metrolook-jump-to-search": "Jump to search",
+	"metrolook-tiles": "",
+	"metrolook-tiles-second": ""
+}

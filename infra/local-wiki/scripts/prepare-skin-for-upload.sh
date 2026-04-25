@@ -4,13 +4,17 @@
 # (vendored source + binary banner assets) at a path OUTSIDE this repo,
 # ready to drag into an FTP client and upload to prod.
 #
-# Default output: ~/maccabipedia_skin/
-# Override:       ./prepare-skin-for-upload.sh /some/other/path
-#                 ./prepare-skin-for-upload.sh /mnt/c/Users/roee/Desktop/maccabipedia_skin
-#                 (use a /mnt/c/... path on WSL if you want it on the
-#                 Windows desktop where FileZilla can see it)
+# Each run snapshots into its OWN timestamped directory so previous
+# preparations stay around for rollback / audit:
 #
-# What goes into the output tree:
+#     <base>/<UTC timestamp with ms>/maccabipedia_skin/...
+#
+# Default base: ~/maccabipedia_skins/
+# Override:     ./prepare-skin-for-upload.sh /mnt/c/Users/roee/Desktop/maccabipedia_skins
+#               (use a /mnt/c/... base on WSL if you want the snapshots
+#               on the Windows desktop where FileZilla can see them)
+#
+# What goes into each snapshot's maccabipedia_skin/ tree:
 #   <repo-root>/skins/Metrolook/                       — tracked source (~1.7 MB)
 #   <repo-root>/infra/local-wiki/synced/skins/Metrolook/assets/
 #                                                      — binary banners (~5.9 MB),
@@ -18,13 +22,9 @@
 #                                                        sync-from-prod.sh
 #
 # The local .gitkeep mountpoint marker is stripped (it's irrelevant on
-# prod). The output dir is named `maccabipedia_skin` per the requested
-# local naming, but on prod the skin still lives at
-# /public_html/skins/Metrolook/ — see the "next steps" section the
-# script prints when it finishes.
-#
-# Refuses to run if the output dir already exists. Pass --force to wipe
-# and re-create.
+# prod). The leaf is named `maccabipedia_skin` per local convention,
+# but on prod the skin still lives at /public_html/skins/Metrolook/ —
+# the script's "next steps" output spells this out.
 
 set -euo pipefail
 
@@ -39,26 +39,24 @@ REPO_ROOT="$(cd "${LOCAL_WIKI_DIR}/../.." && pwd)"
 SOURCE_SKIN="${REPO_ROOT}/skins/Metrolook"
 SOURCE_ASSETS="${LOCAL_WIKI_DIR}/synced/skins/Metrolook/assets"
 
-DEFAULT_OUT="${HOME}/maccabipedia_skin"
-FORCE=0
-OUT=""
+DEFAULT_BASE="${HOME}/maccabipedia_skins"
+BASE=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        -f|--force)  FORCE=1; shift ;;
-        -h|--help)   usage; exit 0 ;;
-        -*)          echo "ERROR: unknown flag: $1" >&2; usage >&2; exit 1 ;;
+        -h|--help) usage; exit 0 ;;
+        -*)        echo "ERROR: unknown flag: $1" >&2; usage >&2; exit 1 ;;
         *)
-            if [ -n "$OUT" ]; then
-                echo "ERROR: multiple output paths given (got $OUT and $1)" >&2
+            if [ -n "$BASE" ]; then
+                echo "ERROR: multiple base paths given (got $BASE and $1)" >&2
                 exit 1
             fi
-            OUT="$1"; shift
+            BASE="$1"; shift
             ;;
     esac
 done
 
-OUT="${OUT:-$DEFAULT_OUT}"
+BASE="${BASE:-$DEFAULT_BASE}"
 
 if [ ! -d "$SOURCE_SKIN" ]; then
     echo "ERROR: skin source not found at $SOURCE_SKIN" >&2
@@ -71,31 +69,26 @@ if [ ! -d "$SOURCE_ASSETS" ] || [ -z "$(ls -A "$SOURCE_ASSETS" 2>/dev/null)" ]; 
     exit 1
 fi
 
-# Refuse to clobber. Cheap to check, expensive to forget.
-if [ -e "$OUT" ]; then
-    if [ "$FORCE" -ne 1 ]; then
-        echo "ERROR: output path already exists: $OUT" >&2
-        echo "       Pass --force to wipe and re-create, or choose a different path." >&2
-        exit 1
-    fi
-    echo "==> --force given; removing existing $OUT"
-    rm -rf "$OUT"
-fi
-
-# Don't let an output path inside the repo end up gitignored by mistake;
-# but don't actively block it either — user might want a /tmp/... path
-# they can drag from. Just warn.
-case "$OUT" in
+case "$BASE" in
     "$REPO_ROOT"|"$REPO_ROOT"/*)
-        echo "WARN: output path is inside the repo ($OUT)." >&2
-        echo "      That's fine but defeats the 'outside the repo' intent." >&2
+        echo "WARN: base path is inside the repo ($BASE)." >&2
+        echo "      That's allowed but defeats the 'outside the repo' intent." >&2
         ;;
 esac
 
-echo "==> assembling skin upload tree at $OUT"
-echo "    source:  $SOURCE_SKIN"
-echo "    assets:  $SOURCE_ASSETS"
+# ISO-8601-style UTC timestamp with milliseconds, with `:` swapped for `-`
+# so the path is valid on Windows filesystems (relevant when BASE is on
+# /mnt/c/...). Example: 2026-04-25T07-58-31-742Z
+TIMESTAMP="$(date -u +"%Y-%m-%dT%H-%M-%S-%3NZ")"
+SNAPSHOT_DIR="${BASE}/${TIMESTAMP}"
+OUT="${SNAPSHOT_DIR}/maccabipedia_skin"
+
 mkdir -p "$OUT"
+
+echo "==> assembling skin upload snapshot"
+echo "    source:   $SOURCE_SKIN"
+echo "    assets:   $SOURCE_ASSETS"
+echo "    snapshot: $SNAPSHOT_DIR"
 
 # Copy the tracked skin source. cp -a preserves perms and timestamps.
 cp -a "$SOURCE_SKIN/." "$OUT/"
@@ -121,12 +114,23 @@ printf "  %-32s %s\n" "menu-helpers.php present:" \
 printf "  %-32s %s\n" "assets/ binary count:" \
     "$(find "$OUT/assets" -type f 2>/dev/null | wc -l)"
 
+# Show the few most recent snapshots so the user can see history at a
+# glance (and remember to clean old ones up if too many accumulate).
+existing=$(find "$BASE" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)
+echo
+printf "  %-32s %s\n" "snapshots in $BASE:" "$existing"
+if [ "$existing" -gt 1 ]; then
+    echo "  recent snapshots:"
+    find "$BASE" -mindepth 1 -maxdepth 1 -type d -printf '    %f\n' \
+        2>/dev/null | sort -r | head -5
+fi
+
 echo
 echo "==> next steps for upload"
-echo "  Local dir:   $OUT"
-echo "  Prod path:   /public_html/skins/Metrolook/    (note: 'Metrolook',"
-echo "               not 'maccabipedia_skin' — MediaWiki's skin loader"
-echo "               resolves the directory name)"
+echo "  Local snapshot: $OUT"
+echo "  Prod path:      /public_html/skins/Metrolook/    (note: 'Metrolook',"
+echo "                  not 'maccabipedia_skin' — MediaWiki's skin loader"
+echo "                  resolves the directory name)"
 echo
 echo "  Safest pattern (atomic via remote rename):"
 echo "    1. Upload $OUT to /public_html/skins/Metrolook_new/"

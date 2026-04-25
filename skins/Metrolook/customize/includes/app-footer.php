@@ -1,22 +1,40 @@
 <?php
-$mpURL = "https://www.maccabipedia.co.il/";
+/**
+ * Page footer for the Metrolook skin: about-section links + social
+ * links + last-mod credit + powered-by-MediaWiki image.
+ */
+
+require_once __DIR__ . '/menu-helpers.php';
+
+$mwResourceURL = mp_static_base_url() . '/resources/assets/';
+
+$aboutLinks = [
+    'תרומות' => 'מכביפדיה: תרומות',
+    'יצירת קשר' => 'מכביפדיה: צור קשר',
+];
+$socialLinks = [
+    'fa-facebook-f' => 'https://bit.ly/visit_mp_fb',
+    'fa-x-twitter' => 'https://bit.ly/visit_mp_x',
+    'fa-instagram' => 'https://bit.ly/visit_mp_i',
+    'fa-youtube' => 'https://bit.ly/visit_mp_y',
+];
 ?>
 
 <footer>
     <section class="about-maccabipedia">
         <div class="content">
             <div class="usefull-links">
-                <a href="<?php echo $mpURL . 'מכביפדיה: תרומות'; ?>">תרומות</a>
-                <a href="<?php echo $mpURL . 'מכביפדיה: צור קשר'; ?>">יצירת קשר</a>
+                <?php foreach ($aboutLinks as $label => $titleText): ?>
+                    <a href="<?php echo htmlspecialchars(mp_page_url($titleText)); ?>"><?php echo htmlspecialchars($label); ?></a>
+                <?php endforeach; ?>
             </div>
 
             <div class="social-networks">
                 <div class="title">עקבו אחרינו</div>
                 <div class="links-container">
-                    <a href="https://bit.ly/visit_mp_fb"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="https://bit.ly/visit_mp_x"><i class="fa-brands fa-x-twitter"></i></a>
-                    <a href="https://bit.ly/visit_mp_i"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="https://bit.ly/visit_mp_y"><i class="fa-brands fa-youtube"></i></a>
+                    <?php foreach ($socialLinks as $iconClass => $url): ?>
+                        <a href="<?php echo htmlspecialchars($url); ?>"><i class="fa-brands <?php echo htmlspecialchars($iconClass); ?>"></i></a>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>
@@ -25,15 +43,9 @@ $mpURL = "https://www.maccabipedia.co.il/";
     <section class="credits">
         <div class="content">
             <div class="last-edited">
-                <?php
-                $footerlinks = array('lastmod');
-                foreach ($footerlinks as $aLink) {
-                    if (isset($this->data[$aLink]) && $this->data[$aLink]) {
-                ?> <span id="<?php echo $aLink ?>"><?php $this->html($aLink) ?></span>
-                <?php
-                    }
-                }
-                ?>
+                <?php if (!empty($this->data['lastmod'])): ?>
+                    <span id="lastmod"><?php $this->html('lastmod'); ?></span>
+                <?php endif; ?>
             </div>
 
             <div class="all-rights-reserved">
@@ -41,7 +53,7 @@ $mpURL = "https://www.maccabipedia.co.il/";
             </div>
 
             <a href="https://www.mediawiki.org" target="_blank">
-                <img src="<?php echo $mpURL; ?>resources/assets/poweredby_mediawiki_88x31.png" />
+                <img src="<?php echo htmlspecialchars($mwResourceURL . 'poweredby_mediawiki_88x31.png'); ?>" />
             </a>
         </div>
     </section>

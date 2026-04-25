@@ -9,6 +9,7 @@ testpaths = [
     "packages/maccabipediabot/tests",
     "packages/maccabipedia-mcp/tests",
     "packages/maccabistats/tests",
+    "infra/local-wiki/tests",
 ]
 addopts = "-m 'not integration'"
 markers = [

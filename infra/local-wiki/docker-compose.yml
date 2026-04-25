@@ -31,6 +31,8 @@ services:
       - ./synced/extensions:/var/www/html/extensions:ro
       - ./synced/favicon.ico:/var/www/html/favicon.ico:ro
       - ./config:/mw-config:ro
+      - ./config/htaccess:/var/www/html/.htaccess:ro
+      - ./config/apache-allow-override.conf:/etc/apache2/conf-enabled/zz-mw-allow-override.conf:ro
 
   mariadb:
     image: mariadb:10.11

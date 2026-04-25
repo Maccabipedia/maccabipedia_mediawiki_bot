@@ -110,22 +110,36 @@ for heading in 'מכבי תל אביב' 'שחקנים וצוות' 'אוהדים 
 done
 
 echo
-echo "Representative menu entries render with Title-encoded hrefs:"
-# Each pair = (Hebrew display label, percent-encoded title in the href)
-# שירי קהל     -> %D7%A9%D7%99%D7%A8%D7%99_%D7%A7%D7%94%D7%9C
-# פורטל שחקנים  -> %D7%A4%D7%95%D7%A8%D7%98%D7%9C_%D7%A9%D7%97%D7%A7%D7%A0%D7%99%D7%9D
-# ארגוני אוהדים -> %D7%90%D7%A8%D7%92%D7%95%D7%A0%D7%99_%D7%90%D7%95%D7%94%D7%93%D7%99%D7%9D
-sample_entries=(
-    "שירי קהל:%D7%A9%D7%99%D7%A8%D7%99_%D7%A7%D7%94%D7%9C"
-    "פורטל שחקנים:%D7%A4%D7%95%D7%A8%D7%98%D7%9C_%D7%A9%D7%97%D7%A7%D7%A0%D7%99%D7%9D"
-    "ארגוני אוהדים:%D7%90%D7%A8%D7%92%D7%95%D7%A0%D7%99_%D7%90%D7%95%D7%94%D7%93%D7%99%D7%9D"
+echo "Every menu link from \$primaryDropdowns + the standalone link + the footer:"
+# Mirror of the menu definitions in
+# skins/Metrolook/customize/includes/{app-header,app-footer}.php.
+# Adding/removing/renaming a menu link must be a coordinated change in
+# both the PHP and this list — the duplication is the point.
+menu_labels=(
+    # מכבי תל אביב dropdown
+    'ההיסטוריה' 'עונות' 'מתקנים' 'מפעלים' 'מדים' 'תארים'
+    # שחקנים וצוות dropdown
+    'שחקנים' 'אנשי צוות'
+    # אוהדים ותרבות dropdown
+    'שירים' 'כרטיסים ומנויים' 'כרזות' 'קלפים ומדבקות'
+    'תפאורות' 'ארגונים' 'ספרים' 'פנזינים'
+    # משחקים dropdown
+    'חיפוש משחק' 'סטטיסטיקות'
+    # standalone link
+    'מכבימדיה'
+    # footer about-section links (app-footer.php)
+    'תרומות' 'יצירת קשר'
 )
-for entry in "${sample_entries[@]}"; do
-    label="${entry%%:*}"
-    encoded="${entry##*:}"
-    assert "menu entry '$label' rendered with Title-encoded href" \
-        grep -qF "$encoded" "$HTML"
+for label in "${menu_labels[@]}"; do
+    assert "menu link '$label' rendered" \
+        grep -qF ">${label}</a>" "$HTML"
 done
+# A dead link from mp_page_url() degrades to href="#" instead of fataling.
+# That's the right runtime behavior, but it's never the intended state for
+# any item we ship — so flag it.
+broken_hrefs=$(grep -cE '<a href="#">' "$HTML" || true)
+assert "no menu links degraded to href=\"#\" (found $broken_hrefs)" \
+    test "$broken_hrefs" = "0"
 
 echo
 echo "Anonymous user panel renders with login + create-account links:"

@@ -33,10 +33,10 @@ class SkinMaccabipedia extends SkinMustache {
 		// Mobile viewport — without it, iPhones render at 1000px desktop width.
 		$out->addMeta( 'viewport', 'width=device-width, initial-scale=1' );
 		$out->addModuleStyles( [
-			'skins.metrolook.styles',
-			'skins.metrolook.interface',
+			'skins.maccabipedia.styles',
+			'skins.maccabipedia.interface',
 		] );
-		$out->addModules( [ 'skins.metrolook.js' ] );
+		$out->addModules( [ 'skins.maccabipedia.js' ] );
 	}
 
 	public function getTemplateData() {
@@ -65,7 +65,7 @@ class SkinMaccabipedia extends SkinMustache {
 	private function buildAppHeaderData(): array {
 		$skinAssetsBase = $this->getConfig()->get( 'Server' )
 			. $this->getConfig()->get( 'ScriptPath' )
-			. '/skins/Metrolook/assets/'; // TODO Phase 4: copy assets/ into skins/Maccabipedia/resources/.
+			. '/skins/Maccabipedia/assets/';
 		return [
 			'logo-url'         => Title::newMainPage()->getLocalURL(),
 			'logo-image-src'   => $skinAssetsBase . 'images/logo.png',

@@ -147,18 +147,10 @@ $wgNativeImageLazyLoading = true;
 
 ## Default skin: you can change the default skin. Use the internal symbolic
 ## names, ie 'vector', 'monobook':
-$wgDefaultSkin = "Metrolook";
+$wgDefaultSkin = "Maccabipedia";
 
 # Enabled skins.
-# The following skins were automatically enabled:
-wfLoadSkin('Metrolook');
-// Guard against the file missing (shallow clone, partial sync, etc.) — without
-// the guard the wiki refuses to boot. Path resolves from inside the container
-// where this is mounted at /mw-config/LocalSettings.shared.php; the matching
-// skins/ directory is at /var/www/html/skins/.
-if ( file_exists( '/var/www/html/skins/Maccabipedia/skin.json' ) ) {
-    wfLoadSkin('Maccabipedia');
-}
+wfLoadSkin('Maccabipedia');
 
 
 // For debugging, dont remove this! just comment out.

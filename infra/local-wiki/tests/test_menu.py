@@ -1,13 +1,12 @@
-"""End-to-end smoke tests for the MaccabiPedia Metrolook menu + footer.
+"""End-to-end smoke tests for the MaccabiPedia skin's menu + user panels.
 
-Mirrors the assertions from ``infra/local-wiki/scripts/test-menu.sh`` against
-a running local docker stack (default http://localhost:8080). All tests are
-marked ``integration`` and deselected by default; run with::
+Hits the running local docker stack (default http://localhost:8080); the
+default skin is Maccabipedia. All tests are marked ``integration`` and
+deselected by default; run with::
 
     uv run pytest -m integration infra/local-wiki/tests
 
-`MENU_LABELS` and `PHP_ERROR_RE` live in conftest.py so the
-Maccabipedia suite and this Metrolook suite share one source of truth.
+`MENU_LABELS` and `PHP_ERROR_RE` live in `skin_test_constants.py`.
 """
 from __future__ import annotations
 
@@ -36,7 +35,7 @@ def test_no_prod_url_leakage(anon_html: str) -> None:
 def test_static_asset_loads(anon_html: str, asset: str) -> None:
     """Logo + powered-by-MediaWiki <img src> must be present and HTTP 200."""
     pattern = {
-        "logo": r'src="([^"]*logo\.png[^"]*)"',
+        "logo": r'src="([^"]*/skins/Maccabipedia/assets/[^"]*logo\.png[^"]*)"',
         "powered-by": r'src="([^"]*poweredby[^"]*)"',
     }[asset]
     match = re.search(pattern, anon_html)

@@ -1,30 +1,37 @@
 #!/usr/bin/env bash
 #
-# prepare-skin-for-upload.sh — assemble the complete MaccabiPedia skin
+# prepare-skin-for-upload.sh — assemble one or both MaccabiPedia skins
 # (vendored source + binary banner assets) at a path OUTSIDE this repo,
 # ready to drag into an FTP client and upload to prod.
 #
 # Each run snapshots into its OWN timestamped directory so previous
 # preparations stay around for rollback / audit:
 #
-#     <base>/<UTC timestamp with ms>/maccabipedia_skin/...
+#     <base>/<UTC timestamp with ms>/{Metrolook,Maccabipedia}/...
 #
 # Default base: ~/maccabipedia_skins/
 # Override:     ./prepare-skin-for-upload.sh /mnt/c/Users/roee/Desktop/maccabipedia_skins
 #               (use a /mnt/c/... base on WSL if you want the snapshots
 #               on the Windows desktop where FileZilla can see them)
 #
-# What goes into each snapshot's maccabipedia_skin/ tree:
-#   <repo-root>/skins/Metrolook/                       — tracked source (~1.7 MB)
-#   <repo-root>/infra/local-wiki/synced/skins/Metrolook/assets/
-#                                                      — binary banners (~5.9 MB),
-#                                                        last pulled from prod via
-#                                                        sync-from-prod.sh
+# Skin selection (flag is positional-friendly — order doesn't matter):
+#     --skin=both          (default) — both Metrolook and Maccabipedia
+#     --skin=metrolook     just the legacy skin
+#     --skin=maccabipedia  just the new skin
 #
-# The local .gitkeep mountpoint marker is stripped (it's irrelevant on
-# prod). The leaf is named `maccabipedia_skin` per local convention,
-# but on prod the skin still lives at /public_html/skins/Metrolook/ —
-# the script's "next steps" output spells this out.
+# What goes into each skin's snapshot directory:
+#   <repo-root>/skins/<Name>/                        — tracked source
+#   <repo-root>/infra/local-wiki/synced/skins/Metrolook/assets/
+#                                                    — binary banners (~5.9 MB),
+#                                                      last pulled from prod via
+#                                                      sync-from-prod.sh. Both
+#                                                      skins share this asset
+#                                                      directory until prod's
+#                                                      directory is renamed.
+#
+# Local-only artefacts stripped per snapshot:
+#   - .gitkeep (assets/ mountpoint marker)
+#   - .gitattributes (git CRLF/EOL directive — irrelevant on prod)
 
 set -euo pipefail
 
@@ -36,15 +43,20 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOCAL_WIKI_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 REPO_ROOT="$(cd "${LOCAL_WIKI_DIR}/../.." && pwd)"
 
-SOURCE_SKIN="${REPO_ROOT}/skins/Metrolook"
 SOURCE_ASSETS="${LOCAL_WIKI_DIR}/synced/skins/Metrolook/assets"
 
 DEFAULT_BASE="${HOME}/maccabipedia_skins"
 BASE=""
+SKIN_SELECTION="both"
 
 while [ $# -gt 0 ]; do
     case "$1" in
         -h|--help) usage; exit 0 ;;
+        --skin=metrolook|--skin=maccabipedia|--skin=both)
+            SKIN_SELECTION="${1#--skin=}"; shift ;;
+        --skin=*)
+            echo "ERROR: --skin must be one of: metrolook, maccabipedia, both" >&2
+            exit 1 ;;
         -*)        echo "ERROR: unknown flag: $1" >&2; usage >&2; exit 1 ;;
         *)
             if [ -n "$BASE" ]; then
@@ -58,10 +70,6 @@ done
 
 BASE="${BASE:-$DEFAULT_BASE}"
 
-if [ ! -d "$SOURCE_SKIN" ]; then
-    echo "ERROR: skin source not found at $SOURCE_SKIN" >&2
-    exit 1
-fi
 if [ ! -d "$SOURCE_ASSETS" ] || [ -z "$(ls -A "$SOURCE_ASSETS" 2>/dev/null)" ]; then
     echo "ERROR: binary skin assets not found or empty at:" >&2
     echo "  $SOURCE_ASSETS" >&2
@@ -76,45 +84,64 @@ case "$BASE" in
         ;;
 esac
 
+# Resolve which skin(s) to package.
+case "$SKIN_SELECTION" in
+    both)         skins=( Metrolook Maccabipedia ) ;;
+    metrolook)    skins=( Metrolook ) ;;
+    maccabipedia) skins=( Maccabipedia ) ;;
+esac
+
+# Verify every requested skin's source exists.
+for skin in "${skins[@]}"; do
+    if [ ! -d "$REPO_ROOT/skins/$skin" ]; then
+        echo "ERROR: skin source not found at $REPO_ROOT/skins/$skin" >&2
+        exit 1
+    fi
+done
+
 # ISO-8601-style UTC timestamp with milliseconds, with `:` swapped for `-`
 # so the path is valid on Windows filesystems (relevant when BASE is on
 # /mnt/c/...). Example: 2026-04-25T07-58-31-742Z
 TIMESTAMP="$(date -u +"%Y-%m-%dT%H-%M-%S-%3NZ")"
 SNAPSHOT_DIR="${BASE}/${TIMESTAMP}"
-OUT="${SNAPSHOT_DIR}/maccabipedia_skin"
 
-mkdir -p "$OUT"
+mkdir -p "$SNAPSHOT_DIR"
 
 echo "==> assembling skin upload snapshot"
-echo "    source:   $SOURCE_SKIN"
+echo "    skins:    ${skins[*]}"
 echo "    assets:   $SOURCE_ASSETS"
 echo "    snapshot: $SNAPSHOT_DIR"
 
-# Copy the tracked skin source. cp -a preserves perms and timestamps.
-cp -a "$SOURCE_SKIN/." "$OUT/"
+for skin in "${skins[@]}"; do
+    src="$REPO_ROOT/skins/$skin"
+    out="$SNAPSHOT_DIR/$skin"
 
-# Strip git-only directives that have no purpose on prod:
-#   - .gitkeep at assets/ exists to stabilize the docker bind-mount
-#     target locally
-#   - .gitattributes tells git not to normalize CRLF in this vendored
-#     tree; prod's apache/php don't read it
-rm -f "$OUT/assets/.gitkeep" "$OUT/.gitattributes"
+    mkdir -p "$out"
 
-# Replace the (empty) tracked assets/ directory with the real binary
-# banners. Synced/ is the FTP mirror so this is exactly what prod
-# currently serves.
-rm -rf "$OUT/assets"
-mkdir -p "$OUT/assets"
-cp -a "$SOURCE_ASSETS/." "$OUT/assets/"
+    # Copy the tracked skin source. cp -a preserves perms and timestamps.
+    cp -a "$src/." "$out/"
+
+    # Strip git-only directives that have no purpose on prod.
+    rm -f "$out/assets/.gitkeep" "$out/.gitattributes"
+
+    # Replace the (possibly empty) tracked assets/ directory with the real
+    # binary banners. Both skins share the same assets directory on disk
+    # — synced/skins/Metrolook/assets/ — until prod's source is renamed.
+    rm -rf "$out/assets"
+    mkdir -p "$out/assets"
+    cp -a "$SOURCE_ASSETS/." "$out/assets/"
+done
 
 echo
 echo "==> summary"
-printf "  %-32s %s\n" "files:"   "$(find "$OUT" -type f | wc -l)"
-printf "  %-32s %s\n" "size:"    "$(du -sh "$OUT" | awk '{print $1}')"
-printf "  %-32s %s\n" "menu-helpers.php present:" \
-    "$([ -f "$OUT/customize/includes/menu-helpers.php" ] && echo yes || echo NO)"
-printf "  %-32s %s\n" "assets/ binary count:" \
-    "$(find "$OUT/assets" -type f 2>/dev/null | wc -l)"
+for skin in "${skins[@]}"; do
+    out="$SNAPSHOT_DIR/$skin"
+    printf "  [%s]\n" "$skin"
+    printf "    %-30s %s\n" "files:"   "$(find "$out" -type f | wc -l)"
+    printf "    %-30s %s\n" "size:"    "$(du -sh "$out" | awk '{print $1}')"
+    printf "    %-30s %s\n" "assets/ binary count:" \
+        "$(find "$out/assets" -type f 2>/dev/null | wc -l)"
+done
 
 # Show the few most recent snapshots so the user can see history at a
 # glance (and remember to clean old ones up if too many accumulate).
@@ -129,22 +156,29 @@ fi
 
 echo
 echo "==> next steps for upload"
-echo "  Local snapshot: $OUT"
-echo "  Prod path:      /public_html/skins/Metrolook/    (note: 'Metrolook',"
-echo "                  not 'maccabipedia_skin' — MediaWiki's skin loader"
-echo "                  resolves the directory name)"
+echo "  Local snapshot: $SNAPSHOT_DIR"
 echo
-echo "  Safest pattern (atomic via remote rename):"
-echo "    1. Upload $OUT to /public_html/skins/Metrolook_new/"
-echo "    2. On the FTP server: rename Metrolook → Metrolook_old"
-echo "    3. On the FTP server: rename Metrolook_new → Metrolook"
-echo "    4. Smoke-test the live site, then delete Metrolook_old later."
+for skin in "${skins[@]}"; do
+    echo "  $skin → /public_html/skins/$skin/"
+done
 echo
-echo "  Simpler pattern (overwrite in place):"
-echo "    1. Drag the CONTENTS of $OUT into /public_html/skins/Metrolook/"
-echo "    2. Smoke-test the live site."
+echo "  Safest pattern (atomic via remote rename, repeat per skin):"
+echo "    1. Upload <skin>/ to /public_html/skins/<skin>_new/"
+echo "    2. On the FTP server: rename <skin> → <skin>_old"
+echo "    3. On the FTP server: rename <skin>_new → <skin>"
+echo "    4. Smoke-test the live site, then delete <skin>_old later."
 echo
-echo "  Smoke test against prod (anonymous-only assertions will pass;"
-echo "  admin-login and oldid tests will skip — that's expected):"
+echo "  Simpler pattern (overwrite in place, repeat per skin):"
+echo "    Drag the CONTENTS of $SNAPSHOT_DIR/<skin> into /public_html/skins/<skin>/"
+echo
+if [[ " ${skins[*]} " == *" Maccabipedia "* ]]; then
+    echo "  After uploading Maccabipedia for the first time, also update"
+    echo "  prod's LocalSettings.php — add (keep \$wgDefaultSkin unchanged):"
+    echo "      wfLoadSkin('Maccabipedia');"
+    echo "  Maccabipedia is then opt-in via ?useskin=maccabipedia and"
+    echo "  Special:Preferences. Flip the default in a follow-up after soak."
+    echo
+fi
+echo "  Smoke test against prod:"
 echo "    MACCABIPEDIA_LOCAL_URL=https://www.maccabipedia.co.il \\"
 echo "      uv run pytest -m integration infra/local-wiki/tests"

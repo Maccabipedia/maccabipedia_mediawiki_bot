@@ -1,5 +1,5 @@
 <?php
-$mpURL = "https://www.maccabipedia.co.il/";
+$mpURL = $GLOBALS['wgServer'] . str_replace('$1', '', $GLOBALS['wgArticlePath']);
 ?>
 
 <footer>

@@ -1,7 +1,7 @@
 <?php
 use MediaWiki\MediaWikiServices;
 
-$mpURL = "https://www.maccabipedia.co.il/";
+$mpURL = $GLOBALS['wgServer'] . str_replace('$1', '', $GLOBALS['wgArticlePath']);
 $user = $skin->getUser();
 $mwPageName = str_replace('"', '&#34;', $this->getSkin()->getRelevantTitle());
 $mwNamespace = $this->getSkin()->getTitle()->getNamespace();

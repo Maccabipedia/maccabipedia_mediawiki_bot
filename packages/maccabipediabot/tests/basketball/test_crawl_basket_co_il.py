@@ -42,7 +42,7 @@ def test_parse_game_page_against_real_fixture():
     assert actual.model_dump() == expected.model_dump()
 
 
-def _player_row(cell0: str, name: str = "איפה לונדברג") -> str:
+def _player_row(cell0: str, name: str = "מיקי ברקוביץ'") -> str:
     """One <tr class='row'> with the 21 <td>s _parse_player_rows expects.
     `cell0` is whatever goes inside tds[0] (the number cell) — pass an `<a>...`
     to simulate a linked number, '&nbsp;' to simulate the team-row layout, or

@@ -4,9 +4,11 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
+from bs4 import BeautifulSoup
 
 from maccabipediabot.basketball.basketball_game import BasketballGame
 from maccabipediabot.basketball.crawl_basket_co_il import (
+    _parse_player_rows,
     discover_games_latest_season,
     parse_game_page,
 )
@@ -38,6 +40,59 @@ def test_parse_game_page_against_real_fixture():
     )
     actual = parse_game_page(html, _partial_game())
     assert actual.model_dump() == expected.model_dump()
+
+
+def _player_row(cell0: str, name: str = "מיקי ברקוביץ'") -> str:
+    """One <tr class='row'> with the 21 <td>s _parse_player_rows expects.
+    `cell0` is whatever goes inside tds[0] (the number cell) — pass an `<a>...`
+    to simulate a linked number, '&nbsp;' to simulate the team-row layout, or
+    plain text to simulate a number with no surrounding link."""
+    cells = [f"<td>{cell0}</td>"]                                  # 0: number
+    cells += [f'<td><a href="x">{name}</a></td>']                  # 1: name
+    cells += ['<td></td>']                                         # 2: starting *
+    cells += ['<td>10</td>']                                       # 3: minutes
+    cells += ['<td>0</td>']                                        # 4: total points
+    cells += ['<td>0/3</td>', '<td>0</td>']                        # 5,6: 2pt
+    cells += ['<td>0/3</td>', '<td>0</td>']                        # 7,8: 3pt
+    cells += ['<td>0/0</td>', '<td>0</td>']                        # 9,10: ft
+    cells += ['<td>4</td>', '<td>0</td>']                          # 11,12: rebounds
+    cells += ['<td>0</td>']                                        # 13: total rebounds (unused)
+    cells += ['<td>2</td>']                                        # 14: fouls
+    cells += ['<td>0</td>']                                        # 15: pad
+    cells += ['<td>0</td>', '<td>1</td>', '<td>0</td>', '<td>0</td>']  # 16-19: steals, to, ast, blk
+    cells += ['<td>0</td>']                                        # 20: pad to reach 21
+    return f'<tr class="row">{"".join(cells)}</tr>'
+
+
+def _player_table_html(player_row: str) -> str:
+    """Minimal table mirroring basket.co.il layout: two non-row header rows,
+    a `tr.row` "קבוצתי" team row that the parser treats as the column header,
+    the player row under test, and a `tr.row` "סה\"כ" totals row that the
+    parser drops via `[start_index:-1]`."""
+    return f"""
+    <table>
+      <tr class="header_row_2"><td>section header</td></tr>
+      <tr class="header_row"><td>column labels</td></tr>
+      {_player_row("&nbsp;", name="קבוצתי")}
+      {player_row}
+      {_player_row("&nbsp;", name='סה"כ')}
+    </table>
+    """
+
+
+@pytest.mark.parametrize("cell0, expected_number", [
+    ('<a href="player.asp?PlayerId=1">0</a>', 0),    # jersey #0 must stay 0, not collapse to None
+    ('<a href="player.asp?PlayerId=1">23</a>', 23),
+    ('<a href="player.asp?PlayerId=1">00</a>', 0),   # zero-padded — basket.co.il sometimes does this
+    ('<a href="player.asp?PlayerId=1"></a>', None),  # link present but empty text → unknown
+    ('&nbsp;', None),                                # no <a> at all → unknown
+])
+def test_parse_player_rows_preserves_jersey_number(cell0, expected_number):
+    html = _player_table_html(_player_row(cell0))
+    table = BeautifulSoup(html, "html.parser").select_one("table")
+    players = _parse_player_rows(table)
+    assert len(players) == 1
+    assert players[0].number == expected_number
 
 
 def test_parse_game_page_raises_when_header_missing():

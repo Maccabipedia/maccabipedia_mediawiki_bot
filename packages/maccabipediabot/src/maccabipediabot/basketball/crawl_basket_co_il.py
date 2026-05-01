@@ -11,7 +11,7 @@ import requests
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup, Tag
 
-from maccabipediabot.basketball._crawler_utils import season_from_date
+from maccabipediabot.basketball._crawler_utils import season_from_date, to_int_or_none
 from maccabipediabot.basketball.basketball_game import BasketballGame, PlayerSummary
 from maccabipediabot.basketball.translations import (
     basket_co_il_competition_name,
@@ -244,7 +244,7 @@ def _parse_player_rows(table: Tag) -> list[PlayerSummary]:
         raw_name = name_link.get_text(strip=True) if name_link else ""
 
         players.append(PlayerSummary(
-            number=_to_int(number_link.get_text() if number_link else None) or None,
+            number=to_int_or_none(number_link.get_text(strip=True) if number_link else None),
             name=normalize_player_name(raw_name),
             is_starting_five=tds[2].get_text(strip=True) == "*",
             minutes_played=_to_int(tds[3].get_text()),

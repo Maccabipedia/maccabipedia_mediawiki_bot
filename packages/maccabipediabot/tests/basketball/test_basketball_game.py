@@ -66,6 +66,19 @@ def test_player_summary_zero_points_renders_as_empty():
     assert "|נק= |" in _make_player(total_points=0).__maccabipedia__()
 
 
+@pytest.mark.parametrize("field", [
+    "number", "minutes_played",
+    "defensive_rebounds", "offensive_rebounds", "personal_total_fouls",
+    "steals", "turnovers", "assists", "blocks",
+])
+def test_player_summary_optional_int_none_never_renders_as_literal_None(field):
+    """Catches the whole class of 'leaks Python None into the wiki' bug —
+    the originator of which was `מספר=None` for two #0-jersey players on the
+    29-04-2026 Maccabi vs Netanya page (Lundberg, Cameron Oliver)."""
+    rendered = _make_player(**{field: None}).__maccabipedia__()
+    assert "=None" not in rendered
+
+
 # ---------------------------------------------------------------------------
 # BasketballGame — home/away logic + from_raw
 # ---------------------------------------------------------------------------

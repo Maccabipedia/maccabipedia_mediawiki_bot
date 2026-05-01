@@ -4,6 +4,14 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+
+def _blank_if_none(value: Optional[int]) -> str:
+    """Render an Optional[int] as a wiki-template value: int → str, None → ''.
+    Prevents the literal string 'None' from leaking into the wiki when an
+    upstream crawler couldn't determine a stat."""
+    return "" if value is None else str(value)
+
+
 class PlayerSummary(BaseModel):
     name: str
     number: Optional[int] = None
@@ -30,12 +38,14 @@ class PlayerSummary(BaseModel):
     def __maccabipedia__(self) -> str:
         # Field order matches the existing wiki convention: 2pt before 3pt;
         # is_starting_five renders True→"כן", False→"לא", None→"" (unknown);
-        # total_points falsy values (0 / None) render as empty so a DNP looks like "נק=" not "נק=0".
+        # total_points falsy values (0 / None) render as empty so a DNP looks like "נק=" not "נק=0";
+        # every other Optional[int] goes through `_blank_if_none` so a missing value
+        # never leaks the string "None" into the wiki (e.g. jersey-less player → "מספר=").
         starting_five_str = {True: "כן", False: "לא"}.get(self.is_starting_five, "")
         inner = " |".join([
             f"שם={self.name}",
-            f"מספר={self.number}",
-            f"דקות={self.minutes_played}",
+            f"מספר={_blank_if_none(self.number)}",
+            f"דקות={_blank_if_none(self.minutes_played)}",
             f"חמישייה={starting_five_str}",
             f"נק={self.total_points or ''}",
             f"זריקות עונשין={self.free_throws_attempts}",
@@ -44,14 +54,14 @@ class PlayerSummary(BaseModel):
             f"קליעות שתי נק={self.field_goals_scored}",
             f"זריקות שלוש נק={self.three_scores_attempts}",
             f"קליעות שלוש נק={self.three_scores_scored}",
-            f"ריבאונד הגנה={self.defensive_rebounds}",
-            f"ריבאונד התקפה={self.offensive_rebounds}",
-            f"פאולים={self.personal_total_fouls}",
+            f"ריבאונד הגנה={_blank_if_none(self.defensive_rebounds)}",
+            f"ריבאונד התקפה={_blank_if_none(self.offensive_rebounds)}",
+            f"פאולים={_blank_if_none(self.personal_total_fouls)}",
             *(f"פאולים טכני={self.personal_technical_fouls}" if self.personal_technical_fouls is not None else []),
-            f"חטיפות={self.steals}",
-            f"איבודים={self.turnovers}",
-            f"אסיסטים={self.assists}",
-            f"בלוקים={self.blocks}",
+            f"חטיפות={_blank_if_none(self.steals)}",
+            f"איבודים={_blank_if_none(self.turnovers)}",
+            f"אסיסטים={_blank_if_none(self.assists)}",
+            f"בלוקים={_blank_if_none(self.blocks)}",
         ])
 
         return f"{{{{אירועי שחקן סל |{inner}}}}}"

@@ -186,3 +186,34 @@ Both `|שחקנים מכבי=` and `|שחקנים יריבה=` use the same form
 ## 12. External Research Sources
 
 See `.claude/maccabipedia_research_sources.md` for the full reference of where to search for data by sport and type (stats, rosters, video, etc.).
+
+## 13. Navigation Categories
+
+Pill-style navigation strips on player/staff achievement category pages, rendered by two DPL-based templates:
+
+- `תבנית:ניווט קטגוריות זכיה בתארים` — params: `ענף`, `תואר`, `האם אנשי צוות` (optional `כן`).
+- `תבנית:ניווט קטגוריות עונות במכבי` — params: `ענף`, `האם אנשי צוות` (optional `כן`).
+
+### Category title patterns
+
+| Pattern | Kind | Role |
+|---|---|---|
+| `שחקני {sport} שזכו ב-{N} {trophy_type}` | trophy | players |
+| `אנשי צוות {sport} שזכו ב-{N} {trophy_type}` | trophy | staff |
+| `שחקני {sport} ששיחקו {N} עונות במכבי` | seasons | players |
+| `אנשי צוות {sport} שהיו {N} עונות במכבי` | seasons | staff |
+
+### How the nav renders
+
+Each template uses DPL with a regex on category titles (`[1-9]` or `[1-9][0-9]` for the count) plus a `PAGESINCATEGORY > 0` filter, so only categories with at least one member appear in the strip. New milestone categories materialize automatically when a player gets categorized — no need to pre-create them.
+
+### Maintenance script
+
+`packages/maccabipediabot/src/maccabipediabot/maintenance/sync_navigation_categories.py` enumerates existing category pages, classifies each as CANONICAL / EMPTY / STUB / OTHER, and installs the canonical template invocation on EMPTY/STUB pages. Skips CANONICAL, warns and leaves OTHER untouched. Then purges all matched pages with `forcelinkupdate=true` so the DPL caches refresh. Daily cron (`.github/workflows/sync_navigation_categories.yaml`).
+
+### Sports and trophy types today
+
+- `כדורגל` — אליפויות, גביעי מדינה, גביעי הטוטו, etc.
+- `כדורסל` — אליפויות, גביעי מדינה, גביעי אירופה, הגביע הבין יבשתי, etc.
+- `כדורעף` — אליפויות, גביעי מדינה, etc.
+

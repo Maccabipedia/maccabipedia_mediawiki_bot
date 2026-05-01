@@ -29,7 +29,9 @@ from __future__ import annotations
 import enum
 import re
 from dataclasses import dataclass
-from typing import Literal
+from typing import Iterator, Literal
+
+import pywikibot
 
 ALLOWED_SPORTS = {"כדורגל", "כדורסל", "כדורעף"}
 
@@ -143,3 +145,25 @@ def classify_page_text(text: str, match: ParsedMatch) -> PageState:
     if stripped.startswith(_STUB_BOILERPLATE_MARKER):
         return PageState.STUB
     return PageState.OTHER
+
+
+_DISCOVERY_PREFIXES = ("שחקני ", "אנשי צוות ")
+
+
+def discover_matches(
+    site: pywikibot.Site, sport_filter: str | None = None
+) -> Iterator[tuple[str, ParsedMatch]]:
+    """Yield (title, ParsedMatch) for every category page matching the four patterns.
+
+    Iterates `site.allcategories(prefix=...)` for the two role prefixes; sport_filter
+    (if given) further narrows to a single sport.
+    """
+    for prefix in _DISCOVERY_PREFIXES:
+        for cat in site.allcategories(prefix=prefix):
+            title = cat.title(with_ns=False)
+            match = parse_category_title(title)
+            if match is None:
+                continue
+            if sport_filter is not None and match.sport != sport_filter:
+                continue
+            yield title, match

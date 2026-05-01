@@ -1,4 +1,6 @@
 """Unit tests for sync_navigation_categories pure functions."""
+from unittest.mock import MagicMock
+
 import pytest
 
 from maccabipediabot.maintenance.sync_navigation_categories import (
@@ -6,6 +8,7 @@ from maccabipediabot.maintenance.sync_navigation_categories import (
     ParsedMatch,
     build_canonical_wikitext,
     classify_page_text,
+    discover_matches,
     parse_category_title,
 )
 
@@ -151,3 +154,55 @@ class TestClassifyPageText:
         )
         text = "{{ניווט קטגוריות עונות במכבי |ענף=כדורסל |האם אנשי צוות=כן}}"
         assert classify_page_text(text, match) == PageState.CANONICAL
+
+
+def _fake_cat(title_str: str) -> MagicMock:
+    cat = MagicMock()
+    cat.title.return_value = title_str
+    return cat
+
+
+class TestDiscoverMatches:
+    def test_discovers_and_filters(self):
+        site = MagicMock()
+        prefix_to_titles = {
+            "שחקני ": [
+                "שחקני כדורגל שזכו ב-3 אליפויות",
+                "שחקני כדורגל ששיחקו 5 עונות במכבי",
+                "שחקני קוקיה שזכו ב-1 אליפויות",  # unknown sport — filtered
+                "שחקני כדורגל",  # doesn't match any pattern — filtered
+            ],
+            "אנשי צוות ": [
+                "אנשי צוות כדורסל שזכו ב-19 תארים",
+                "אנשי צוות כדורעף שהיו 7 עונות במכבי",
+            ],
+        }
+
+        def fake_allcategories(prefix: str):
+            return [_fake_cat(t) for t in prefix_to_titles[prefix]]
+
+        site.allcategories.side_effect = fake_allcategories
+
+        matches = list(discover_matches(site))
+
+        assert len(matches) == 4
+        kinds = {(m.kind, m.sport, m.role, m.n) for _title, m in matches}
+        assert kinds == {
+            ("trophy", "כדורגל", "players", 3),
+            ("seasons", "כדורגל", "players", 5),
+            ("trophy", "כדורסל", "staff", 19),
+            ("seasons", "כדורעף", "staff", 7),
+        }
+
+    def test_sport_filter(self):
+        site = MagicMock()
+        site.allcategories.return_value = [
+            _fake_cat("שחקני כדורגל שזכו ב-3 אליפויות"),
+            _fake_cat("שחקני כדורסל שזכו ב-3 אליפויות"),
+        ]
+        matches = list(discover_matches(site, sport_filter="כדורגל"))
+        # allcategories.return_value is shared across both prefix calls;
+        # filter keeps only כדורגל. Two prefixes × one matching item = 2 results.
+        assert len(matches) == 2
+        for _title, match in matches:
+            assert match.sport == "כדורגל"

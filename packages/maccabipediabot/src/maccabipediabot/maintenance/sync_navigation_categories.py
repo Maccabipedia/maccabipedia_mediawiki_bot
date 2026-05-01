@@ -9,8 +9,9 @@ For every existing category page matching one of four patterns:
   - שחקני {sport} ששיחקו {N} עונות במכבי
   - אנשי צוות {sport} שהיו {N} עונות במכבי
 
-…install the canonical `{{ניווט קטגוריות …}}` invocation if missing, then
-purge with forcelinkupdate=true so the DPL caches refresh.
+…overwrite the page with the canonical `{{ניווט קטגוריות …}}` invocation
+when it differs from the current text, then purge with forcelinkupdate=true
+so the DPL caches refresh.
 
 Idempotent — safe to re-run.
 
@@ -26,7 +27,6 @@ Usage:
 """
 from __future__ import annotations
 
-import enum
 import logging
 import re
 from dataclasses import dataclass
@@ -34,11 +34,12 @@ from typing import Iterator, Literal
 
 import pywikibot
 
+from maccabipediabot.common.logging_setup import setup_logging
+from maccabipediabot.common.wiki_login import get_site
+
 logger = logging.getLogger(__name__)
 
 EDIT_SUMMARY = "בוט: התקנת תבנית ניווט בעמוד קטגוריה"
-
-ALLOWED_SPORTS = {"כדורגל", "כדורסל", "כדורעף"}
 
 _RE_TROPHY_PLAYERS = re.compile(r"^שחקני (\S+) שזכו ב-(\d+) (.+)$")
 _RE_TROPHY_STAFF = re.compile(r"^אנשי צוות (\S+) שזכו ב-(\d+) (.+)$")
@@ -51,105 +52,56 @@ TEMPLATE_SEASONS = "ניווט קטגוריות עונות במכבי"
 
 @dataclass(frozen=True)
 class ParsedMatch:
-    kind: Literal["trophy", "seasons"]
+    kind: Literal["זכיה", "עונות"]
     sport: str
-    role: Literal["players", "staff"]
-    n: int
-    trophy_type: str | None  # None for seasons
+    role: Literal["שחקנים", "צוות"]
+    count: int
+    trophy_type: str | None  # None for עונות
 
 
 def parse_category_title(title: str) -> ParsedMatch | None:
     """Parse a category title into a ParsedMatch, or return None if it doesn't match.
 
     `title` is the page title without the `קטגוריה:` namespace prefix.
-    Sports outside ALLOWED_SPORTS yield None.
     """
     for regex, kind, role in (
-        (_RE_TROPHY_PLAYERS, "trophy", "players"),
-        (_RE_TROPHY_STAFF, "trophy", "staff"),
+        (_RE_TROPHY_PLAYERS, "זכיה", "שחקנים"),
+        (_RE_TROPHY_STAFF, "זכיה", "צוות"),
     ):
         trophy_match = regex.match(title)
         if trophy_match:
-            sport = trophy_match.group(1)
-            if sport not in ALLOWED_SPORTS:
-                return None
             return ParsedMatch(
                 kind=kind,
-                sport=sport,
+                sport=trophy_match.group(1),
                 role=role,
-                n=int(trophy_match.group(2)),
+                count=int(trophy_match.group(2)),
                 trophy_type=trophy_match.group(3),
             )
     for regex, role in (
-        (_RE_SEASONS_PLAYERS, "players"),
-        (_RE_SEASONS_STAFF, "staff"),
+        (_RE_SEASONS_PLAYERS, "שחקנים"),
+        (_RE_SEASONS_STAFF, "צוות"),
     ):
         seasons_match = regex.match(title)
         if seasons_match:
-            sport = seasons_match.group(1)
-            if sport not in ALLOWED_SPORTS:
-                return None
             return ParsedMatch(
-                kind="seasons",
-                sport=sport,
+                kind="עונות",
+                sport=seasons_match.group(1),
                 role=role,
-                n=int(seasons_match.group(2)),
+                count=int(seasons_match.group(2)),
                 trophy_type=None,
             )
     return None
 
 
-def build_canonical_wikitext(match: ParsedMatch) -> str:
+def build_canonical_wikitext(parsed: ParsedMatch) -> str:
     """Return the exact wikitext a category page should contain for this match."""
-    staff_param = " |האם אנשי צוות=כן" if match.role == "staff" else ""
-    if match.kind == "trophy":
+    staff_param = " |האם אנשי צוות=כן" if parsed.role == "צוות" else ""
+    if parsed.kind == "זכיה":
         return (
-            f"{{{{{TEMPLATE_TROPHY} |ענף={match.sport} "
-            f"|תואר={match.trophy_type}{staff_param}}}}}"
+            f"{{{{{TEMPLATE_TROPHY} |ענף={parsed.sport} "
+            f"|תואר={parsed.trophy_type}{staff_param}}}}}"
         )
-    return f"{{{{{TEMPLATE_SEASONS} |ענף={match.sport}{staff_param}}}}}"
-
-
-_STUB_BOILERPLATE_MARKER = "זהו דף קטגוריה"
-
-
-class PageState(enum.Enum):
-    CANONICAL = "canonical"
-    EMPTY = "empty"
-    STUB = "stub"
-    OTHER = "other"
-
-
-def _canonical_match_regex(match: ParsedMatch) -> re.Pattern[str]:
-    """Whitespace-tolerant regex that matches the canonical invocation for *match*.
-
-    Tolerates extra whitespace inside the braces but requires the right
-    template name and parameter values.
-    """
-    template = TEMPLATE_TROPHY if match.kind == "trophy" else TEMPLATE_SEASONS
-    pattern = (
-        rf"\{{\{{\s*{re.escape(template)}\s*"
-        rf"\|\s*ענף\s*=\s*{re.escape(match.sport)}\s*"
-    )
-    if match.kind == "trophy":
-        assert match.trophy_type is not None
-        pattern += rf"\|\s*תואר\s*=\s*{re.escape(match.trophy_type)}\s*"
-    if match.role == "staff":
-        pattern += r"\|\s*האם אנשי צוות\s*=\s*כן\s*"
-    pattern += r"\}\}"
-    return re.compile(pattern)
-
-
-def classify_page_text(text: str, match: ParsedMatch) -> PageState:
-    """Classify a category page's current wikitext for the given parsed match."""
-    stripped = text.strip()
-    if not stripped:
-        return PageState.EMPTY
-    if _canonical_match_regex(match).search(stripped):
-        return PageState.CANONICAL
-    if stripped.startswith(_STUB_BOILERPLATE_MARKER):
-        return PageState.STUB
-    return PageState.OTHER
+    return f"{{{{{TEMPLATE_SEASONS} |ענף={parsed.sport}{staff_param}}}}}"
 
 
 _DISCOVERY_PREFIXES = ("שחקני ", "אנשי צוות ")
@@ -166,37 +118,24 @@ def discover_matches(
     for prefix in _DISCOVERY_PREFIXES:
         for cat in site.allcategories(prefix=prefix):
             title = cat.title(with_ns=False)
-            match = parse_category_title(title)
-            if match is None:
+            parsed = parse_category_title(title)
+            if parsed is None:
                 continue
-            if sport_filter is not None and match.sport != sport_filter:
+            if sport_filter is not None and parsed.sport != sport_filter:
                 continue
-            yield title, match
+            yield title, parsed
 
 
 def process_page(
-    site: pywikibot.Site,
     page: pywikibot.Page,
-    match: ParsedMatch,
+    parsed: ParsedMatch,
     dry_run: bool,
-) -> Literal["skip", "install", "warn"]:
+) -> Literal["skip", "install"]:
     """Bring `page` to canonical state. Returns the action taken."""
-    state = classify_page_text(page.text, match)
-    canonical = build_canonical_wikitext(match)
-
-    if state == PageState.CANONICAL:
+    canonical = build_canonical_wikitext(parsed)
+    if page.text == canonical:
         logger.info("[SKIP] %s", page.title())
         return "skip"
-
-    if state == PageState.OTHER:
-        logger.warning(
-            "[WARN] %s — unexpected content, leaving untouched. Existing: %r",
-            page.title(),
-            page.text[:120],
-        )
-        return "warn"
-
-    # EMPTY or STUB → install
     logger.info("[INSTALL] %s", page.title())
     if dry_run:
         logger.info("  [DRY-RUN] Would set content to: %s", canonical)
@@ -226,33 +165,26 @@ def purge_pages(
 
 
 def main(
-    dry_run: bool = True,
-    sport_filter: str | None = None,
-    skip_purge: bool = False,
-    test: bool = False,
+    dry_run: bool,
+    sport_filter: str | None,
+    skip_purge: bool,
+    test: bool,
 ) -> int:
-    """Run one full sync. Returns the number of warnings (for CI exit code)."""
-    from maccabipediabot.common.logging_setup import setup_logging
-    from maccabipediabot.common.wiki_login import get_site
-
+    """Run one full sync. Returns 0 (reserved for future error signalling)."""
     setup_logging(level=logging.INFO)
     site = get_site()
 
-    skipped = installed = warned = 0
+    skipped = installed = 0
     matched_pages: list[pywikibot.Page] = []
-    warned_titles: list[str] = []
 
-    for title, match in discover_matches(site, sport_filter=sport_filter):
+    for title, parsed in discover_matches(site, sport_filter=sport_filter):
         page = pywikibot.Page(site, f"קטגוריה:{title}")
-        action = process_page(site, page, match, dry_run=dry_run)
+        action = process_page(page, parsed, dry_run=dry_run)
         matched_pages.append(page)
         if action == "skip":
             skipped += 1
         elif action == "install":
             installed += 1
-        elif action == "warn":
-            warned += 1
-            warned_titles.append(title)
         if test:
             logger.info("Test mode: stopping after first page.")
             break
@@ -262,14 +194,10 @@ def main(
         purged = purge_pages(site, matched_pages, dry_run=dry_run)
 
     logger.info(
-        "Done: %d skipped, %d installed, %d purged, %d warnings",
-        skipped, installed, purged, warned,
+        "Done: %d skipped, %d installed, %d purged",
+        skipped, installed, purged,
     )
-    if warned_titles:
-        logger.warning("Pages with unexpected content (skipped — review manually):")
-        for warned_title in warned_titles:
-            logger.warning("  - %s", warned_title)
-    return warned
+    return 0
 
 
 if __name__ == "__main__":
@@ -278,25 +206,24 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--live", action="store_true", help="Actually edit the wiki (default: dry-run)"
+        "--live", action="store_true", default=False,
+        help="Actually edit the wiki (default: dry-run)",
     )
     parser.add_argument(
-        "--sport",
-        choices=sorted(ALLOWED_SPORTS),
-        help="Only process this sport",
+        "--sport", default=None,
+        help="Only process this sport (Hebrew, e.g. כדורגל)",
     )
     parser.add_argument(
-        "--no-purge", action="store_true", help="Skip the purge step"
+        "--no-purge", action="store_true", default=False, help="Skip the purge step"
     )
     parser.add_argument(
-        "--test", action="store_true", help="Process only one page then stop"
+        "--test", action="store_true", default=False,
+        help="Process only one page then stop",
     )
     args = parser.parse_args()
-    warnings_count = main(
+    sys.exit(main(
         dry_run=not args.live,
         sport_filter=args.sport,
         skip_purge=args.no_purge,
         test=args.test,
-    )
-    # Exit non-zero only if warnings appeared in --live mode
-    sys.exit(0 if warnings_count == 0 or not args.live else 1)
+    ))

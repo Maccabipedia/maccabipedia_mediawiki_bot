@@ -204,3 +204,22 @@ def process_page(
     page.text = canonical
     page.save(summary=EDIT_SUMMARY, minor=False)
     return "install"
+
+
+def purge_pages(
+    site: pywikibot.Site, pages: list[pywikibot.Page], dry_run: bool
+) -> int:
+    """Purge pages with forcelinkupdate=true so DPL caches refresh.
+
+    Returns the number of pages submitted to purge.
+    """
+    if not pages:
+        return 0
+    if dry_run:
+        logger.info(
+            "[DRY-RUN] Would purge %d pages with forcelinkupdate=true", len(pages)
+        )
+        return len(pages)
+    logger.info("[PURGE] Purging %d pages with forcelinkupdate=true", len(pages))
+    site.purgepages(pages, forcelinkupdate=True)
+    return len(pages)

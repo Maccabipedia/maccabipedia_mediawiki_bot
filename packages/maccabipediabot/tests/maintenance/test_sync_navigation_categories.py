@@ -2,8 +2,10 @@
 import pytest
 
 from maccabipediabot.maintenance.sync_navigation_categories import (
+    PageState,
     ParsedMatch,
     build_canonical_wikitext,
+    classify_page_text,
     parse_category_title,
 )
 
@@ -99,3 +101,53 @@ class TestBuildCanonicalWikitext:
         assert build_canonical_wikitext(match) == (
             "{{ניווט קטגוריות עונות במכבי |ענף=כדורעף |האם אנשי צוות=כן}}"
         )
+
+
+class TestClassifyPageText:
+    @pytest.fixture
+    def trophy_match(self):
+        return ParsedMatch(
+            kind="trophy",
+            sport="כדורגל",
+            role="players",
+            n=3,
+            trophy_type="אליפויות",
+        )
+
+    def test_canonical_exact(self, trophy_match):
+        text = "{{ניווט קטגוריות זכיה בתארים |ענף=כדורגל |תואר=אליפויות}}"
+        assert classify_page_text(text, trophy_match) == PageState.CANONICAL
+
+    def test_canonical_with_extra_whitespace(self, trophy_match):
+        text = "  {{ניווט קטגוריות זכיה בתארים  |ענף=כדורגל  |תואר=אליפויות}}\n"
+        assert classify_page_text(text, trophy_match) == PageState.CANONICAL
+
+    def test_canonical_with_trailing_newline(self, trophy_match):
+        text = "{{ניווט קטגוריות זכיה בתארים |ענף=כדורגל |תואר=אליפויות}}\n"
+        assert classify_page_text(text, trophy_match) == PageState.CANONICAL
+
+    def test_empty_page(self, trophy_match):
+        assert classify_page_text("", trophy_match) == PageState.EMPTY
+        assert classify_page_text("   \n  ", trophy_match) == PageState.EMPTY
+
+    def test_stub_boilerplate(self, trophy_match):
+        text = (
+            "זהו דף קטגוריה.\n"
+            'כאן מופיעים כל הדפים בקטגוריה "שחקני כדורגל שזכו ב-3 אליפויות"…'
+        )
+        assert classify_page_text(text, trophy_match) == PageState.STUB
+
+    def test_other_content_warned(self, trophy_match):
+        text = "Some hand-curated content about this category."
+        assert classify_page_text(text, trophy_match) == PageState.OTHER
+
+    def test_canonical_with_wrong_params_is_other(self, trophy_match):
+        text = "{{ניווט קטגוריות זכיה בתארים |ענף=כדורגל |תואר=גביעי מדינה}}"
+        assert classify_page_text(text, trophy_match) == PageState.OTHER
+
+    def test_seasons_canonical(self):
+        match = ParsedMatch(
+            kind="seasons", sport="כדורסל", role="staff", n=7, trophy_type=None
+        )
+        text = "{{ניווט קטגוריות עונות במכבי |ענף=כדורסל |האם אנשי צוות=כן}}"
+        assert classify_page_text(text, match) == PageState.CANONICAL

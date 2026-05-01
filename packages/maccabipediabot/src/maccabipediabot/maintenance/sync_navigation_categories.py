@@ -26,6 +26,7 @@ Usage:
 """
 from __future__ import annotations
 
+import enum
 import re
 from dataclasses import dataclass
 from typing import Literal
@@ -100,3 +101,45 @@ def build_canonical_wikitext(match: ParsedMatch) -> str:
             f"|תואר={match.trophy_type}{staff_param}}}}}"
         )
     return f"{{{{{TEMPLATE_SEASONS} |ענף={match.sport}{staff_param}}}}}"
+
+
+_STUB_BOILERPLATE_MARKER = "זהו דף קטגוריה"
+
+
+class PageState(enum.Enum):
+    CANONICAL = "canonical"
+    EMPTY = "empty"
+    STUB = "stub"
+    OTHER = "other"
+
+
+def _canonical_match_regex(match: ParsedMatch) -> re.Pattern[str]:
+    """Whitespace-tolerant regex that matches the canonical invocation for *match*.
+
+    Tolerates extra whitespace inside the braces but requires the right
+    template name and parameter values.
+    """
+    template = TEMPLATE_TROPHY if match.kind == "trophy" else TEMPLATE_SEASONS
+    pattern = (
+        rf"\{{\{{\s*{re.escape(template)}\s*"
+        rf"\|\s*ענף\s*=\s*{re.escape(match.sport)}\s*"
+    )
+    if match.kind == "trophy":
+        assert match.trophy_type is not None
+        pattern += rf"\|\s*תואר\s*=\s*{re.escape(match.trophy_type)}\s*"
+    if match.role == "staff":
+        pattern += r"\|\s*האם אנשי צוות\s*=\s*כן\s*"
+    pattern += r"\}\}"
+    return re.compile(pattern)
+
+
+def classify_page_text(text: str, match: ParsedMatch) -> PageState:
+    """Classify a category page's current wikitext for the given parsed match."""
+    stripped = text.strip()
+    if not stripped:
+        return PageState.EMPTY
+    if _canonical_match_regex(match).search(stripped):
+        return PageState.CANONICAL
+    if stripped.startswith(_STUB_BOILERPLATE_MARKER):
+        return PageState.STUB
+    return PageState.OTHER

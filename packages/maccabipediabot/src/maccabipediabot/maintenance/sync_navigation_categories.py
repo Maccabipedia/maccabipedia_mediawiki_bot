@@ -27,11 +27,16 @@ Usage:
 from __future__ import annotations
 
 import enum
+import logging
 import re
 from dataclasses import dataclass
 from typing import Iterator, Literal
 
 import pywikibot
+
+logger = logging.getLogger(__name__)
+
+EDIT_SUMMARY = "בוט: התקנת תבנית ניווט בעמוד קטגוריה"
 
 ALLOWED_SPORTS = {"כדורגל", "כדורסל", "כדורעף"}
 
@@ -167,3 +172,35 @@ def discover_matches(
             if sport_filter is not None and match.sport != sport_filter:
                 continue
             yield title, match
+
+
+def process_page(
+    site: pywikibot.Site,
+    page: pywikibot.Page,
+    match: ParsedMatch,
+    dry_run: bool,
+) -> Literal["skip", "install", "warn"]:
+    """Bring `page` to canonical state. Returns the action taken."""
+    state = classify_page_text(page.text, match)
+    canonical = build_canonical_wikitext(match)
+
+    if state == PageState.CANONICAL:
+        logger.info("[SKIP] %s", page.title())
+        return "skip"
+
+    if state == PageState.OTHER:
+        logger.warning(
+            "[WARN] %s — unexpected content, leaving untouched. Existing: %r",
+            page.title(),
+            page.text[:120],
+        )
+        return "warn"
+
+    # EMPTY or STUB → install
+    logger.info("[INSTALL] %s", page.title())
+    if dry_run:
+        logger.info("  [DRY-RUN] Would set content to: %s", canonical)
+        return "install"
+    page.text = canonical
+    page.save(summary=EDIT_SUMMARY, minor=False)
+    return "install"

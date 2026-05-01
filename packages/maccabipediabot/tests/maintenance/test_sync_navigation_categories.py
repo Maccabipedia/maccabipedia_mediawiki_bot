@@ -10,6 +10,7 @@ from maccabipediabot.maintenance.sync_navigation_categories import (
     classify_page_text,
     discover_matches,
     parse_category_title,
+    process_page,
 )
 
 
@@ -206,3 +207,58 @@ class TestDiscoverMatches:
         assert len(matches) == 2
         for _title, match in matches:
             assert match.sport == "כדורגל"
+
+
+class TestProcessPage:
+    @pytest.fixture
+    def trophy_match(self):
+        return ParsedMatch(
+            kind="trophy",
+            sport="כדורגל",
+            role="players",
+            n=3,
+            trophy_type="אליפויות",
+        )
+
+    def test_skip_canonical(self, trophy_match):
+        site = MagicMock()
+        page = MagicMock()
+        page.text = "{{ניווט קטגוריות זכיה בתארים |ענף=כדורגל |תואר=אליפויות}}"
+        action = process_page(site, page, trophy_match, dry_run=False)
+        assert action == "skip"
+        page.save.assert_not_called()
+
+    def test_install_on_stub(self, trophy_match):
+        site = MagicMock()
+        page = MagicMock()
+        page.text = "זהו דף קטגוריה.\nכאן מופיעים כל הדפים בקטגוריה..."
+        action = process_page(site, page, trophy_match, dry_run=False)
+        assert action == "install"
+        assert page.text == (
+            "{{ניווט קטגוריות זכיה בתארים |ענף=כדורגל |תואר=אליפויות}}"
+        )
+        page.save.assert_called_once()
+
+    def test_install_on_empty(self, trophy_match):
+        site = MagicMock()
+        page = MagicMock()
+        page.text = ""
+        action = process_page(site, page, trophy_match, dry_run=False)
+        assert action == "install"
+        page.save.assert_called_once()
+
+    def test_warn_on_other(self, trophy_match):
+        site = MagicMock()
+        page = MagicMock()
+        page.text = "Some hand-curated description."
+        action = process_page(site, page, trophy_match, dry_run=False)
+        assert action == "warn"
+        page.save.assert_not_called()
+
+    def test_dry_run_does_not_save(self, trophy_match):
+        site = MagicMock()
+        page = MagicMock()
+        page.text = ""
+        action = process_page(site, page, trophy_match, dry_run=True)
+        assert action == "install"
+        page.save.assert_not_called()

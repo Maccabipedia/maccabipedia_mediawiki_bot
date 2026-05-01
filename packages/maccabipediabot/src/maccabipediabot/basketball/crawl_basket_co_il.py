@@ -242,9 +242,10 @@ def _parse_player_rows(table: Tag) -> list[PlayerSummary]:
         number_link = tds[0].select_one("a")
         name_link = tds[1].select_one("a")
         raw_name = name_link.get_text(strip=True) if name_link else ""
+        number_text = number_link.get_text(strip=True) if number_link else ""
 
         players.append(PlayerSummary(
-            number=_to_int(number_link.get_text() if number_link else None) or None,
+            number=int(number_text) if number_text.isdigit() else None,
             name=normalize_player_name(raw_name),
             is_starting_five=tds[2].get_text(strip=True) == "*",
             minutes_played=_to_int(tds[3].get_text()),

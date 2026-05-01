@@ -4,9 +4,11 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
+from bs4 import BeautifulSoup
 
 from maccabipediabot.basketball.basketball_game import BasketballGame
 from maccabipediabot.basketball.crawl_basket_co_il import (
+    _parse_player_rows,
     discover_games_latest_season,
     parse_game_page,
 )
@@ -38,6 +40,46 @@ def test_parse_game_page_against_real_fixture():
     )
     actual = parse_game_page(html, _partial_game())
     assert actual.model_dump() == expected.model_dump()
+
+
+def _player_row_html(jersey_link_html: str) -> str:
+    """Minimal player table: 1 header row.row + 1 player row.row + totals row.
+    The player row has 21 <td>s with the column layout _parse_player_rows expects.
+    `jersey_link_html` goes in tds[0]; pass an `<a>` to simulate a linked number,
+    or empty string to simulate no link."""
+    cells = [f"<td>{jersey_link_html}</td>"]                       # 0: number
+    cells += ['<td><a href="x">איפה לונדברג</a></td>']            # 1: name
+    cells += ['<td></td>']                                         # 2: starting *
+    cells += ['<td>10</td>']                                       # 3: minutes
+    cells += ['<td>0</td>']                                        # 4: total points
+    cells += ['<td>0/3</td>', '<td>0</td>']                        # 5,6: 2pt
+    cells += ['<td>0/3</td>', '<td>0</td>']                        # 7,8: 3pt
+    cells += ['<td>0/0</td>', '<td>0</td>']                        # 9,10: ft
+    cells += ['<td>4</td>', '<td>0</td>']                          # 11,12: rebounds
+    cells += ['<td>0</td>']                                        # 13: total rebounds (unused)
+    cells += ['<td>2</td>']                                        # 14: fouls
+    cells += ['<td>0</td>']                                        # 15: pad
+    cells += ['<td>0</td>', '<td>1</td>', '<td>0</td>', '<td>0</td>']  # 16-19: steals, to, ast, blk
+    cells += ['<td>0</td>']                                        # 20: pad to reach 21
+    return f"""
+    <table>
+      <tr class="row"><td>header</td></tr>
+      <tr class="row">{''.join(cells)}</tr>
+      <tr><td>totals</td></tr>
+    </table>
+    """
+
+
+@pytest.mark.parametrize("jersey_link_html, expected_number", [
+    ('<a href="player.asp?PlayerId=1">0</a>', 0),    # jersey #0 must stay 0, not collapse to None
+    ('<a href="player.asp?PlayerId=1">23</a>', 23),
+    ('', None),                                       # no <a> in the cell → number unknown
+])
+def test_parse_player_rows_preserves_jersey_zero(jersey_link_html, expected_number):
+    table = BeautifulSoup(_player_row_html(jersey_link_html), "html.parser").select_one("table")
+    players = _parse_player_rows(table)
+    assert len(players) == 1
+    assert players[0].number == expected_number
 
 
 def test_parse_game_page_raises_when_header_missing():

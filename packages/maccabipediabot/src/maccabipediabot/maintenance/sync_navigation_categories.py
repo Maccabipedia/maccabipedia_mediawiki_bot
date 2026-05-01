@@ -223,3 +223,80 @@ def purge_pages(
     logger.info("[PURGE] Purging %d pages with forcelinkupdate=true", len(pages))
     site.purgepages(pages, forcelinkupdate=True)
     return len(pages)
+
+
+def main(
+    dry_run: bool = True,
+    sport_filter: str | None = None,
+    skip_purge: bool = False,
+    test: bool = False,
+) -> int:
+    """Run one full sync. Returns the number of warnings (for CI exit code)."""
+    from maccabipediabot.common.logging_setup import setup_logging
+    from maccabipediabot.common.wiki_login import get_site
+
+    setup_logging(level=logging.INFO)
+    site = get_site()
+
+    skipped = installed = warned = 0
+    matched_pages: list[pywikibot.Page] = []
+    warned_titles: list[str] = []
+
+    for title, match in discover_matches(site, sport_filter=sport_filter):
+        page = pywikibot.Page(site, f"קטגוריה:{title}")
+        action = process_page(site, page, match, dry_run=dry_run)
+        matched_pages.append(page)
+        if action == "skip":
+            skipped += 1
+        elif action == "install":
+            installed += 1
+        elif action == "warn":
+            warned += 1
+            warned_titles.append(title)
+        if test:
+            logger.info("Test mode: stopping after first page.")
+            break
+
+    purged = 0
+    if not skip_purge:
+        purged = purge_pages(site, matched_pages, dry_run=dry_run)
+
+    logger.info(
+        "Done: %d skipped, %d installed, %d purged, %d warnings",
+        skipped, installed, purged, warned,
+    )
+    if warned_titles:
+        logger.warning("Pages with unexpected content (skipped — review manually):")
+        for warned_title in warned_titles:
+            logger.warning("  - %s", warned_title)
+    return warned
+
+
+if __name__ == "__main__":
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--live", action="store_true", help="Actually edit the wiki (default: dry-run)"
+    )
+    parser.add_argument(
+        "--sport",
+        choices=sorted(ALLOWED_SPORTS),
+        help="Only process this sport",
+    )
+    parser.add_argument(
+        "--no-purge", action="store_true", help="Skip the purge step"
+    )
+    parser.add_argument(
+        "--test", action="store_true", help="Process only one page then stop"
+    )
+    args = parser.parse_args()
+    warnings_count = main(
+        dry_run=not args.live,
+        sport_filter=args.sport,
+        skip_purge=args.no_purge,
+        test=args.test,
+    )
+    # Exit non-zero only if warnings appeared in --live mode
+    sys.exit(0 if warnings_count == 0 or not args.live else 1)

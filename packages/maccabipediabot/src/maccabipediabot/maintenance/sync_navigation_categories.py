@@ -37,6 +37,9 @@ _RE_TROPHY_STAFF = re.compile(r"^אנשי צוות (\S+) שזכו ב-(\d+) (.+)$
 _RE_SEASONS_PLAYERS = re.compile(r"^שחקני (\S+) ששיחקו (\d+) עונות במכבי$")
 _RE_SEASONS_STAFF = re.compile(r"^אנשי צוות (\S+) שהיו (\d+) עונות במכבי$")
 
+TEMPLATE_TROPHY = "ניווט קטגוריות זכיה בתארים"
+TEMPLATE_SEASONS = "ניווט קטגוריות עונות במכבי"
+
 
 @dataclass(frozen=True)
 class ParsedMatch:
@@ -86,3 +89,14 @@ def parse_category_title(title: str) -> ParsedMatch | None:
                 trophy_type=None,
             )
     return None
+
+
+def build_canonical_wikitext(match: ParsedMatch) -> str:
+    """Return the exact wikitext a category page should contain for this match."""
+    staff_param = " |האם אנשי צוות=כן" if match.role == "staff" else ""
+    if match.kind == "trophy":
+        return (
+            f"{{{{{TEMPLATE_TROPHY} |ענף={match.sport} "
+            f"|תואר={match.trophy_type}{staff_param}}}}}"
+        )
+    return f"{{{{{TEMPLATE_SEASONS} |ענף={match.sport}{staff_param}}}}}"

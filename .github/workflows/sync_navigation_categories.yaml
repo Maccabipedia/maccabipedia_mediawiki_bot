@@ -1,11 +1,11 @@
-name: Add player category navigation bars
+name: Sync navigation categories
 on:
   schedule:
     - cron: "0 3 * * *"
   workflow_dispatch:
 
 jobs:
-  add-player-category-navbars:
+  sync-navigation-categories:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,12 +16,12 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - name: Install dependencies
         run: uv sync
-      - name: Add pill navigation bars to player achievement category pages
+      - name: Sync DPL navigation templates onto category pages
         env:
           PYWIKIBOT_DIR: packages/maccabipediabot/src/maccabipediabot/pywikibot_configs/
           MACCABIPEDIA_BOT_USERNAME: ${{ secrets.MACCABIPEDIA_BOT_USERNAME }}
           MACCABIPEDIA_BOT_PASSWORD: ${{ secrets.MACCABIPEDIA_BOT_PASSWORD }}
-        run: uv run python -m maccabipediabot.maintenance.football.add_player_category_navbars --live
+        run: uv run python -m maccabipediabot.maintenance.sync_navigation_categories --live
   workflow-keepalive:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest

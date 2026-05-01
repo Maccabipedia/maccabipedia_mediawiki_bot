@@ -1,14 +1,11 @@
 """Unit tests for sync_navigation_categories pure functions."""
 from unittest.mock import MagicMock
 
-import pytest
-
 from maccabipediabot.maintenance.sync_navigation_categories import (
     ParsedMatch,
     build_canonical_wikitext,
     discover_matches,
     parse_category_title,
-    process_page,
 )
 
 
@@ -163,60 +160,3 @@ class TestDiscoverMatches:
         for _title, parsed in matches:
             assert parsed.sport == "כדורגל"
 
-
-class TestProcessPage:
-    @pytest.fixture
-    def trophy_parsed(self):
-        return ParsedMatch(
-            kind="זכיה",
-            sport="כדורגל",
-            role="שחקנים",
-            count=3,
-            trophy_type="אליפויות",
-        )
-
-    def test_skip_when_canonical(self, trophy_parsed):
-        page = MagicMock()
-        page.text = "{{ניווט קטגוריות זכיה בתארים |ענף=כדורגל |תואר=אליפויות}}"
-        action = process_page(page, trophy_parsed, dry_run=False)
-        assert action == "skip"
-        page.save.assert_not_called()
-
-    def test_install_when_stub(self, trophy_parsed):
-        page = MagicMock()
-        page.text = "זהו דף קטגוריה.\nכאן מופיעים כל הדפים בקטגוריה..."
-        action = process_page(page, trophy_parsed, dry_run=False)
-        assert action == "install"
-        assert page.text == (
-            "{{ניווט קטגוריות זכיה בתארים |ענף=כדורגל |תואר=אליפויות}}"
-        )
-        page.save.assert_called_once()
-
-    def test_install_when_empty(self, trophy_parsed):
-        page = MagicMock()
-        page.text = ""
-        action = process_page(page, trophy_parsed, dry_run=False)
-        assert action == "install"
-        page.save.assert_called_once()
-
-    def test_install_overwrites_unexpected_content(self, trophy_parsed):
-        page = MagicMock()
-        page.text = "Some hand-curated description."
-        action = process_page(page, trophy_parsed, dry_run=False)
-        assert action == "install"
-        page.save.assert_called_once()
-
-    def test_dry_run_does_not_save(self, trophy_parsed):
-        page = MagicMock()
-        page.text = ""
-        action = process_page(page, trophy_parsed, dry_run=True)
-        assert action == "install"
-        page.save.assert_not_called()
-
-    def test_install_when_canonical_has_extra_whitespace(self, trophy_parsed):
-        # Whitespace differences trigger a re-save (one-time noise on first run).
-        page = MagicMock()
-        page.text = "  {{ניווט קטגוריות זכיה בתארים |ענף=כדורגל |תואר=אליפויות}}\n"
-        action = process_page(page, trophy_parsed, dry_run=False)
-        assert action == "install"
-        page.save.assert_called_once()

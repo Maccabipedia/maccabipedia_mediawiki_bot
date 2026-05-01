@@ -126,25 +126,6 @@ def discover_matches(
             yield title, parsed
 
 
-def process_page(
-    page: pywikibot.Page,
-    parsed: ParsedMatch,
-    dry_run: bool,
-) -> Literal["skip", "install"]:
-    """Bring `page` to canonical state. Returns the action taken."""
-    canonical = build_canonical_wikitext(parsed)
-    if page.text == canonical:
-        logger.info("[SKIP] %s", page.title())
-        return "skip"
-    logger.info("[INSTALL] %s", page.title())
-    if dry_run:
-        logger.info("  [DRY-RUN] Would set content to: %s", canonical)
-        return "install"
-    page.text = canonical
-    page.save(summary=EDIT_SUMMARY, minor=False)
-    return "install"
-
-
 def purge_pages(
     site: pywikibot.Site, pages: list[pywikibot.Page], dry_run: bool
 ) -> int:
@@ -174,17 +155,21 @@ def main(
     setup_logging(level=logging.INFO)
     site = get_site()
 
-    skipped = installed = 0
+    edited = 0
     matched_pages: list[pywikibot.Page] = []
 
     for title, parsed in discover_matches(site, sport_filter=sport_filter):
         page = pywikibot.Page(site, f"קטגוריה:{title}")
-        action = process_page(page, parsed, dry_run=dry_run)
         matched_pages.append(page)
-        if action == "skip":
-            skipped += 1
-        elif action == "install":
-            installed += 1
+        canonical = build_canonical_wikitext(parsed)
+        if page.text == canonical:
+            logger.info("[SKIP] %s", page.title())
+        else:
+            logger.info("[INSTALL] %s → %s", page.title(), canonical)
+            edited += 1
+            if not dry_run:
+                page.text = canonical
+                page.save(summary=EDIT_SUMMARY, minor=False)
         if test:
             logger.info("Test mode: stopping after first page.")
             break
@@ -194,8 +179,8 @@ def main(
         purged = purge_pages(site, matched_pages, dry_run=dry_run)
 
     logger.info(
-        "Done: %d skipped, %d installed, %d purged",
-        skipped, installed, purged,
+        "Done: %d/%d edited, %d purged",
+        edited, len(matched_pages), purged,
     )
     return 0
 

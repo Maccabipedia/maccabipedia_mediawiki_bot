@@ -71,6 +71,16 @@ class TestParseCategoryTitle:
         assert parse_category_title("אנשי צוות כדורגל שהיו 0 עונות במכבי") is None
         assert parse_category_title("שחקני כדורגל שזכו ב-0 אליפויות") is None
 
+    def test_count_above_99_returns_none(self):
+        # The DPL templates' regex caps at [1-9][0-9], so N≥100 wouldn't render.
+        assert parse_category_title("שחקני כדורגל שזכו ב-100 אליפויות") is None
+        assert parse_category_title("שחקני כדורגל ששיחקו 150 עונות במכבי") is None
+
+    def test_count_99_is_accepted(self):
+        result = parse_category_title("שחקני כדורגל שזכו ב-99 אליפויות")
+        assert result is not None
+        assert result.count == 99
+
     def test_unknown_sport_passes_through(self):
         # No sport allowlist — any future sport flows through.
         result = parse_category_title("שחקני האנדבול שזכו ב-1 אליפויות")

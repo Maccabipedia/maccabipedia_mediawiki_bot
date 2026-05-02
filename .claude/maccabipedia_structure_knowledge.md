@@ -186,3 +186,39 @@ Both `|שחקנים מכבי=` and `|שחקנים יריבה=` use the same form
 ## 12. External Research Sources
 
 See `.claude/maccabipedia_research_sources.md` for the full reference of where to search for data by sport and type (stats, rosters, video, etc.).
+
+## 13. Navigation Categories
+
+Pill-style navigation strips on player/staff achievement category pages, rendered by two DPL-based templates:
+
+- `תבנית:ניווט קטגוריות זכיה בתארים` — params: `ענף`, `תואר`, `האם אנשי צוות` (optional `כן`).
+- `תבנית:ניווט קטגוריות עונות במכבי` — params: `ענף`, `האם אנשי צוות` (optional `כן`).
+
+### Category title patterns
+
+| Pattern | Kind | Role |
+|---|---|---|
+| `שחקני {sport} שזכו ב-{N} {trophy_type}` | trophy | players |
+| `אנשי צוות {sport} שזכו ב-{N} {trophy_type}` | trophy | staff |
+| `שחקני {sport} ששיחקו {N} עונות במכבי` | seasons | players |
+| `אנשי צוות {sport} שהיו {N} עונות במכבי` | seasons | staff |
+
+### How the nav renders
+
+Each template uses DPL with a regex on category titles (`[1-9]` or `[1-9][0-9]` for the count) plus a `PAGESINCATEGORY > 0` filter, so only categories with at least one member appear in the strip. New milestone categories materialize automatically when a player gets categorized — no need to pre-create them.
+
+### Maintenance script
+
+`packages/maccabipediabot/src/maccabipediabot/maintenance/sync_navigation_categories.py` enumerates every category found by `site.allcategories(...)` matching the four patterns, builds the canonical template invocation, and overwrites any page whose wikitext doesn't already match. Then purges all matched pages with `forcelinkupdate=true` so DPL caches refresh. Daily cron (`.github/workflows/sync_navigation_categories.yaml`).
+
+Two side effects worth knowing:
+
+- **Backfills missing pages.** `allcategories` returns categories that have ≥1 member even when no wiki page physically exists for them (redlink categories left over from before `AutoCreateCategoryPages` was installed, or from category-add paths the extension didn't hook). The script's save step creates the page from scratch, in addition to installing the template.
+- **One-time spacing normalization.** Equality is exact (no whitespace tolerance). On first run, any page whose wikitext only differs by spacing gets re-saved to match the canonical exactly. From the second run onward, all matching pages skip cleanly.
+
+### Sports and trophy types today
+
+- `כדורגל` — אליפויות, גביעי מדינה, גביעי הטוטו, etc.
+- `כדורסל` — אליפויות, גביעי מדינה, גביעי אירופה, הגביע הבין יבשתי, etc.
+- `כדורעף` — אליפויות, גביעי מדינה, etc.
+

@@ -209,7 +209,12 @@ Each template uses DPL with a regex on category titles (`[1-9]` or `[1-9][0-9]` 
 
 ### Maintenance script
 
-`packages/maccabipediabot/src/maccabipediabot/maintenance/sync_navigation_categories.py` enumerates existing category pages, classifies each as CANONICAL / EMPTY / STUB / OTHER, and installs the canonical template invocation on EMPTY/STUB pages. Skips CANONICAL, warns and leaves OTHER untouched. Then purges all matched pages with `forcelinkupdate=true` so the DPL caches refresh. Daily cron (`.github/workflows/sync_navigation_categories.yaml`).
+`packages/maccabipediabot/src/maccabipediabot/maintenance/sync_navigation_categories.py` enumerates every category found by `site.allcategories(...)` matching the four patterns, builds the canonical template invocation, and overwrites any page whose wikitext doesn't already match. Then purges all matched pages with `forcelinkupdate=true` so DPL caches refresh. Daily cron (`.github/workflows/sync_navigation_categories.yaml`).
+
+Two side effects worth knowing:
+
+- **Backfills missing pages.** `allcategories` returns categories that have ≥1 member even when no wiki page physically exists for them (redlink categories left over from before `AutoCreateCategoryPages` was installed, or from category-add paths the extension didn't hook). The script's save step creates the page from scratch, in addition to installing the template.
+- **One-time spacing normalization.** Equality is exact (no whitespace tolerance). On first run, any page whose wikitext only differs by spacing gets re-saved to match the canonical exactly. From the second run onward, all matching pages skip cleanly.
 
 ### Sports and trophy types today
 

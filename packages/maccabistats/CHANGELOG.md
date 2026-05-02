@@ -1,3 +1,12 @@
+## Version 2.67 ##
+
+    Skip unfinished maccabi-tlv.co.il matches in the season crawler so the football
+    games-uploader workflow can no longer publish a wiki page mid-match (Maccabi
+    1-0 Hapoel B"S, 28-04-2026: bot first created the page 25 minutes after kickoff).
+    A match is considered finished iff the per-match top banner does NOT carry the
+    `live` CSS class — set throughout the match (including half-time and stoppage)
+    and stripped the moment the final whistle is logged.
+
 ## Version 2.66 ##
 
     Retry MaccabiPedia Cargo Export requests on transient 5xx/4xx (415, 429, 500-504) via

@@ -9,6 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 from maccabistats.config import MaccabiStatsConfigSingleton
 from maccabistats.parse.maccabi_tlv_site.game_squads_parser import MaccabiSiteGameSquadsParser
+from maccabistats.parse.maccabi_tlv_site.match_status import MatchNotFinishedError
 
 logger = logging.getLogger(__name__)
 
@@ -102,8 +103,13 @@ def __parse_games_from_season_number(season_number):
     logger.info(
         "Found {number} games on this season! {season}".format(number=len(bs_games_elements), season=season_string))
 
-    return [MaccabiSiteGameSquadsParser.parse_game(bs_game_element, season_string) for bs_game_element in
-            bs_games_elements]
+    parsed_games = []
+    for bs_game_element in bs_games_elements:
+        try:
+            parsed_games.append(MaccabiSiteGameSquadsParser.parse_game(bs_game_element, season_string))
+        except MatchNotFinishedError as not_finished:
+            logger.info("Skipping not-finished match: %s", not_finished)
+    return parsed_games
 
 
 def get_parsed_maccabi_games_from_maccabi_site():

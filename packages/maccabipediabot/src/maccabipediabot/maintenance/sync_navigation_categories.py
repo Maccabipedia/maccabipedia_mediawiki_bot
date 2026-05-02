@@ -41,10 +41,12 @@ logger = logging.getLogger(__name__)
 
 EDIT_SUMMARY = "בוט: התקנת תבנית ניווט בעמוד קטגוריה"
 
-_RE_TROPHY_PLAYERS = re.compile(r"^שחקני (\S+) שזכו ב-(\d+) (.+)$")
-_RE_TROPHY_STAFF = re.compile(r"^אנשי צוות (\S+) שזכו ב-(\d+) (.+)$")
-_RE_SEASONS_PLAYERS = re.compile(r"^שחקני (\S+) ששיחקו (\d+) עונות במכבי$")
-_RE_SEASONS_STAFF = re.compile(r"^אנשי צוות (\S+) שהיו (\d+) עונות במכבי$")
+# Count must be ≥1 — matches the DPL templates' [1-9]/[1-9][0-9] regex.
+# N=0 categories exist in the data (upstream bug) but render nothing.
+_RE_TROPHY_PLAYERS = re.compile(r"^שחקני (\S+) שזכו ב-([1-9]\d*) (.+)$")
+_RE_TROPHY_STAFF = re.compile(r"^אנשי צוות (\S+) שזכו ב-([1-9]\d*) (.+)$")
+_RE_SEASONS_PLAYERS = re.compile(r"^שחקני (\S+) ששיחקו ([1-9]\d*) עונות במכבי$")
+_RE_SEASONS_STAFF = re.compile(r"^אנשי צוות (\S+) שהיו ([1-9]\d*) עונות במכבי$")
 
 TEMPLATE_TROPHY = "ניווט קטגוריות זכיה בתארים"
 TEMPLATE_SEASONS = "ניווט קטגוריות עונות במכבי"

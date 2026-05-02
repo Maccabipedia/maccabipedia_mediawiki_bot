@@ -64,6 +64,13 @@ class TestParseCategoryTitle:
         assert parse_category_title("קטגוריה:משחקי כדורגל") is None
         assert parse_category_title("שחקני כדורגל") is None
 
+    def test_zero_count_returns_none(self):
+        # N=0 categories exist in the data but the templates can't render them
+        # (DPL regex is [1-9]). Skip so we don't waste edits / create useless pages.
+        assert parse_category_title("שחקני כדורסל ששיחקו 0 עונות במכבי") is None
+        assert parse_category_title("אנשי צוות כדורגל שהיו 0 עונות במכבי") is None
+        assert parse_category_title("שחקני כדורגל שזכו ב-0 אליפויות") is None
+
     def test_unknown_sport_passes_through(self):
         # No sport allowlist — any future sport flows through.
         result = parse_category_title("שחקני האנדבול שזכו ב-1 אליפויות")

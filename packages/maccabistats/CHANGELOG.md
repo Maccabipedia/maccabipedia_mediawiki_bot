@@ -3,9 +3,13 @@
     Skip unfinished maccabi-tlv.co.il matches in the season crawler so the football
     games-uploader workflow can no longer publish a wiki page mid-match (Maccabi
     1-0 Hapoel B"S, 28-04-2026: bot first created the page 25 minutes after kickoff).
-    A match is considered finished iff the per-match top banner does NOT carry the
-    `live` CSS class — set throughout the match (including half-time and stoppage)
-    and stripped the moment the final whistle is logged.
+    A match is considered finished iff the per-match top banner carries the
+    `fixtures-list` class but NOT `live` — `live` is set throughout the match
+    (including half-time and stoppage) and stripped the moment the final whistle
+    is logged. Missing banner is treated as unfinished so a future site rename
+    fails loudly. When a live page is detected we evict the on-disk events/squads
+    cache for that game so the next crawler run re-fetches instead of being pinned
+    to the live snapshot by `use_disk_as_cache_when_crawling=True`.
 
 ## Version 2.66 ##
 

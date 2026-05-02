@@ -28,3 +28,10 @@ def _load(name: str) -> BeautifulSoup:
 )
 def test_is_match_finished(fixture_name: str, expected: bool) -> None:
     assert is_match_finished(_load(fixture_name)) is expected
+
+
+def test_missing_top_banner_treated_as_unfinished() -> None:
+    """If the site renames `site-top-banner.fixtures-list` we'd rather fail
+    closed (skip everything) than silently treat every match as finished."""
+    soup = BeautifulSoup("<html><body><p>no banner</p></body></html>", "html.parser")
+    assert is_match_finished(soup) is False

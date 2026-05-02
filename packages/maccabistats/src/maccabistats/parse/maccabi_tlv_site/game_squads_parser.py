@@ -4,7 +4,7 @@
 from maccabistats.models.game_data import GameData
 from maccabistats.parse.maccabi_tlv_site.team_parser import MaccabiSiteTeamParser
 from maccabistats.parse.maccabi_tlv_site.game_pages_provider import get_game_squads_bs_by_link, \
-    get_game_events_bs_by_link
+    get_game_events_bs_by_link, evict_cached_game_pages
 from maccabistats.parse.maccabi_tlv_site.game_events_parser import MaccabiSiteGameEventsParser
 from maccabistats.parse.maccabi_tlv_site.match_status import MatchNotFinishedError, is_match_finished
 import logging
@@ -48,10 +48,12 @@ class MaccabiSiteGameSquadsParser(object):
 
         game_content_web_page = unquote(bs_content.find("a", href=True).get("href"))
 
-        # Parse game events early so we can decide whether the match is finished
-        # before doing the rest of the (relatively expensive) parsing work.
         events_bs_page_content = get_game_events_bs_by_link(game_content_web_page)
         if not is_match_finished(events_bs_page_content):
+            # Evict the on-disk cache before raising; otherwise (with the default
+            # use_disk_as_cache_when_crawling=True) every subsequent run would
+            # serve the stale live HTML and skip this match permanently.
+            evict_cached_game_pages(game_content_web_page)
             raise MatchNotFinishedError(
                 f"Match at {date} ({game_content_web_page}) has not finished yet")
 
@@ -63,8 +65,6 @@ class MaccabiSiteGameSquadsParser(object):
                                                                                  maccabi_final_score,
                                                                                  not_maccabi_final_score)
 
-        # Parse game events (events_bs_page_content already fetched above for the
-        # finished-match guard; reuse it).
         game_events_parser = MaccabiSiteGameEventsParser(maccabi_team, not_maccabi_team, events_bs_page_content, game_content_web_page)
         maccabi_team, not_maccabi_team = game_events_parser.enrich_teams_with_events()
         halfed_parsed_events = game_events_parser.halfed_parsed_events

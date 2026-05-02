@@ -106,6 +106,19 @@ def get_game_events_bs_by_link(link):
         return __download_game_events_page(link)
 
 
+def evict_cached_game_pages(link):
+    """Remove cached events/squads HTML for this game so the next crawler run
+    re-fetches from the network. Used when a captured page is mid-match (live)
+    and would otherwise pin the bot to that snapshot until the cache is wiped
+    by hand."""
+    game_date = __extract_games_date(link)
+    for pattern in (folder_to_save_games_events_html_files_pattern,
+                    folder_to_save_games_squads_html_files_pattern):
+        path = pattern.format(game_date=game_date)
+        if os.path.isfile(path):
+            os.remove(path)
+
+
 # GameSquads #
 
 def __get_game_squads_bs_from_disk(link):

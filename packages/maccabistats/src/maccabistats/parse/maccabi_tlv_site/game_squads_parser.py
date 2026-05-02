@@ -4,7 +4,7 @@
 from maccabistats.models.game_data import GameData
 from maccabistats.parse.maccabi_tlv_site.team_parser import MaccabiSiteTeamParser
 from maccabistats.parse.maccabi_tlv_site.game_pages_provider import get_game_squads_bs_by_link, \
-    get_game_events_bs_by_link, evict_cached_game_pages
+    get_game_events_bs_by_link
 from maccabistats.parse.maccabi_tlv_site.game_events_parser import MaccabiSiteGameEventsParser
 from maccabistats.parse.maccabi_tlv_site.match_status import MatchNotFinishedError, is_match_finished
 import logging
@@ -50,10 +50,6 @@ class MaccabiSiteGameSquadsParser(object):
 
         events_bs_page_content = get_game_events_bs_by_link(game_content_web_page)
         if not is_match_finished(events_bs_page_content):
-            # Evict the on-disk cache before raising; otherwise (with the default
-            # use_disk_as_cache_when_crawling=True) every subsequent run would
-            # serve the stale live HTML and skip this match permanently.
-            evict_cached_game_pages(game_content_web_page)
             raise MatchNotFinishedError(
                 f"Match at {date} ({game_content_web_page}) has not finished yet")
 

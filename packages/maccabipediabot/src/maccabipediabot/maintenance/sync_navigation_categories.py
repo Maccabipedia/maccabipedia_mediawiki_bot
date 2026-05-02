@@ -149,7 +149,6 @@ def main(
     dry_run: bool,
     sport_filter: str | None,
     skip_purge: bool,
-    test: bool,
 ) -> int:
     """Run one full sync. Returns 0 (reserved for future error signalling)."""
     setup_logging(level=logging.INFO)
@@ -170,9 +169,6 @@ def main(
             if not dry_run:
                 page.text = canonical
                 page.save(summary=EDIT_SUMMARY, minor=False)
-        if test:
-            logger.info("Test mode: stopping after first page.")
-            break
 
     purged = 0
     if not skip_purge:
@@ -201,14 +197,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--no-purge", action="store_true", default=False, help="Skip the purge step"
     )
-    parser.add_argument(
-        "--test", action="store_true", default=False,
-        help="Process only one page then stop",
-    )
     args = parser.parse_args()
     sys.exit(main(
         dry_run=not args.live,
         sport_filter=args.sport,
         skip_purge=args.no_purge,
-        test=args.test,
     ))

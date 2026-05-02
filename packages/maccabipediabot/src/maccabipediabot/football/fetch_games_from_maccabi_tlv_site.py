@@ -16,6 +16,12 @@ def fetch_games_from_maccabi_tlv_site() -> None:
     MaccabiStatsConfigSingleton.maccabi_site.use_multiprocess_crawling = False
     logging.info(
         f"Changed use multi process to be: {MaccabiStatsConfigSingleton.maccabi_site.use_multiprocess_crawling}")
+
+    # The most recent game might still be live; with disk caching on we'd pin the
+    # crawler to the live HTML and keep skipping the match on every retry until
+    # the cache is wiped by hand. Force every fetch to hit the network.
+    MaccabiStatsConfigSingleton.maccabi_site.use_disk_as_cache_when_crawling = False
+
     run_maccabitlv_site_source()
 
 

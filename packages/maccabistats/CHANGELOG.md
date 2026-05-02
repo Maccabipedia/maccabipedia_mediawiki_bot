@@ -1,3 +1,12 @@
+## Version 2.67 ##
+
+    Skip unfinished maccabi-tlv.co.il matches in the season crawler so the football
+    games-uploader workflow can no longer publish a wiki page mid-match. A match
+    is considered finished iff the per-match top banner does NOT carry the `live`
+    CSS class — set throughout the match (including half-time and stoppage) and
+    stripped the moment the final whistle is logged. Missing banner is treated as
+    unfinished so a future site rename fails loudly.
+
 ## Version 2.66 ##
 
     Retry MaccabiPedia Cargo Export requests on transient 5xx/4xx (415, 429, 500-504) via

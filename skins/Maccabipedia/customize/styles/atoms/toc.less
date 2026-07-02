@@ -11,6 +11,11 @@
     width: 2.5rem;
     height: 2rem;
 
+    .viewport-wide-start-from(@viewport-regular; {
+            right: calc(50vw - 1280px / 2);
+            transform: translateX(calc(-100% - @space-small));
+        });
+
     &.active {
         .atom-toc-toggler {
             color: @text-secondary;

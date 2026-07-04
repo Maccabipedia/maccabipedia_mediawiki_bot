@@ -16,13 +16,18 @@ logger = logging.getLogger(__name__)
 _MAX_LIMIT_PER_REQUEST = 5000  # mediawiki api hardcoded limit
 _MUST_HAVE_FIELDS = "_pageName"
 
-# MaccabiPedia occasionally serves transient 415 from an openresty proxy (normal server is nginx);
-# seen twice in six days at ~19:00 UTC. Retry across those blips instead of failing the daily job.
+# MaccabiPedia's Imunify360 WAF returns HTTP 415 to requests whose Accept header is the default
+# wildcard */* (fires for datacenter IPs, so it broke scheduled CI jobs). Send a concrete Accept;
+# MediaWiki ignores it (format comes from &format=json) so no response body changes.
+_MACCABIPEDIA_JSON_HEADERS = {"Accept": "application/json"}
+
+# The same edge also serves transient 415/5xx blips; retry across those instead of failing the job.
 _RETRYABLE_STATUSES = (408, 415, 429, 500, 502, 503, 504)
 
 
 def _build_session() -> requests.Session:
     session = requests.Session()
+    session.headers.update(_MACCABIPEDIA_JSON_HEADERS)
     retry = Retry(
         total=5,
         backoff_factor=2,

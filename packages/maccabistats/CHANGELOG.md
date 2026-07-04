@@ -1,3 +1,10 @@
+## Version 2.68 ##
+
+    Send an explicit `Accept: application/json` header on every maccabipedia Cargo
+    request. The host's Imunify360 WAF returns HTTP 415 to the default wildcard `*/*`
+    Accept header for datacenter IPs, which was failing scheduled crawls. MediaWiki
+    ignores Accept (format is set by `&format=json`), so responses are unchanged.
+
 ## Version 2.67 ##
 
     Skip unfinished maccabi-tlv.co.il matches in the season crawler so the football

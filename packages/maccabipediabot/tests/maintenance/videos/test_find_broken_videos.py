@@ -86,7 +86,7 @@ def test_fetch_from_table_returns_video_entries():
     ]
     fields = {"FullGame": "משחק מלא", "Highlights": "תקציר ראשי", "Highlights2": "תקציר משני"}
     with patch(
-        "maccabipediabot.maintenance.videos.find_broken_videos.requests.get",
+        "maccabipediabot.maintenance.videos.find_broken_videos._session.get",
         return_value=mock_response,
     ):
         entries = _fetch_from_table("Games_Videos", fields)
@@ -108,7 +108,7 @@ def test_fetch_from_table_skips_null_urls():
     ]
     fields = {"FullGame": "משחק מלא", "Highlights": "תקציר ראשי", "Highlights2": "תקציר משני"}
     with patch(
-        "maccabipediabot.maintenance.videos.find_broken_videos.requests.get",
+        "maccabipediabot.maintenance.videos.find_broken_videos._session.get",
         return_value=mock_response,
     ):
         entries = _fetch_from_table("Games_Videos", fields)
@@ -120,7 +120,7 @@ def test_fetch_from_table_raises_on_http_error():
     mock_response = Mock()
     mock_response.raise_for_status.side_effect = requests.HTTPError("500")
     with patch(
-        "maccabipediabot.maintenance.videos.find_broken_videos.requests.get",
+        "maccabipediabot.maintenance.videos.find_broken_videos._session.get",
         return_value=mock_response,
     ):
         with pytest.raises(requests.HTTPError):
@@ -133,7 +133,7 @@ def test_fetch_from_table_raises_on_non_json_response():
     mock_response.headers = {"Content-Type": "text/html"}
     mock_response.text = "<html>error</html>"
     with patch(
-        "maccabipediabot.maintenance.videos.find_broken_videos.requests.get",
+        "maccabipediabot.maintenance.videos.find_broken_videos._session.get",
         return_value=mock_response,
     ):
         with pytest.raises(ValueError, match="Unexpected Content-Type"):

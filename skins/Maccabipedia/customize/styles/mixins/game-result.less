@@ -1,13 +1,13 @@
-.game-result-colors() {
+.game-result-colors(@property: background-color) {
     &.win {
-        background-color: @background-contrast-regular;
+        @{property}: @background-contrast-regular;
     }
 
     &.loose {
-        background-color: @background-primary-darker;
+        @{property}: @background-primary-darker;
     }
 
     &.tie {
-        background-color: @background-secondary-lighter;
+        @{property}: @background-secondary-lighter;
     }
 }

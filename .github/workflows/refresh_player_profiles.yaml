@@ -2,9 +2,12 @@ name: Refresh player profiles
 
 # Player "won N titles" / "played N seasons" categories are computed live from
 # Cargo data and go stale when new titles/seasons are recorded (MediaWiki does
-# not re-parse the profile pages on data change). This job purges every profile
-# so those categorylinks refresh, then runs sync_navigation_categories so any
-# freshly-populated milestone category gets its page + navigation template.
+# not re-parse the profile pages on data change). This job purges the players of
+# the two most recent seasons — the only ones whose counts can change — so those
+# categorylinks refresh, then runs sync_navigation_categories so any freshly
+# populated milestone category gets its page + navigation template.
+# A full sweep (--all, ~28 min) is only needed after historical Achievements
+# rewrites; run that by hand rather than on this schedule.
 # Runs daily at 01:00, before the 03:00 sync cron, so a same-day sync also catches the changes.
 on:
   schedule:

@@ -38,9 +38,22 @@ $MobileTabTimeoutSec     = 60
 $MaxConsecutiveFailures  = 3
 $MaxLogBytes             = 512KB
 
+# "Consecutive" has to mean consecutive in TIME, not just three entries in a
+# file. The task doesn't tick while the machine is asleep or off, so without
+# decay a stall last week plus two today would look like a live wedge and force
+# a restart. Any failure older than this is stale and the count restarts.
+$FailureDecayMin         = 30
+
+# Hard ceiling on how often a shutdown may be issued, whatever the failure
+# count says. `wsl --shutdown` is global -- it takes down every distro and any
+# Docker running on WSL2 -- so an unbounded retry is far worse than staying
+# down: it would also repeatedly kill a human mid-repair. This guarantees at
+# most one shutdown per window and leaves a usable gap to work in.
+$RecoveryCooldownMin     = 30
+
 $StateDir  = Join-Path $env:LOCALAPPDATA 'wsl-watchdog'
 $LogFile   = Join-Path $StateDir 'watchdog.log'
-$FailFile  = Join-Path $StateDir 'consecutive-failures.txt'
+$StateFile = Join-Path $StateDir 'state.json'
 $LockFile  = Join-Path $StateDir 'watchdog.lock'
 $WslExe    = Join-Path $env:SystemRoot 'System32\wsl.exe'
 
@@ -106,17 +119,50 @@ function Invoke-MobileTab {
     }
 }
 
-function Get-FailureCount {
-    if (-not (Test-Path $FailFile)) { return 0 }
-    $raw = (Get-Content $FailFile -Raw -ErrorAction SilentlyContinue)
-    $parsed = 0
-    if ([int]::TryParse(($raw -replace '\s', ''), [ref]$parsed)) { return $parsed }
-    return 0
+# State carries timestamps, not just a tally, so the two guards above can be
+# enforced. A missing or corrupt file reads as pristine -- the watchdog must
+# still function on a fresh host, and a bad parse must not wedge it.
+function Get-State {
+    $blank = [pscustomobject]@{ Failures = 0; LastFailureUtc = $null; LastRecoveryUtc = $null }
+    if (-not (Test-Path $StateFile)) { return $blank }
+    try {
+        $s = Get-Content $StateFile -Raw -ErrorAction Stop | ConvertFrom-Json
+        return [pscustomobject]@{
+            Failures        = [int]$s.Failures
+            LastFailureUtc  = $s.LastFailureUtc
+            LastRecoveryUtc = $s.LastRecoveryUtc
+        }
+    } catch {
+        Write-Log 'WARN state file unreadable -- treating as a clean slate'
+        return $blank
+    }
 }
 
-function Set-FailureCount {
-    param([int]$Count)
-    Set-Content -Path $FailFile -Value $Count -Encoding ASCII
+function Set-State {
+    param([int]$Failures, $LastFailureUtc, $LastRecoveryUtc)
+    [pscustomobject]@{
+        Failures        = $Failures
+        LastFailureUtc  = $LastFailureUtc
+        LastRecoveryUtc = $LastRecoveryUtc
+    } | ConvertTo-Json | Set-Content -Path $StateFile -Encoding ASCII
+}
+
+# Minutes since an ISO-8601 UTC stamp. Returns $null when never set or
+# unparseable, which every caller treats as "long ago".
+#
+# RoundtripKind is load-bearing. A bare [datetime]::Parse silently converts the
+# trailing Z to LOCAL time, so subtracting it from a UTC "now" yields the
+# elapsed time minus the UTC offset -- negative for any positive offset. The
+# cooldown then reads as "-179 minutes ago" and never expires on schedule.
+function Get-MinutesSince {
+    param($Utc)
+    if (-not $Utc) { return $null }
+    try {
+        $parsed = [datetime]::Parse($Utc, [Globalization.CultureInfo]::InvariantCulture,
+                                    [Globalization.DateTimeStyles]::RoundtripKind)
+        return ((Get-Date).ToUniversalTime() - $parsed.ToUniversalTime()).TotalMinutes
+    }
+    catch { return $null }
 }
 
 # The scheduled task is configured MultipleInstances=IgnoreNew, but that only
@@ -131,23 +177,43 @@ try {
 }
 
 try {
+    $state = Get-State
     $probe = Invoke-Wsl -Arguments '-e true' -TimeoutSec $ProbeTimeoutSec
 
     if (-not $probe.TimedOut -and $probe.ExitCode -eq 0) {
-        if ((Get-FailureCount) -gt 0) {
+        if ($state.Failures -gt 0) {
             Write-Log 'OK wsl responsive again -- clearing failure count'
-            Set-FailureCount 0
+            Set-State -Failures 0 -LastFailureUtc $null -LastRecoveryUtc $state.LastRecoveryUtc
         }
         Invoke-MobileTab
         exit 0
     }
 
     if ($probe.TimedOut) {
-        $failures = (Get-FailureCount) + 1
-        Set-FailureCount $failures
+        # Only failures close together in time count as consecutive; an old one
+        # restarts the tally rather than topping it up.
+        $sinceFailure = Get-MinutesSince $state.LastFailureUtc
+        $failures = if ($null -eq $sinceFailure -or $sinceFailure -gt $FailureDecayMin) { 1 }
+                    else { $state.Failures + 1 }
+        $nowUtc = (Get-Date).ToUniversalTime().ToString('o')
+        Set-State -Failures $failures -LastFailureUtc $nowUtc -LastRecoveryUtc $state.LastRecoveryUtc
         Write-Log ("HANG probe timed out after ${ProbeTimeoutSec}s ({0}/{1})" -f $failures, $MaxConsecutiveFailures)
 
         if ($failures -lt $MaxConsecutiveFailures) { exit 1 }
+
+        $sinceRecovery = Get-MinutesSince $state.LastRecoveryUtc
+        if ($null -ne $sinceRecovery -and $sinceRecovery -lt $RecoveryCooldownMin) {
+            Write-Log ("SUPPRESSED threshold reached, but a shutdown was issued {0:N0}m ago -- backing off" -f $sinceRecovery)
+            exit 1
+        }
+
+        # Stamp the attempt and clear the count BEFORE acting, not after. If the
+        # recovery fails -- or this process is killed partway through by the
+        # task's ExecutionTimeLimit -- the cooldown is already on disk, so the
+        # next tick backs off instead of firing another shutdown. Recording it
+        # only on success is what turned one failed recovery into a global
+        # `wsl --shutdown` every 5 minutes, forever.
+        Set-State -Failures 0 -LastFailureUtc $nowUtc -LastRecoveryUtc $nowUtc
 
         # Confirmed wedge. `wsl --shutdown` tears the VM down at the hypervisor
         # level, which is the only thing that clears this state -- and until
@@ -155,19 +221,18 @@ try {
         Write-Log 'RECOVER threshold reached -- issuing wsl --shutdown'
         $shutdown = Invoke-Wsl -Arguments '--shutdown' -TimeoutSec $ShutdownTimeoutSec
         if ($shutdown.TimedOut) {
-            Write-Log 'ERROR wsl --shutdown itself timed out -- leaving count set for next tick'
+            Write-Log 'ERROR wsl --shutdown itself timed out -- next attempt gated by cooldown'
             exit 1
         }
 
         Start-Sleep -Seconds 5
         $boot = Invoke-Wsl -Arguments '-e true' -TimeoutSec $BootTimeoutSec
         if ($boot.TimedOut -or $boot.ExitCode -ne 0) {
-            Write-Log 'ERROR distro did not come back after shutdown -- will retry next tick'
+            Write-Log 'ERROR distro did not come back after shutdown -- next attempt gated by cooldown'
             exit 1
         }
 
         Write-Log 'RECOVER distro is back up'
-        Set-FailureCount 0
         Invoke-MobileTab
         exit 0
     }

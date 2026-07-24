@@ -3,7 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-apt-get install -y tinyproxy
+# sysstat is what makes a future memory freeze diagnosable -- without it the
+# guard below silently skips on a fresh host and we learn nothing, again.
+apt-get install -y tinyproxy sysstat
 
 if ! command -v tailscale >/dev/null 2>&1; then
     echo "Installing Tailscale..."
@@ -113,14 +115,21 @@ if command -v wslpath >/dev/null 2>&1 && [ -x /mnt/c/Windows/System32/cmd.exe ];
         /tn "WslWatchdog" \
         /tr "$BAT_PATH_WIN" \
         /sc MINUTE /mo 5 /it /f
-    # ExecutionTimeLimit must clear the script's own worst case: a 90s probe
-    # timeout, then --shutdown, then a boot probe. At 2 minutes Windows would
-    # kill the recovery midway through the restart it was there to perform.
+    # ExecutionTimeLimit must clear the script's own worst case, which is the
+    # full failed-recovery path: 90s probe + 60s shutdown + 5s settle + 120s
+    # boot probe + 60s ensure-mobile-tab = 335s. 8 minutes leaves headroom;
+    # at the original 2 minutes Windows would kill the recovery midway through
+    # the restart it was there to perform.
+    #
+    # -ErrorAction Stop + explicit exit: without it a failure here is
+    # non-terminating and the script still prints "=== Done ===" while the task
+    # is left half-configured, pointing at the .bat with default settings.
     /mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -Command "
+        \$ErrorActionPreference = 'Stop';
         \$a = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument '\"$VBS_PATH_WIN\"';
-        \$s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 5);
+        \$s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 8);
         Set-ScheduledTask -TaskName 'WslWatchdog' -Action \$a -Settings \$s | Out-Null
-    "
+    " || { echo "ERROR: failed to configure the WslWatchdog task action/settings"; exit 1; }
 else
     echo "Skipping WslWatchdog install — not running inside WSL on a Windows host."
 fi

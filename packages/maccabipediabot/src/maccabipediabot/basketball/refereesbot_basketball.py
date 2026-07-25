@@ -19,7 +19,7 @@ Dependencies
 import logging
 import sys
 
-from maccabipediabot.common.maccabipedia_http import build_maccabipedia_session
+from maccabipediabot.common.maccabipedia_http import build_maccabipedia_session, parse_cargo_rows
 from maccabipediabot.common.wiki_login import get_site
 
 from maccabipediabot.common.logging_setup import setup_logging
@@ -46,12 +46,9 @@ def fetch_all_referee_names():
     """Query Cargo and return a sorted list of unique non-empty referee names."""
     resp = _session.get(CARGO_EXPORT_URL)
 
-    if resp.status_code != 200 or 'application/json' not in resp.headers.get('Content-Type', ''):
-        raise RuntimeError(
-            f'Unexpected Cargo response: status={resp.status_code}\n{resp.text[:500]}'
-        )
+    resp.raise_for_status()
 
-    rows = resp.json()
+    rows = parse_cargo_rows(resp)
     names = set()
 
     for row in rows:

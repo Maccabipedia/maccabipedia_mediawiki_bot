@@ -30,7 +30,7 @@ from datetime import datetime
 import contextlib
 
 from maccabipediabot.common.logging_setup import setup_logging
-from maccabipediabot.common.maccabipedia_http import MACCABIPEDIA_JSON_HEADERS, build_maccabipedia_session
+from maccabipediabot.common.maccabipedia_http import MACCABIPEDIA_JSON_HEADERS, build_maccabipedia_session, parse_cargo_rows
 from maccabipediabot.common.paths import basketball_tickets_root
 from maccabipediabot.common.wiki_login import get_site
 import pywikibot as pw
@@ -108,13 +108,7 @@ def _get_game_page_name(game_date: datetime) -> str:
     response = _session.get(url)
     response.raise_for_status()
 
-    if 'application/json' not in response.headers.get('Content-Type', ''):
-        raise ValueError(
-            f"Non-JSON response from Cargo API for date {formatted_date}. "
-            f"Response: {response.text[:300]}"
-        )
-
-    data = response.json()
+    data = parse_cargo_rows(response)
 
     if not data:
         raise ValueError(f"No basketball game found for date: {formatted_date}")

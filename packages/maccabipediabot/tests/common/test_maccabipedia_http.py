@@ -4,11 +4,14 @@ import logging
 
 import requests
 
+import pytest
+
 from maccabipediabot.common.maccabipedia_http import (
     MACCABIPEDIA_JSON_HEADERS,
     build_maccabipedia_session,
     describe_unexpected_response,
     install_response_diagnostics,
+    parse_cargo_rows,
 )
 
 
@@ -155,3 +158,48 @@ def test_hook_never_leaks_response_cookies(caplog):
 
     assert "blocked" in caplog.text, "sanity: the hook did log this response"
     assert "SUPERSECRETVALUE" not in caplog.text
+
+
+# --- parse_cargo_rows ------------------------------------------------------------------
+# CargoExport&format=json always answers with an array of row objects, and every caller
+# indexes or iterates it as one. When it answers with something else the old code died far
+# from the cause — `KeyError: 0` on `rows[0]`, or `string indices must be integers` from
+# `for row in rows`, with the body already discarded. Fail at the parse instead, holding it.
+
+
+def test_parse_cargo_rows_returns_the_rows():
+    rows = parse_cargo_rows(_response(CARGO_URL, body='[{"_pageName": "אבי כהן"}]'))
+    assert rows == [{"_pageName": "אבי כהן"}]
+
+
+def test_parse_cargo_rows_allows_an_empty_result():
+    """No rows is a legitimate answer — a date with no game — not a broken response."""
+    assert parse_cargo_rows(_response(CARGO_URL, body="[]")) == []
+
+
+def test_parse_cargo_rows_rejects_an_object():
+    """The shape behind the calendar's `KeyError: 0`: an object where rows were owed."""
+    with pytest.raises(ValueError, match="CargoExport returned a bare dict"):
+        parse_cargo_rows(_response(CARGO_URL, body='{"error": "query failed"}'))
+
+
+def test_parse_cargo_rows_rejects_a_bare_string():
+    with pytest.raises(ValueError, match="CargoExport returned a bare str"):
+        parse_cargo_rows(_response(CARGO_URL, body='"imunify360 block"'))
+
+
+def test_parse_cargo_rows_rejects_a_non_json_body():
+    with pytest.raises(ValueError, match="CargoExport returned a non-JSON body"):
+        parse_cargo_rows(_response(CARGO_URL, body="<html>blocked</html>"))
+
+
+def test_parse_cargo_rows_logs_the_body_it_rejected(caplog):
+    """The object case slips past the response hook (it opens with `{`, so it looks like
+    healthy JSON), so this is the only place that body ever gets recorded."""
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError):
+            parse_cargo_rows(_response(CARGO_URL, body='{"error": "query failed"}',
+                                       server="openresty/1.29.2.3"))
+
+    assert "query failed" in caplog.text
+    assert "openresty/1.29.2.3" in caplog.text

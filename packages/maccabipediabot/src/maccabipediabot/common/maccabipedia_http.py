@@ -129,6 +129,19 @@ def _log_unexpected_response(response: requests.Response, *args, **kwargs) -> No
     if reason is None:
         return None
 
+    logger.error(
+        "Unexpected response from maccabipedia (%s): %s %s | %s",
+        reason,
+        response.request.method,
+        response.url,
+        describe_responder(response),
+    )
+    return None
+
+
+def describe_responder(response: requests.Response) -> str:
+    """Who answered and what they said, bounded — the identifying headers plus a capped
+    body snippet, for a log line. Never includes ``Set-Cookie`` (session token)."""
     headers = {
         name: response.headers[name]
         for name in _DIAGNOSTIC_HEADERS
@@ -136,17 +149,41 @@ def _log_unexpected_response(response: requests.Response, *args, **kwargs) -> No
     }
     snippet = response.text[:_BODY_SNIPPET_LIMIT]
     truncated = " ...[truncated]" if len(response.text) > _BODY_SNIPPET_LIMIT else ""
+    return f"headers={headers} | body={snippet!r}{truncated}"
 
-    logger.error(
-        "Unexpected response from maccabipedia (%s): %s %s | headers=%s | body=%r%s",
-        reason,
-        response.request.method,
-        response.url,
-        headers,
-        snippet,
-        truncated,
-    )
-    return None
+
+def parse_cargo_rows(response: requests.Response) -> list:
+    """The rows of a ``Special:CargoExport&format=json`` response.
+
+    Cargo answers with an array of row objects, and every caller here immediately indexes
+    or iterates it as one. When the wiki answers with a different shape the failure used to
+    surface far from its cause and with the body already thrown away: ``KeyError: 0`` from
+    ``rows[0]``, or ``string indices must be integers`` from ``for row in rows`` walking a
+    dict's *keys*. An object also slips past the response hook, which judges a body by its
+    opening byte and so reads ``{`` as healthy JSON — this is the only place it is caught.
+    """
+    try:
+        payload = response.json()
+    except ValueError as parse_error:
+        logger.error(
+            "CargoExport returned a non-JSON body from %s | %s",
+            response.url,
+            describe_responder(response),
+        )
+        raise ValueError(f"CargoExport returned a non-JSON body: {parse_error}") from parse_error
+
+    if not isinstance(payload, list):
+        logger.error(
+            "CargoExport returned a bare %s from %s | %s",
+            type(payload).__name__,
+            response.url,
+            describe_responder(response),
+        )
+        raise ValueError(
+            f"CargoExport returned a bare {type(payload).__name__}, expected a list of rows"
+        )
+
+    return payload
 
 
 def install_response_diagnostics(session: requests.Session) -> requests.Session:

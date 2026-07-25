@@ -1,4 +1,3 @@
-import json
 import logging
 import re
 from datetime import datetime, timedelta
@@ -8,7 +7,7 @@ import bs4
 from bs4 import BeautifulSoup
 
 from maccabipediabot.calendar.calendar_operations import Event
-from maccabipediabot.common.maccabipedia_http import build_maccabipedia_session
+from maccabipediabot.common.maccabipedia_http import build_maccabipedia_session, parse_cargo_rows
 
 _logger = logging.getLogger(__name__)
 
@@ -165,10 +164,9 @@ def handle_game(game: bs4.element.Tag) -> Event:
     response = _session.get(
         f"https://www.maccabipedia.co.il/index.php?title=Special:CargoExport&format=json&tables=Football_Games&fields=_pageName&where=Football_Games.Date='{game_date.date()}'")
     response.raise_for_status()
-    page_name = json.loads(response.text)
-    if page_name and '_pageName' in page_name[0]:
-        page_name = page_name[0]['_pageName']
-        page_name = re.sub(r"\s+", '_', page_name)  # Replacing spaces/whitespace with underscore
+    rows = parse_cargo_rows(response)
+    if rows and '_pageName' in rows[0]:
+        page_name = re.sub(r"\s+", '_', rows[0]['_pageName'])  # Spaces/whitespace to underscore
         game_page_link = f'\n<a href="https://maccabipedia.co.il/{page_name}">עמוד המשחק</a>'
     else:
         page_name = ''

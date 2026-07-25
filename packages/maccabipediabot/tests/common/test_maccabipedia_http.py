@@ -60,6 +60,38 @@ def test_healthy_api_object_is_not_flagged():
     assert describe_unexpected_response(_response(API_URL, body='{"query": {"userinfo": {}}}')) is None
 
 
+USERINFO_URL = API_URL + "?action=query&meta=userinfo&format=json&formatversion=2"
+
+
+def test_userinfo_object_without_query_is_flagged():
+    """The 39-failure shape: pywikibot asserts `'query' in uidata` and drops the body."""
+    reason = describe_unexpected_response(
+        _response(USERINFO_URL, body='{"error": {"code": "blocked"}}'))
+    assert reason is not None
+    assert "lacks 'query'" in reason
+    assert "error" in reason, "the top-level keys name what came back instead"
+
+
+def test_healthy_userinfo_object_is_not_flagged():
+    assert describe_unexpected_response(
+        _response(USERINFO_URL, body='{"query": {"userinfo": {"name": "MaccabiBot"}}}')) is None
+
+
+def test_userinfo_bare_string_still_reported_as_a_string():
+    """The bare-string case must keep its own wording — it is a different diagnosis to
+    hand the host than 'the API answered with an error object'."""
+    reason = describe_unexpected_response(_response(USERINFO_URL, body='"blocked"'))
+    assert reason is not None
+    assert "bare string" in reason
+
+
+def test_non_userinfo_object_is_judged_by_its_opening_byte_alone():
+    """The parse is confined to userinfo. A 5000-row Cargo chunk must never be re-parsed
+    by a hook that runs on every single response."""
+    huge = "[" + ",".join('{"_pageName": "אבי כהן"}' for _ in range(5000)) + "]"
+    assert describe_unexpected_response(_response(CARGO_URL, body=huge)) is None
+
+
 def test_bare_json_string_body_is_flagged():
     """The exact shape behind 'str' object has no attribute 'items'."""
     reason = describe_unexpected_response(_response(CARGO_URL, body='"blocked"'))

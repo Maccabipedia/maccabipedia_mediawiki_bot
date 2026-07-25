@@ -115,11 +115,38 @@ def describe_unexpected_response(response: requests.Response) -> str | None:
 
     first_character = body_start[:1]
     if first_character in (b"{", b"["):
-        return None
+        # An object opens the same byte whether or not it holds what MediaWiki owes, so
+        # the opening byte alone cleared the very failures we were hunting. Look inside —
+        # but only for userinfo, see below.
+        return _describe_missing_userinfo(response)
     if first_character == b'"':
         # The exact shape behind all three CI crash signatures.
         return "JSON body is a bare string, expected an object or array"
     return "body is not JSON"
+
+
+def _describe_missing_userinfo(response: requests.Response) -> str | None:
+    """Why this ``meta=userinfo`` reply is not what pywikibot is about to assert on, or
+    ``None`` — including for every response that is not a userinfo call at all.
+
+    ``_apisite.py`` does ``assert 'query' in uidata`` immediately after this response and
+    discards the body when it fails, which is why 39 CI failures produced no evidence.
+    Parsing is confined to userinfo URLs on purpose: one small reply per job, so the hook
+    stays O(1) on the 5000-row Cargo chunks it also sees.
+    """
+    if "meta=userinfo" not in urlsplit(response.url).query:
+        return None
+
+    try:
+        payload = response.json()
+    except ValueError:
+        return "userinfo body is not JSON"
+
+    if not isinstance(payload, dict):
+        return f"userinfo body is a bare {type(payload).__name__}, expected an object"
+    if "query" not in payload:
+        return f"userinfo response lacks 'query'; top-level keys: {sorted(payload)}"
+    return None
 
 
 def _log_unexpected_response(response: requests.Response, *args, **kwargs) -> None:

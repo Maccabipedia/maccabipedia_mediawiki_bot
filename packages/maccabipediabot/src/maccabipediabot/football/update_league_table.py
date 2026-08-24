@@ -23,7 +23,8 @@ OPPONENTS_NAMES_TO_UNICODE = {"FC Ashdod": "\u05de.\u05e1. \u05d0\u05e9\u05d3\u0
                               "Hapoel Haifa": "\u05d4\u05e4\u05d5\u05e2\u05dc \u05d7\u05d9\u05e4\u05d4",
                               "Maccabi Tel Aviv": "\u05de\u05db\u05d1\u05d9 \u05ea\u05dc \u05d0\u05d1\u05d9\u05d1",
                               "Maccabi Petach Tikva": "מכבי פתח תקווה", "Hapoel Petah Tikva": "הפועל פתח תקווה",
-                              "Ironi Tiberias": "עירוני טבריה", "Hapoel Ironi Kiryat Shmona": "עירוני קריית שמונה"}
+                              "Ironi Tiberias": "עירוני טבריה", "Hapoel Ironi Kiryat Shmona": "עירוני קריית שמונה",
+                              "Hapoel Ramat Gan": "הפועל רמת גן"}
 
 LINKS_TO_FETCH_LEAGUE_TABLE_FROM = [
     # Playoff stages (top 6 + bottom 8). Swap with the regular-season URL below

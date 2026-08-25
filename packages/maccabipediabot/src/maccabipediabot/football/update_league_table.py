@@ -26,6 +26,14 @@ OPPONENTS_NAMES_TO_UNICODE = {"FC Ashdod": "\u05de.\u05e1. \u05d0\u05e9\u05d3\u0
                               "Ironi Tiberias": "עירוני טבריה", "Hapoel Ironi Kiryat Shmona": "עירוני קריית שמונה",
                               "Hapoel Ramat Gan": "הפועל רמת גן"}
 
+# The source site (livescore.com) does not follow Israeli Football Association
+# disciplinary rulings, so points deductions must be applied here explicitly -
+# keyed by the source's English team name (row["Tnm"]), same as OPPONENTS_NAMES_TO_UNICODE.
+# Update this each season to match the "הערות" section of the league table template.
+POINTS_DEDUCTIONS = {
+    "Ironi Tiberias": 6,
+}
+
 LINKS_TO_FETCH_LEAGUE_TABLE_FROM = [
     # Playoff stages (top 6 + bottom 8). Swap with the regular-season URL below
     # at the start of each season, then back once playoffs begin.
@@ -51,6 +59,7 @@ def fetch_league_table_data():
         resp = requests.get(url)
         table = resp.json()["Stages"][0]["LeagueTable"]["L"][0]["Tables"][0]["team"]
         for row in table:
+            points = row["win"] * 3 + row["drw"] - POINTS_DEDUCTIONS.get(row["Tnm"], 0)
             stats.append(
                 "^".join(
                     [
@@ -61,7 +70,7 @@ def fetch_league_table_data():
                         row["lstn"],
                         str(row["gf"]),
                         str(row["ga"]),
-                        row["ptsn"],
+                        str(points),
                     ]
                 )
             )

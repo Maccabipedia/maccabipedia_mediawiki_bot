@@ -58,22 +58,28 @@ def fetch_league_table_data():
     for url in LINKS_TO_FETCH_LEAGUE_TABLE_FROM:
         resp = requests.get(url)
         table = resp.json()["Stages"][0]["LeagueTable"]["L"][0]["Tables"][0]["team"]
+        table_rows = []
         for row in table:
             points = row["win"] * 3 + row["drw"] - POINTS_DEDUCTIONS.get(row["Tnm"], 0)
-            stats.append(
-                "^".join(
-                    [
-                        OPPONENTS_NAMES_TO_UNICODE.get(row["Tnm"], row["Tnm"]),
-                        str(row["pld"]),
-                        row["winn"],
-                        row["drwn"],
-                        row["lstn"],
-                        str(row["gf"]),
-                        str(row["ga"]),
-                        str(points),
-                    ]
-                )
+            row_line = "^".join(
+                [
+                    OPPONENTS_NAMES_TO_UNICODE.get(row["Tnm"], row["Tnm"]),
+                    str(row["pld"]),
+                    row["winn"],
+                    row["drwn"],
+                    row["lstn"],
+                    str(row["gf"]),
+                    str(row["ga"]),
+                    str(points),
+                ]
             )
+            table_rows.append((points, row_line))
+
+        # Deductions can drop a team's real points below the source's own
+        # (undeducted) sort order, so re-sort within this stage rather than
+        # trusting the fetched row order for standings position.
+        table_rows.sort(key=lambda item: item[0], reverse=True)
+        stats.extend(row_line for _, row_line in table_rows)
     prettified_result = ",\n".join(stats)
 
     logging.info(f'Fetched league table data: {prettified_result}')
